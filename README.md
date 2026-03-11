@@ -13,15 +13,7 @@ De extensie gebruikt de **cookies/sessie van een open Magister-tab**: je moet er
 
 ## AVG & privacy
 
-De extensie is bewust sober met gegevens:
-
-- **Geen externe servers** — Er zijn geen eigen servers. Alles draait lokaal in je browser; de extensie praat alleen **rechtstreeks** met Magister via hun API (magister.net). Geen tussenliggende diensten, geen doorsturen van leerling- of persoonsdata.
-- **Conservatief met API-calls** — Er wordt zuinig omgegaan met aanroepen naar de Magister-API. Waar mogelijk wordt hergebruikt wat al is opgehaald; alleen wat nodig is voor wat je op dat moment doet wordt opgevraagd.
-- **Niet-persistente lokale cache** — Om het aantal API-calls te beperken wordt gebruikgemaakt van een lokale cache in **session storage**. Die cache is niet persistent: zodra je de browser of het extensievenster sluit, is hij weg. Binnen een sessie worden eerder opgehaalde antwoorden (bijv. roosters) hergebruikt waar dat kan.
-- **Geen leerlingdata in local storage** — Leerlinggegevens (namen, roosters, absenties, enz.) worden **niet** in local storage weggeschreven. Ze bestaan alleen in het geheugen van de extensie en in session storage; na sluiten verdwijnt dat.
-- **Local storage alleen voor voorkeuren** — In local storage wordt uitsluitend bewaard wat je zelf kiest: bijvoorbeeld geselecteerde opleidingen (filter) of bezettingslocaties. Geen persoonsgegevens.
-
-Daarmee beperk je het verwerken en bewaren van leerlinggegevens en sluit de extensie beter aan bij AVG-uitgangspunten (minimale gegevensverwerking, geen onnodige persistentie).
+De extensie draait lokaal, heeft geen eigen servers en slaat geen leerlingdata permanent op. Alleen voorkeuren (filters) blijven in local storage. Zie **[docs/privacy.md](docs/privacy.md)** voor de volledige uitleg.
 
 ## Documentatie
 
@@ -30,6 +22,7 @@ Meer uitleg staat in de map **`docs/`**:
 - **[docs/getting-started.md](docs/getting-started.md)** — Setup (clone, install), development en lokaal testen.
 - **[docs/build.md](docs/build.md)** — Build-instructies (productiebuild, watch) en de extensie laden in Chrome.
 - **[docs/testserver.md](docs/testserver.md)** — Testserver gebruiken (init, fake data, lokaal testen zonder Magister).
+- **[docs/privacy.md](docs/privacy.md)** — Privacy & AVG: hoe de extensie met gegevens omgaat.
 
 ## Quick start
 
