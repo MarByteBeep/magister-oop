@@ -1,0 +1,1946 @@
+{
+	"filters": {
+		"types": [
+			{
+				"count": 16,
+				"name": "Absent",
+				"id": 1
+			},
+			{
+				"count": 0,
+				"name": "HuiswerkVergeten",
+				"id": 8
+			},
+			{
+				"count": 0,
+				"name": "MateriaalVergeten",
+				"id": 7
+			},
+			{
+				"count": 6,
+				"name": "TeLaat",
+				"id": 2
+			},
+			{
+				"count": 9,
+				"name": "Uitgestuurd",
+				"id": 4
+			},
+			{
+				"count": 0,
+				"name": "MobielInKlas",
+				"id": 9
+			}
+		]
+	},
+	"items": [
+		{
+			"id": 72302,
+			"voorletters": "KO",
+			"roepnaam": "Savanah",
+			"tussenvoegsel": null,
+			"achternaam": "McGlynn",
+			"stamklas": {
+				"id": 7,
+				"code": "5B5"
+			},
+			"stamnummer": "51155",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 1290420,
+					"begin": "2025-11-26T08:50:00.000Z",
+					"einde": "2025-11-26T09:30:00.000Z",
+					"lesuurBegin": 3,
+					"lesuurEinde": 3,
+					"omschrijving": "Vitium agnitio amo cumque trucido sub demergo.",
+					"organisatorPersoonIds": [391],
+					"isVerantwoord": false,
+					"verantwoordingen": [
+						{
+							"id": 86971839,
+							"reden": {
+								"id": 48,
+								"code": "U",
+								"type": "uitgestuurd",
+								"isGeoorloofd": false,
+								"omschrijving": "Depraedor substantia impedit deserunt voluptatibus demens argumentum crudelis adimpleo."
+							},
+							"opmerking": "",
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555551"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653563/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653563/deelnemers/13511/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 1774131,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Terebro argentum tandem.",
+					"organisatorPersoonIds": [46339],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653351/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653351/deelnemers/13511/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 9755915,
+					"begin": "2025-11-26T07:30:00.000Z",
+					"einde": "2025-11-26T08:10:00.000Z",
+					"lesuurBegin": 1,
+					"lesuurEinde": 1,
+					"omschrijving": "Vitium agnitio amo cumque trucido sub demergo.",
+					"organisatorPersoonIds": [391],
+					"isVerantwoord": false,
+					"verantwoordingen": [
+						{
+							"id": 34969514,
+							"reden": {
+								"id": 48,
+								"code": "U",
+								"type": "uitgestuurd",
+								"isGeoorloofd": false,
+								"omschrijving": "Depraedor substantia impedit deserunt voluptatibus demens argumentum crudelis adimpleo."
+							},
+							"opmerking": "",
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555567"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653153/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653153/deelnemers/13511/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/13511/foto"
+				}
+			}
+		},
+		{
+			"id": 60403,
+			"voorletters": "CE",
+			"roepnaam": "Alexandrea",
+			"tussenvoegsel": null,
+			"achternaam": "Weissnat",
+			"stamklas": {
+				"id": 7,
+				"code": "5KB5"
+			},
+			"stamnummer": "51157",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 4677270,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Auxilium odio magnam venio terga.",
+					"organisatorPersoonIds": [40950],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 65420003,
+							"reden": {
+								"id": 1,
+								"code": "L",
+								"type": "teLaat",
+								"isGeoorloofd": false,
+								"omschrijving": "Asperiores adopto spiculum caelum creptio caries."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35576751"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653516/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653516/deelnemers/13515/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 1892887,
+					"begin": "2025-11-26T07:30:00.000Z",
+					"einde": "2025-11-26T08:10:00.000Z",
+					"lesuurBegin": 1,
+					"lesuurEinde": 1,
+					"omschrijving": "Vigilo volup cuppedia creator celebrer timidus somniculosus.",
+					"organisatorPersoonIds": [551],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653117/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653117/deelnemers/13515/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 5969244,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Cubicularis audacia odio sustineo circumvenio caterva cum accusator tum.",
+					"organisatorPersoonIds": [37027],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653553/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653553/deelnemers/13515/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 4262039,
+					"begin": "2025-11-26T11:10:00.000Z",
+					"einde": "2025-11-26T11:50:00.000Z",
+					"lesuurBegin": 6,
+					"lesuurEinde": 6,
+					"omschrijving": "Tamen debitis ago vos spiculum convoco.",
+					"organisatorPersoonIds": [37027],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653517/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653517/deelnemers/13515/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/13515/foto"
+				}
+			}
+		},
+		{
+			"id": 62515,
+			"voorletters": "GG",
+			"roepnaam": "Candace",
+			"tussenvoegsel": null,
+			"achternaam": "Hermiston",
+			"stamklas": {
+				"id": 7,
+				"code": "1K5"
+			},
+			"stamnummer": "55357",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 6679425,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Congregatio decumbo antiquus tristis trado optio.",
+					"organisatorPersoonIds": [39078],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 26990746,
+							"reden": {
+								"id": 1,
+								"code": "L",
+								"type": "teLaat",
+								"isGeoorloofd": false,
+								"omschrijving": "Asperiores adopto spiculum caelum creptio caries."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35575151"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653565/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653565/deelnemers/31171/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/31171/foto"
+				}
+			}
+		},
+		{
+			"id": 57579,
+			"voorletters": "UX",
+			"roepnaam": "Alexandra",
+			"tussenvoegsel": null,
+			"achternaam": "Wiza",
+			"stamklas": {
+				"id": 7,
+				"code": "3T5"
+			},
+			"stamnummer": "51376",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 3547769,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Ventosus adulescens tui.",
+					"organisatorPersoonIds": [551],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 33534229,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555137"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653555/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653555/deelnemers/15651/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 8850442,
+					"begin": "2025-11-26T08:10:00.000Z",
+					"einde": "2025-11-26T08:50:00.000Z",
+					"lesuurBegin": 2,
+					"lesuurEinde": 2,
+					"omschrijving": "Tripudio stips demum.",
+					"organisatorPersoonIds": [371],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653516/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653516/deelnemers/15651/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/15651/foto"
+				}
+			}
+		},
+		{
+			"id": 68779,
+			"voorletters": "LJ",
+			"roepnaam": "Ned",
+			"tussenvoegsel": null,
+			"achternaam": "Kilback",
+			"stamklas": {
+				"id": 7,
+				"code": "3B5"
+			},
+			"stamnummer": "51355",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 2670185,
+					"begin": "2025-11-26T08:50:00.000Z",
+					"einde": "2025-11-26T09:30:00.000Z",
+					"lesuurBegin": 3,
+					"lesuurEinde": 3,
+					"omschrijving": "Vaco totidem derelinquo timor territo.",
+					"organisatorPersoonIds": [38930, 46465],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 55964410,
+							"reden": {
+								"id": 1,
+								"code": "L",
+								"type": "teLaat",
+								"isGeoorloofd": false,
+								"omschrijving": "Asperiores adopto spiculum caelum creptio caries."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35571575"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653555/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653555/deelnemers/15665/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 5564932,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Aduro toties conitor.",
+					"organisatorPersoonIds": [742],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 36558752,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35576555"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653351/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653351/deelnemers/15665/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/15665/foto"
+				}
+			}
+		},
+		{
+			"id": 53327,
+			"voorletters": "CX",
+			"roepnaam": "Lexus",
+			"tussenvoegsel": null,
+			"achternaam": "Schneider",
+			"stamklas": {
+				"id": 7,
+				"code": "5KB5"
+			},
+			"stamnummer": "51163",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 4677270,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Auxilium odio magnam venio terga.",
+					"organisatorPersoonIds": [40950],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 29926635,
+							"reden": {
+								"id": 1,
+								"code": "L",
+								"type": "teLaat",
+								"isGeoorloofd": false,
+								"omschrijving": "Asperiores adopto spiculum caelum creptio caries."
+							},
+							"opmerking": "",
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35575771"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653516/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653516/deelnemers/13751/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 1892887,
+					"begin": "2025-11-26T07:30:00.000Z",
+					"einde": "2025-11-26T08:10:00.000Z",
+					"lesuurBegin": 1,
+					"lesuurEinde": 1,
+					"omschrijving": "Vigilo volup cuppedia creator celebrer timidus somniculosus.",
+					"organisatorPersoonIds": [551],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653117/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653117/deelnemers/13751/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 5969244,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Cubicularis audacia odio sustineo circumvenio caterva cum accusator tum.",
+					"organisatorPersoonIds": [37027],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653553/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653553/deelnemers/13751/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 4262039,
+					"begin": "2025-11-26T11:10:00.000Z",
+					"einde": "2025-11-26T11:50:00.000Z",
+					"lesuurBegin": 6,
+					"lesuurEinde": 6,
+					"omschrijving": "Tamen debitis ago vos spiculum convoco.",
+					"organisatorPersoonIds": [37027],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653517/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653517/deelnemers/13751/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/13751/foto"
+				}
+			}
+		},
+		{
+			"id": 47950,
+			"voorletters": "QY",
+			"roepnaam": "Leonardo",
+			"tussenvoegsel": "van",
+			"achternaam": "Wisozk",
+			"stamklas": {
+				"id": 7,
+				"code": "5K5"
+			},
+			"stamnummer": "51151",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 1245313,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Convoco adiuvo dedico magni stipes.",
+					"organisatorPersoonIds": [391],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653176/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653176/deelnemers/13516/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 9424557,
+					"begin": "2025-11-26T13:40:00.000Z",
+					"einde": "2025-11-26T14:20:00.000Z",
+					"lesuurBegin": 9,
+					"lesuurEinde": 9,
+					"omschrijving": "Voluptates tandem doloremque audentia terreo ulciscor audacia adsidue theca surgo.",
+					"organisatorPersoonIds": [551],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 73293981,
+							"reden": {
+								"id": 48,
+								"code": "U",
+								"type": "uitgestuurd",
+								"isGeoorloofd": false,
+								"omschrijving": "Depraedor substantia impedit deserunt voluptatibus demens argumentum crudelis adimpleo."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555135"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653513/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653513/deelnemers/13516/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/13516/foto"
+				}
+			}
+		},
+		{
+			"id": 62411,
+			"voorletters": "KO",
+			"roepnaam": "Alvena",
+			"tussenvoegsel": null,
+			"achternaam": "Renner",
+			"stamklas": {
+				"id": 7,
+				"code": "3K5"
+			},
+			"stamnummer": "51576",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 5879183,
+					"begin": "2025-11-26T08:50:00.000Z",
+					"einde": "2025-11-26T09:30:00.000Z",
+					"lesuurBegin": 3,
+					"lesuurEinde": 3,
+					"omschrijving": "Blanditiis viridis adsidue vespillo depereo quia theca cunabula.",
+					"organisatorPersoonIds": [39078],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 82847674,
+							"reden": {
+								"id": 48,
+								"code": "U",
+								"type": "uitgestuurd",
+								"isGeoorloofd": false,
+								"omschrijving": "Depraedor substantia impedit deserunt voluptatibus demens argumentum crudelis adimpleo."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35571555"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653351/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653351/deelnemers/15155/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/15155/foto"
+				}
+			}
+		},
+		{
+			"id": 93048,
+			"voorletters": "OX",
+			"roepnaam": "Viva",
+			"tussenvoegsel": null,
+			"achternaam": "Schneider",
+			"stamklas": {
+				"id": 7,
+				"code": "3T5"
+			},
+			"stamnummer": "51115",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 8850442,
+					"begin": "2025-11-26T08:10:00.000Z",
+					"einde": "2025-11-26T08:50:00.000Z",
+					"lesuurBegin": 2,
+					"lesuurEinde": 2,
+					"omschrijving": "Tripudio stips demum.",
+					"organisatorPersoonIds": [371],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 78301717,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35557117"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653516/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653516/deelnemers/15751/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/15751/foto"
+				}
+			}
+		},
+		{
+			"id": 82270,
+			"voorletters": "DZ",
+			"roepnaam": "Jerome",
+			"tussenvoegsel": "van der",
+			"achternaam": "Hansen",
+			"stamklas": {
+				"id": 7,
+				"code": "1T5"
+			},
+			"stamnummer": "55366",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 6714277,
+					"begin": "2025-11-26T08:10:00.000Z",
+					"einde": "2025-11-26T08:50:00.000Z",
+					"lesuurBegin": 2,
+					"lesuurEinde": 2,
+					"omschrijving": "Arceo spero acceptus.",
+					"organisatorPersoonIds": [551],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 42351133,
+							"reden": {
+								"id": 1,
+								"code": "L",
+								"type": "teLaat",
+								"isGeoorloofd": false,
+								"omschrijving": "Asperiores adopto spiculum caelum creptio caries."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555116"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653671/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653671/deelnemers/31311/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/31311/foto"
+				}
+			}
+		},
+		{
+			"id": 63962,
+			"voorletters": "ZU",
+			"roepnaam": "Shemar",
+			"tussenvoegsel": null,
+			"achternaam": "Deckow",
+			"stamklas": {
+				"id": 7,
+				"code": "3K5"
+			},
+			"stamnummer": "51553",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 7894785,
+					"begin": "2025-11-26T07:30:00.000Z",
+					"einde": "2025-11-26T08:10:00.000Z",
+					"lesuurBegin": 1,
+					"lesuurEinde": 1,
+					"omschrijving": "Demonstro sapiente alter terminatio desidero vito tumultus supellex quia ascisco.",
+					"organisatorPersoonIds": [38930, 46465],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 43673575,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35551115"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653135/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653135/deelnemers/15555/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/15555/foto"
+				}
+			}
+		},
+		{
+			"id": 24137,
+			"voorletters": "ZN",
+			"roepnaam": "Anna",
+			"tussenvoegsel": null,
+			"achternaam": "Bernhard",
+			"stamklas": {
+				"id": 7,
+				"code": "1B5"
+			},
+			"stamnummer": "55635",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 9805478,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Spectaculum vitium solus causa paens cognatus carcer cometes.",
+					"organisatorPersoonIds": [742],
+					"isVerantwoord": false,
+					"verantwoordingen": [
+						{
+							"id": 99258806,
+							"reden": {
+								"id": 48,
+								"code": "U",
+								"type": "uitgestuurd",
+								"isGeoorloofd": false,
+								"omschrijving": "Depraedor substantia impedit deserunt voluptatibus demens argumentum crudelis adimpleo."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555155"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653555/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653555/deelnemers/17736/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/17736/foto"
+				}
+			}
+		},
+		{
+			"id": 61967,
+			"voorletters": "KO",
+			"roepnaam": "Era",
+			"tussenvoegsel": null,
+			"achternaam": "Nienow",
+			"stamklas": {
+				"id": 7,
+				"code": "5K5"
+			},
+			"stamnummer": "51161",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 1245313,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Convoco adiuvo dedico magni stipes.",
+					"organisatorPersoonIds": [391],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 89707271,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35575566"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653176/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653176/deelnemers/13375/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 9424557,
+					"begin": "2025-11-26T13:40:00.000Z",
+					"einde": "2025-11-26T14:20:00.000Z",
+					"lesuurBegin": 9,
+					"lesuurEinde": 9,
+					"omschrijving": "Voluptates tandem doloremque audentia terreo ulciscor audacia adsidue theca surgo.",
+					"organisatorPersoonIds": [551],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653513/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653513/deelnemers/13375/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/13375/foto"
+				}
+			}
+		},
+		{
+			"id": 31702,
+			"voorletters": "QL",
+			"roepnaam": "Winnifred",
+			"tussenvoegsel": "van de",
+			"achternaam": "Schowalter",
+			"stamklas": {
+				"id": 7,
+				"code": "5T5"
+			},
+			"stamnummer": "57557",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 6817412,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Defaeco adiuvo patrocinor tam creo conservo.",
+					"organisatorPersoonIds": [36991],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 90230212,
+							"reden": {
+								"id": 48,
+								"code": "U",
+								"type": "uitgestuurd",
+								"isGeoorloofd": false,
+								"omschrijving": "Depraedor substantia impedit deserunt voluptatibus demens argumentum crudelis adimpleo."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555316"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653517/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653517/deelnemers/16575/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/16575/foto"
+				}
+			}
+		},
+		{
+			"id": 70702,
+			"voorletters": "KH",
+			"roepnaam": "Ludie",
+			"tussenvoegsel": null,
+			"achternaam": "Hermann",
+			"stamklas": {
+				"id": 7,
+				"code": "1K5"
+			},
+			"stamnummer": "55351",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 5231569,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Necessitatibus avaritia comprehendo vero fugiat artificiose theologus clementia aequitas.",
+					"organisatorPersoonIds": [38930, 46465],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 52154364,
+							"reden": {
+								"id": 1,
+								"code": "L",
+								"type": "teLaat",
+								"isGeoorloofd": false,
+								"omschrijving": "Asperiores adopto spiculum caelum creptio caries."
+							},
+							"opmerking": "",
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35575555"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653516/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653516/deelnemers/31151/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 5454301,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Necessitatibus avaritia comprehendo vero fugiat artificiose theologus clementia aequitas.",
+					"organisatorPersoonIds": [38930, 46465],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653351/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653351/deelnemers/31151/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/31151/foto"
+				}
+			}
+		},
+		{
+			"id": 81570,
+			"voorletters": "PS",
+			"roepnaam": "Cristian",
+			"tussenvoegsel": "van 't",
+			"achternaam": "Collins",
+			"stamklas": {
+				"id": 7,
+				"code": "1K5"
+			},
+			"stamnummer": "55651",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 5231569,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Necessitatibus avaritia comprehendo vero fugiat artificiose theologus clementia aequitas.",
+					"organisatorPersoonIds": [38930, 46465],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 67751775,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35576751"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653516/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653516/deelnemers/17776/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 5454301,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Necessitatibus avaritia comprehendo vero fugiat artificiose theologus clementia aequitas.",
+					"organisatorPersoonIds": [38930, 46465],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 62847713,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35576717"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653351/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653351/deelnemers/17776/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/17776/foto"
+				}
+			}
+		},
+		{
+			"id": 68583,
+			"voorletters": "ZU",
+			"roepnaam": "Tressa",
+			"tussenvoegsel": "van",
+			"achternaam": "Ortiz",
+			"stamklas": {
+				"id": 7,
+				"code": "3K3"
+			},
+			"stamnummer": "51555",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 9726696,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Cicuta corporis tripudio versus thalassinus adnuo patruus exercitationem.",
+					"organisatorPersoonIds": [46339],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 82566437,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35575511"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653551/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653551/deelnemers/15551/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/15551/foto"
+				}
+			}
+		},
+		{
+			"id": 73713,
+			"voorletters": "LD",
+			"roepnaam": "Sydnie",
+			"tussenvoegsel": null,
+			"achternaam": "Stamm",
+			"stamklas": {
+				"id": 7,
+				"code": "1B5"
+			},
+			"stamnummer": "55175",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 9805478,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Spectaculum vitium solus causa paens cognatus carcer cometes.",
+					"organisatorPersoonIds": [742],
+					"isVerantwoord": false,
+					"verantwoordingen": [
+						{
+							"id": 31357080,
+							"reden": {
+								"id": 48,
+								"code": "U",
+								"type": "uitgestuurd",
+								"isGeoorloofd": false,
+								"omschrijving": "Depraedor substantia impedit deserunt voluptatibus demens argumentum crudelis adimpleo."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555551"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653555/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653555/deelnemers/17656/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 5188829,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Vapulus patria quidem maxime verus adamo aurum.",
+					"organisatorPersoonIds": [39030, 42796, 46466],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5551153/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5551153/deelnemers/17656/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 8517891,
+					"begin": "2025-11-26T08:50:00.000Z",
+					"einde": "2025-11-26T09:30:00.000Z",
+					"lesuurBegin": 3,
+					"lesuurEinde": 3,
+					"omschrijving": "Vapulus patria quidem maxime verus adamo aurum.",
+					"organisatorPersoonIds": [39030, 42796, 46466],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5551151/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5551151/deelnemers/17656/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 3814094,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Vapulus patria quidem maxime verus adamo aurum.",
+					"organisatorPersoonIds": [39030, 42796, 46466],
+					"isVerantwoord": true,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5551155/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5551155/deelnemers/17656/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/17656/foto"
+				}
+			}
+		},
+		{
+			"id": 23023,
+			"voorletters": "KO",
+			"roepnaam": "Sasha",
+			"tussenvoegsel": null,
+			"achternaam": "Runolfsdottir",
+			"stamklas": {
+				"id": 7,
+				"code": "1B5"
+			},
+			"stamnummer": "51775",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 9805478,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Spectaculum vitium solus causa paens cognatus carcer cometes.",
+					"organisatorPersoonIds": [742],
+					"isVerantwoord": false,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653555/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653555/deelnemers/17131/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 5188829,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Vapulus patria quidem maxime verus adamo aurum.",
+					"organisatorPersoonIds": [39030, 42796, 46466],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 57292014,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35575315"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5551153/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5551153/deelnemers/17131/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 8517891,
+					"begin": "2025-11-26T08:50:00.000Z",
+					"einde": "2025-11-26T09:30:00.000Z",
+					"lesuurBegin": 3,
+					"lesuurEinde": 3,
+					"omschrijving": "Vapulus patria quidem maxime verus adamo aurum.",
+					"organisatorPersoonIds": [39030, 42796, 46466],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 86034058,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35575175"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5551151/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5551151/deelnemers/17131/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 3814094,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Vapulus patria quidem maxime verus adamo aurum.",
+					"organisatorPersoonIds": [39030, 42796, 46466],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 97778966,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35575335"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5551155/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5551155/deelnemers/17131/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/17131/foto"
+				}
+			}
+		},
+		{
+			"id": 90736,
+			"voorletters": "LO",
+			"roepnaam": "Denis",
+			"tussenvoegsel": null,
+			"achternaam": "Marvin",
+			"stamklas": {
+				"id": 7,
+				"code": "1T5"
+			},
+			"stamnummer": "55537",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 1969323,
+					"begin": "2025-11-26T11:10:00.000Z",
+					"einde": "2025-11-26T11:50:00.000Z",
+					"lesuurBegin": 6,
+					"lesuurEinde": 6,
+					"omschrijving": "Aetas adeo ullam temptatio creber vae amplexus communis.",
+					"organisatorPersoonIds": [36991],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 20601390,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555115"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653555/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653555/deelnemers/17511/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/17511/foto"
+				}
+			}
+		},
+		{
+			"id": 56624,
+			"voorletters": "MX",
+			"roepnaam": "Lavinia",
+			"tussenvoegsel": null,
+			"achternaam": "Dach",
+			"stamklas": {
+				"id": 7,
+				"code": "5B5"
+			},
+			"stamnummer": "51535",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 1290420,
+					"begin": "2025-11-26T08:50:00.000Z",
+					"einde": "2025-11-26T09:30:00.000Z",
+					"lesuurBegin": 3,
+					"lesuurEinde": 3,
+					"omschrijving": "Vitium agnitio amo cumque trucido sub demergo.",
+					"organisatorPersoonIds": [391],
+					"isVerantwoord": false,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653563/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653563/deelnemers/13617/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 1774131,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Terebro argentum tandem.",
+					"organisatorPersoonIds": [46339],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 22405362,
+							"reden": {
+								"id": 48,
+								"code": "U",
+								"type": "uitgestuurd",
+								"isGeoorloofd": false,
+								"omschrijving": "Depraedor substantia impedit deserunt voluptatibus demens argumentum crudelis adimpleo."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35553561"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653351/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653351/deelnemers/13617/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 9755915,
+					"begin": "2025-11-26T07:30:00.000Z",
+					"einde": "2025-11-26T08:10:00.000Z",
+					"lesuurBegin": 1,
+					"lesuurEinde": 1,
+					"omschrijving": "Vitium agnitio amo cumque trucido sub demergo.",
+					"organisatorPersoonIds": [391],
+					"isVerantwoord": false,
+					"verantwoordingen": [],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653153/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653153/deelnemers/13617/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/13617/foto"
+				}
+			}
+		},
+		{
+			"id": 48681,
+			"voorletters": "MA",
+			"roepnaam": "Alexzander",
+			"tussenvoegsel": null,
+			"achternaam": "Hickle",
+			"stamklas": {
+				"id": 7,
+				"code": "5KB5"
+			},
+			"stamnummer": "51515",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 4677270,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Auxilium odio magnam venio terga.",
+					"organisatorPersoonIds": [40950],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 92551119,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35571163"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653516/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653516/deelnemers/13115/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 1892887,
+					"begin": "2025-11-26T07:30:00.000Z",
+					"einde": "2025-11-26T08:10:00.000Z",
+					"lesuurBegin": 1,
+					"lesuurEinde": 1,
+					"omschrijving": "Vigilo volup cuppedia creator celebrer timidus somniculosus.",
+					"organisatorPersoonIds": [551],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 67625926,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35551535"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653117/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653117/deelnemers/13115/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 5969244,
+					"begin": "2025-11-26T10:30:00.000Z",
+					"einde": "2025-11-26T11:10:00.000Z",
+					"lesuurBegin": 5,
+					"lesuurEinde": 5,
+					"omschrijving": "Cubicularis audacia odio sustineo circumvenio caterva cum accusator tum.",
+					"organisatorPersoonIds": [37027],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 81444307,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35576556"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653553/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653553/deelnemers/13115/verantwoordingen"
+						}
+					}
+				},
+				{
+					"id": 4262039,
+					"begin": "2025-11-26T11:10:00.000Z",
+					"einde": "2025-11-26T11:50:00.000Z",
+					"lesuurBegin": 6,
+					"lesuurEinde": 6,
+					"omschrijving": "Tamen debitis ago vos spiculum convoco.",
+					"organisatorPersoonIds": [37027],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 75699916,
+							"reden": {
+								"id": 5,
+								"code": "A",
+								"type": "absent",
+								"isGeoorloofd": false,
+								"omschrijving": "Cubitum sonitus tardus adsuesco tamen adaugeo ter."
+							},
+							"opmerking": null,
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35553161"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653517/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653517/deelnemers/13115/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/13115/foto"
+				}
+			}
+		},
+		{
+			"id": 23007,
+			"voorletters": "EO",
+			"roepnaam": "Eugene",
+			"tussenvoegsel": "van der",
+			"achternaam": "Haley",
+			"stamklas": {
+				"id": 7,
+				"code": "5B5"
+			},
+			"stamnummer": "57555",
+			"afwezigheidsredenen": null,
+			"afspraken": [
+				{
+					"id": 2321448,
+					"begin": "2025-11-26T07:30:00.000Z",
+					"einde": "2025-11-26T08:10:00.000Z",
+					"lesuurBegin": 1,
+					"lesuurEinde": 1,
+					"omschrijving": "Suffragium tamen crinis.",
+					"organisatorPersoonIds": [41081],
+					"isVerantwoord": true,
+					"verantwoordingen": [
+						{
+							"id": 17192046,
+							"reden": {
+								"id": 48,
+								"code": "U",
+								"type": "uitgestuurd",
+								"isGeoorloofd": false,
+								"omschrijving": "Depraedor substantia impedit deserunt voluptatibus demens argumentum crudelis adimpleo."
+							},
+							"opmerking": "",
+							"links": {
+								"self": {
+									"href": "/api/medewerkers/afspraken/verantwoordingen/35555153"
+								}
+							}
+						}
+					],
+					"links": {
+						"verantwoordingen": {
+							"href": "/api/medewerkers/afspraken/5653315/verantwoordingen"
+						},
+						"verantwoordingenDeelnemer": {
+							"href": "/api/medewerkers/afspraken/5653315/deelnemers/16356/verantwoordingen"
+						}
+					}
+				}
+			],
+			"links": {
+				"foto": {
+					"href": "/api/leerlingen/16356/foto"
+				}
+			}
+		}
+	],
+	"links": {
+		"first": {
+			"href": "/api/m6/verantwoordingen/ongeoorloofderegistraties?datum=2025-11-26"
+		},
+		"last": {
+			"href": "/api/m6/verantwoordingen/ongeoorloofderegistraties?datum=2025-11-26"
+		}
+	},
+	"totalCount": 23
+}

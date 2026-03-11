@@ -1,0 +1,10 @@
+{
+	"editor.codeActionsOnSave": {
+		"source.organizeImports": "never",
+		"source.organizeImports.biome": "explicit",
+		"source.fixAll.biome": "explicit"
+	},
+	"typescript.preferences.importModuleSpecifier": "non-relative",
+	"typescript.preferences.importModuleSpecifierEnding": "auto",
+	"javascript.preferences.importModuleSpecifier": "non-relative"
+}

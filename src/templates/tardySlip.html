@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Te laat melding - {{studentName}}</title>
+	<style>
+		/* === RECEIPT PRINTER SETTINGS (EPSON TM-T88VII) === */
+		@page {
+			/* 80mm width, auto height for continuous paper */
+			size: 80mm auto;
+			margin: 0;
+		}
+
+		/* === GENERAL STYLES === */
+		* {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		html, body {
+			width: 80mm;
+			max-width: 80mm;
+		}
+
+		body {
+			font-family: Arial, sans-serif;
+			padding: 0mm 5mm 20mm 5mm;
+			color: #000;
+			font-size: 12pt;
+			line-height: 1.3;
+		}
+
+		/* === TITLE === */
+		h1 {
+			text-align: center;
+			border-bottom: 1pt solid #000;
+			padding-bottom: 2mm;
+			margin-bottom: 3mm;
+			font-size: 15pt;
+			font-weight: bold;
+		}
+
+		/* === FIELD ROW === */
+		.field {
+			margin-bottom: 1.5mm;
+		}
+
+		/* === FIELD LABEL === */
+		.label {
+			font-weight: bold;
+			display: inline;
+		}
+
+		/* === FIELD VALUE === */
+		.value {
+			display: inline;
+		}
+
+		/* === SEPARATOR === */
+		.separator {
+			border-top: 1pt solid #000;
+			margin: 3mm 0;
+		}
+
+		/* === FOOTER === */
+		.footer {
+			margin-top: 4mm;
+			padding-top: 2mm;
+			border-top: 1pt solid #000;
+			text-align: center;
+			font-size: 10pt;
+		}
+	</style>
+</head>
+<body>
+	<h1>TE LAAT MELDING</h1>
+
+	<div class="field">
+		<span class="label">Leerling:</span>
+		<span class="value">{{studentName}}</span>
+	</div>
+
+	<div class="field">
+		<span class="label">Datum:</span>
+		<span class="value">{{currentDate}}</span>
+	</div>
+
+	<div class="field">
+		<span class="label">Tijd:</span>
+		<span class="value">{{currentTime}}</span>
+	</div>
+
+	<div class="field">
+		<span class="label">Lesuur:</span>
+		<span class="value">{{lessonInfo}}</span>
+	</div>
+
+	<div class="field">
+		<span class="label">Vak:</span>
+		<span class="value">{{subject}}</span>
+	</div>
+
+	<div class="footer">
+		Graag dit briefje inleveren bij de docent
+	</div>
+
+	<div class="separator"></div>
+</body>
+</html>

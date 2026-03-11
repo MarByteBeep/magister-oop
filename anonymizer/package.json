@@ -1,0 +1,13 @@
+{
+	"name": "anonymizer",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {},
+	"dependencies": {},
+	"devDependencies": {
+		"@types/bun": "^1.3.2",
+		"@types/node": "^24.10.0",
+		"@faker-js/faker": "^8.4.1"
+	}
+}
