@@ -1,0 +1,10 @@
+{
+	"extensionName": {
+		"message": "Magister OOP",
+		"description": "Name of the extension."
+	},
+	"extensionDescription": {
+		"message": "Magister voor OOP. Leerlingen, bezetting en absenties in één overzicht.",
+		"description": "Description of the extension."
+	}
+}

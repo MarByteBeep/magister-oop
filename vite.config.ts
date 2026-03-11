@@ -26,6 +26,10 @@ export default defineConfig(({ mode }) => {
 						src: 'public/icons/*',
 						dest: 'icons',
 					},
+					{
+						src: 'public/_locales/**',
+						dest: '_locales',
+					},
 				],
 			}),
 		],
