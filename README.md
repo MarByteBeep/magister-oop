@@ -9,7 +9,9 @@ Chrome-extensie voor **Magister** (magister.net) gericht op OOP (onderwijsonders
 - **Absenties** — Overzicht van afwezige leerlingen met reden, lesuur en vak/docent. Filter op opleiding; vernieuwen om de laatste stand op te halen.
 - **Medewerkers** en **Terugkomers** — Tabbladen zijn aanwezig maar nog niet uitgewerkt.
 
-De extensie gebruikt de **cookies/sessie van een open Magister-tab**: je moet ergens op magister.net ingelogd zijn. Bij een klik op het extensie-icoon opent een popupvenster (ca. 1300×900) met de React-app; API-aanroepen gaan via die actieve Magister-tab's onder `## AVG & privacy
+De extensie gebruikt de **cookies/sessie van een open Magister-tab**: je moet ergens op magister.net ingelogd zijn. Bij een klik op het extensie-icoon opent een popupvenster met de React-app; API-aanroepen gaan via die actieve Magister-tabs.
+
+## AVG & privacy
 
 De extensie is bewust sober met gegevens:
 
