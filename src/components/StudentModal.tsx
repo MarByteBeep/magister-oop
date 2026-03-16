@@ -1,6 +1,7 @@
 'use client';
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import LazyAvatar from '@/components/LazyAvatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Student } from '@/magister/types';
 import Details from './student/Details';
@@ -13,7 +14,9 @@ interface StudentModalProps {
 
 export default function StudentModal({ student, onClose }: StudentModalProps) {
 	const studentId = student?.id;
-	const fullName = student ? `${student.roepnaam} ${student.tussenvoegsel ?? ''} ${student.achternaam}` : '';
+	const fullName = student ? `${student.roepnaam} ${student.tussenvoegsel ?? ''} ${student.achternaam}`.trim() : '';
+	const avatarSrc = student?.links.foto?.href || undefined;
+	const initials = student ? `${student.roepnaam.charAt(0)}${student.achternaam.charAt(0)}`.toUpperCase() : '';
 
 	return (
 		<Dialog
@@ -22,10 +25,12 @@ export default function StudentModal({ student, onClose }: StudentModalProps) {
 		>
 			<DialogContent className="w-[1100px] h-[700px] flex flex-col">
 				<DialogHeader className="shrink-0">
-					<DialogTitle className="text-center">{fullName}</DialogTitle>
-					<DialogDescription className="text-center">
-						Bekijk gegevens, rooster, verzuim en logboek voor deze leerling.
-					</DialogDescription>
+					<DialogTitle className="flex items-center justify-center gap-3 text-center">
+						{student && (
+							<LazyAvatar src={avatarSrc} alt={fullName} initials={initials} className="h-10 w-10" />
+						)}
+						<span>{fullName}</span>
+					</DialogTitle>
 				</DialogHeader>
 
 				{/* Scrollable */}

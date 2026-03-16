@@ -67,10 +67,7 @@ export default function LazyAvatar({ src, alt, initials, className }: LazyAvatar
 	return (
 		<div
 			ref={avatarRef}
-			className={cn(
-				'relative inline-block cursor-pointer p-0 border-none bg-transparent focus:outline-none',
-				className,
-			)}
+			className={cn('relative inline-block p-0 border-none bg-transparent focus:outline-none', className)}
 		>
 			<Avatar src={blobUrl} alt={alt} initials={initials} />
 		</div>

@@ -44,6 +44,8 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 
 	const [weekOffset, setWeekOffset] = useState(0); // 0 = current week, -1 = last week, 1 = next week
 	const hasLoadedRef = useRef<Set<string>>(new Set()); // Track which weeks we've already fetched
+	const nowLineRef = useRef<HTMLDivElement | null>(null);
+	const hasScrolledToNowRef = useRef(false);
 
 	// Use refs to access current values without triggering effect re-runs
 	const studentRef = useRef(student);
@@ -148,6 +150,15 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 		return (currentMinutes - displayStartMinutes) * PIXELS_PER_MINUTE;
 	}, [currentTime, isCurrentWeek]);
 
+	// On open: scroll so the 'now' line is visible (once per view)
+	useEffect(() => {
+		if (currentTimePosition === null || hasScrolledToNowRef.current) return;
+		const el = nowLineRef.current;
+		if (!el) return;
+		hasScrolledToNowRef.current = true;
+		el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+	}, [currentTimePosition]);
+
 	// Find current agenda item for today
 	const activeAgendaItem = useMemo(() => {
 		const todayItems = weekAgenda[todayKey] || [];
@@ -226,7 +237,7 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 		<>
 			<div className="flex flex-col h-[520px]">
 				{/* Navigation header */}
-				<div className="flex items-center justify-between px-2 py-2 border-b shrink-0">
+				<div className="flex items-center justify-between px-2 py-1 border-b shrink-0">
 					<Button variant="ghost" size="icon" onClick={goToPreviousWeek} title="Vorige week">
 						<LuChevronLeft className="h-5 w-5" />
 					</Button>
@@ -266,20 +277,18 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 										<div
 											key={dayKey}
 											className={cn(
-												'flex-1 text-center py-2 font-medium border-l',
+												'flex-1 text-center py-2 font-medium border-l text-sm',
 												isToday && 'bg-primary/10',
 											)}
 										>
-											<div className="text-xs text-muted-foreground uppercase">{dayName}</div>
-											<div
-												className={cn(
-													'text-lg',
-													isToday &&
-														'bg-primary text-primary-foreground rounded-full w-8 h-8 flex items-center justify-center mx-auto',
-												)}
-											>
-												{dayNumber}
-											</div>
+											<span className="text-muted-foreground uppercase">{dayName}</span>
+											{isToday ? (
+												<span className="ml-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+													{dayNumber}
+												</span>
+											) : (
+												<span className="ml-1">{dayNumber}</span>
+											)}
 										</div>
 									);
 								})}
@@ -336,6 +345,15 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 													/>
 												);
 											})}
+
+											{/* Current time indicator - only on today's column */}
+											{isToday && currentTimePosition !== null && (
+												<div
+													ref={nowLineRef}
+													className="absolute left-0 right-0 h-0.5 bg-yellow-500 z-20 pointer-events-none"
+													style={{ top: `${currentTimePosition}px` }}
+												/>
+											)}
 
 											{/* Agenda items */}
 											{sortedItems.map((item) => {
@@ -405,16 +423,6 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 										</div>
 									);
 								})}
-
-								{/* Current time indicator (yellow line across all columns) */}
-								{currentTimePosition !== null && (
-									<div
-										className="absolute left-14 right-0 h-0.5 bg-yellow-500 z-20 pointer-events-none"
-										style={{ top: `${currentTimePosition}px` }}
-									>
-										<div className="absolute -left-1 -top-1.5 w-3 h-3 bg-yellow-500 rounded-full" />
-									</div>
-								)}
 							</div>
 						</div>
 					</ScrollArea>
