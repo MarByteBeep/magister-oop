@@ -1,7 +1,7 @@
 'use client';
 
 import type { ApexOptions } from 'apexcharts';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Chart from 'react-apexcharts';
 import { LuChartLine, LuFilter } from 'react-icons/lu';
 import { Badge } from '@/components/ui/badge';
@@ -36,13 +36,19 @@ export default function Occupancy() {
 
 	/* ---------------- Local storage ---------------- */
 
+	const hasInitialLoadFromStorage = useRef(false);
 	useEffect(() => {
+		if (hasInitialLoadFromStorage.current) return;
+		// Wait until we have real location data, so "no selection yet" correctly defaults to all locations
+		if (allLocations.length === 0) return;
 		(async () => {
 			const stored = await storage.local.get<string[]>(OCCUPANCY_LOCATIONS_STORAGE_KEY);
-			const initialSelection = stored && stored.length > 0 ? new Set(stored) : new Set(allLocations);
+			// Only use "all locations" when key was never set (first load). Empty array [] is valid (user deselected all).
+			const initialSelection = stored !== undefined && stored !== null ? new Set(stored) : new Set(allLocations);
 
 			setSelectedLocations(initialSelection);
 			setInitializedLocations(true);
+			hasInitialLoadFromStorage.current = true;
 		})();
 	}, [allLocations]);
 
@@ -54,9 +60,8 @@ export default function Occupancy() {
 	/* ---------------- Filtering ---------------- */
 
 	const filteredLocations = useMemo(() => {
-		if (selectedLocations.size === 0 && initializedLocations) {
-			return allLocations;
-		}
+		// Before init: show all to avoid flash. After init: empty selection = no rooms (only show selected).
+		if (!initializedLocations) return allLocations;
 		return allLocations.filter((location) => selectedLocations.has(location));
 	}, [allLocations, selectedLocations, initializedLocations]);
 
@@ -216,32 +221,33 @@ export default function Occupancy() {
 			grid: {
 				show: true,
 			},
-			annotations:
-				activeLessonIndex >= 0
-					? {
-							xaxis: [
-								{
-									x: chartData[activeLessonIndex]?.lessonRange,
-									borderColor: 'transparent',
-									strokeDashArray: 0,
-									borderWidth: 0,
-									label: {
-										borderColor: '#fbbf24',
-										style: {
-											color: '#fff',
-											background: '#fbbf24',
-											fontSize: '12px',
-											fontWeight: 'bold',
-										},
-										text: 'Nu',
-										orientation: 'horizontal',
-										position: 'top',
-										offsetY: -10,
-									},
+			annotations: {
+				// ApexCharts expects annotations.images to exist; avoid undefined in library code
+				images: [],
+				...(activeLessonIndex >= 0 && {
+					xaxis: [
+						{
+							x: chartData[activeLessonIndex]?.lessonRange,
+							borderColor: 'transparent',
+							strokeDashArray: 0,
+							borderWidth: 0,
+							label: {
+								borderColor: '#fbbf24',
+								style: {
+									color: '#fff',
+									background: '#fbbf24',
+									fontSize: '12px',
+									fontWeight: 'bold',
 								},
-							],
-						}
-					: undefined,
+								text: 'Nu',
+								orientation: 'horizontal',
+								position: 'top',
+								offsetY: -10,
+							},
+						},
+					],
+				}),
+			},
 		}),
 		[chartData, activeLessonIndex],
 	);
@@ -272,6 +278,7 @@ export default function Occupancy() {
 				<Button
 					variant={showLocationFilters ? 'default' : 'outline'}
 					size="icon"
+					className="relative"
 					onClick={() => setShowLocationFilters(!showLocationFilters)}
 				>
 					{selectedLocations.size > 0 && selectedLocations.size < allLocations.length && (
@@ -352,39 +359,45 @@ export default function Occupancy() {
 			</div>
 
 			{/* -------- Occupancy cards -------- */}
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{filteredLocations.map((location) => (
-					<div key={location} className="border rounded-lg p-2 bg-card shadow-sm">
-						<h3 className="text-md font-semibold mb-2">{location}</h3>
-						<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
-							{Object.entries(occupancyData[location]).map(([lessonRange, count]) => {
-								const isCurrentLesson = currentLessonInfo.range === lessonRange;
-								const isFree = count === 0;
+			{filteredLocations.length === 0 ? (
+				<p className="text-muted-foreground text-sm py-4 text-center">
+					Selecteer één of meer lokalen in het filter om de bezetting per ruimte te zien.
+				</p>
+			) : (
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+					{filteredLocations.map((location) => (
+						<div key={location} className="border rounded-lg p-2 bg-card shadow-sm">
+							<h3 className="text-md font-semibold mb-2">{location}</h3>
+							<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1">
+								{Object.entries(occupancyData[location]).map(([lessonRange, count]) => {
+									const isCurrentLesson = currentLessonInfo.range === lessonRange;
+									const isFree = count === 0;
 
-								return (
-									<button
-										type="button"
-										key={`${location}-${lessonRange}`}
-										className={cn(
-											'p-1 rounded text-xs flex flex-col items-center justify-center cursor-pointer',
-											isCurrentLesson && !isFree && 'bg-primary text-primary-foreground',
-											isCurrentLesson && isFree && 'bg-green-600 text-primary-foreground',
-											!isCurrentLesson &&
-												isFree &&
-												'bg-muted/50 text-muted-foreground/70 border border-dashed',
-											!isCurrentLesson && !isFree && 'bg-primary/20 text-muted-foreground',
-										)}
-										onClick={() => handleCardClick(location, lessonRange)}
-									>
-										<span className="text-xs">{lessonRange}</span>
-										<span className="font-medium text-sm">{isFree ? 'Vrij' : `${count}`}</span>
-									</button>
-								);
-							})}
+									return (
+										<button
+											type="button"
+											key={`${location}-${lessonRange}`}
+											className={cn(
+												'p-1 rounded text-xs flex flex-col items-center justify-center cursor-pointer',
+												isCurrentLesson && !isFree && 'bg-primary text-primary-foreground',
+												isCurrentLesson && isFree && 'bg-green-600 text-primary-foreground',
+												!isCurrentLesson &&
+													isFree &&
+													'bg-muted/50 text-muted-foreground/70 border border-dashed',
+												!isCurrentLesson && !isFree && 'bg-primary/20 text-muted-foreground',
+											)}
+											onClick={() => handleCardClick(location, lessonRange)}
+										>
+											<span className="text-xs">{lessonRange}</span>
+											<span className="font-medium text-sm">{isFree ? 'Vrij' : `${count}`}</span>
+										</button>
+									);
+								})}
+							</div>
 						</div>
-					</div>
-				))}
-			</div>
+					))}
+				</div>
+			)}
 
 			{isModalOpen && (
 				<OccupancyStudentsModal
