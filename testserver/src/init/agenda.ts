@@ -1,9 +1,9 @@
 import { faker } from '@faker-js/faker';
-import { pickRandom } from 'src/api/utils/random';
 import { timeTable } from '@/lib/agendaUtils';
 import type { AgendaItem, AttendanceStaffMember, AttendanceStudent } from '@/magister/response/agenda.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
 import type { Student } from '@/magister/response/student.types';
+import { pickRandom } from '../api/utils/random';
 
 const vakken = [
 	{ code: 'BI', omschrijving: 'Biologie' },

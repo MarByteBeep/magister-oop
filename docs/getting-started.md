@@ -33,7 +33,17 @@ Vite bouwt de extensie en houdt bestanden in de gaten.
 
 ## Lokaal testen zonder Magister
 
-Gebruik de testserver met dummy-data. Het testen gebeurt dan uitsluitend met fake data; er worden geen calls naar Magister gedaan en geen echte leerlinggegevens gebruikt. Zie **[docs/testserver.md](testserver.md)** voor uitleg over init (data genereren) en het starten van de testserver.
+Bij `bun run dev` draait de mock-API mee in dezelfde server; je hebt geen aparte testserver nodig. Eén keer data genereren: `cd testserver && bun run init`. Zie **[docs/testserver.md](testserver.md)** voor details.
+
+## Lint en typecheck
+
+Uit de projectroot:
+
+```sh
+bun run check
+```
+
+Past format en lint automatisch aan. Voor CI (zonder wijzigingen): `bun run check:ci`. De TypeScript-build controleert de extensie (`tsconfig.app.json`), de Vite-config (`tsconfig.node.json`) en de testserver (`tsconfig.testserver.json`).
 
 ## Volgende stappen
 

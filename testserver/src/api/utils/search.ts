@@ -1,10 +1,11 @@
-import { serverUrl } from '../../server';
+import { sleep } from './sleep';
 
 export async function search<T>(req: Request, baseUrl: string, allItems: T[]) {
 	const url = new URL(req.url);
 	const searchParams = url.searchParams;
+	const serverUrl = url.origin;
 
-	Bun.sleepSync(500);
+	await sleep(500);
 
 	const defaultTop = 20;
 	const top = parseInt(searchParams.get('top') || defaultTop.toString(), 10);

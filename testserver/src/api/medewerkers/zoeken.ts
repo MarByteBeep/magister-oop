@@ -1,5 +1,5 @@
-import { getAllStaffMembers } from 'src/api/utils/helpers';
 import type { StaffMember } from '@/magister/response/staffmember.types';
+import { getAllStaffMembers } from '../utils/helpers';
 import { search } from '../utils/search';
 
 export async function GET(req: Request) {

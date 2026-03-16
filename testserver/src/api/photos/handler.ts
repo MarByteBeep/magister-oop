@@ -1,12 +1,16 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-// Path to the directory where all photos are stored
-const ALL_PHOTOS_DIR = join(import.meta.dir, '../../../data/all_photos');
+const dir =
+	typeof (import.meta as { dir?: string }).dir !== 'undefined'
+		? (import.meta as { dir: string }).dir
+		: path.dirname(fileURLToPath(import.meta.url));
+const ALL_PHOTOS_DIR = path.join(dir, '../../../data/all_photos');
 
 export async function GET(_req: Request, id: number): Promise<Response> {
 	const photoFileName = `${id}.jpg`; // Assuming JPEG
-	const photoFilePath = join(ALL_PHOTOS_DIR, photoFileName);
+	const photoFilePath = path.join(ALL_PHOTOS_DIR, photoFileName);
 
 	if (!existsSync(photoFilePath)) {
 		console.warn(`Photo not found for ID ${id} at ${photoFilePath}`);

@@ -1,8 +1,8 @@
-import { getAllStudents } from 'src/api/utils/helpers';
-import { pickRandom } from 'src/api/utils/random';
 import { timeTable } from '@/lib/agendaUtils';
 import { getTodayKey } from '@/lib/dateUtils';
 import type { UnauthorizedAbsencesResponse } from '@/magister/response/unauthorized-absence.types';
+import { getAllStudents } from '../../utils/helpers';
+import { pickRandom } from '../../utils/random';
 import data from './ongeoorloofderegistraties.json' with { type: 'json' };
 
 // Convert CET time to UTC ISO string for a given date

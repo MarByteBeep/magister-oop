@@ -1,7 +1,8 @@
 import type { StudentDetails } from '@/magister/response/student-details.types';
+import { sleep } from '../utils/sleep';
 
 export async function GET(_req: Request, id: number): Promise<Response> {
-	Bun.sleepSync(100);
+	await sleep(100);
 	const details: StudentDetails = {
 		id: id, // Dynamically set the ID
 		woonsituatie: {

@@ -1,6 +1,6 @@
-import { getAllAgendaItems } from 'src/api/utils/helpers';
 import { getTodayKey } from '@/lib/dateUtils';
 import type { AgendaResponse } from '@/magister/response/agenda.types';
+import { getAllAgendaItems } from '../utils/helpers';
 
 export async function GET(req: Request, studentId: number): Promise<Response> {
 	const url = new URL(req.url);

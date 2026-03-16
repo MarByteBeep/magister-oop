@@ -1,16 +1,22 @@
 # Testserver
 
-De testserver is een lokale mock van de Magister-API. Hiermee kun je de extensie ontwikkelen en testen zonder ingelogd te zijn op magister.net. De extensie praat in development-modus rechtstreeks met de testserver in plaats van met Magister. **Testen gebeurt dus uitsluitend met fake data:** er gaan geen requests naar Magister en er wordt geen echte leerlingdata gebruikt.
+De testserver is een lokale mock van de Magister-API. Hiermee kun je de extensie ontwikkelen en testen zonder ingelogd te zijn op magister.net. **Testen gebeurt uitsluitend met fake data:** er gaan geen requests naar Magister en er wordt geen echte leerlingdata gebruikt. De API-routing draait op [Hono](https://hono.dev/); alle routes staan expliciet in `testserver/src/app.ts`.
 
-## Vereisten
+## Dev: alles in één commando
 
-- In de **projectroot** moet een bestand `.env` staan met de poort van de testserver:
+Bij **`bun run dev`** draait de mock-API **geïntegreerd** in de Vite dev-server. Je hoeft geen aparte testserver te starten: één proces, één poort. De extensie praat dan met `/api` op dezelfde origin.
+
+## Standalone testserver (optioneel)
+
+Wil je de API apart draaien (bijv. om alleen de endpoints te testen), dan:
+
+- In de **projectroot** een bestand `.env` aanmaken met de poort:
 
   ```env
   VITE_TESTSERVER_PORT=3000
   ```
 
-  De extensie leest deze variabele bij de build (Vite) en gebruikt `http://localhost:3000` voor API-calls wanneer `import.meta.env.DEV` true is.
+- Starten met: **`bun run testserver:standalone`**. De extensie gebruikt in dev nu de geïntegreerde API; voor standalone moet je handmatig de extensie configureren om naar die poort te gaan (of gebruik de geïntegreerde variant).
 
 ## Data initialiseren (init)
 
@@ -54,15 +60,15 @@ De gegenereerde IDs zijn deterministisch (Faker wordt per ID geseed), zodat je e
 
 Je kunt `bun run init` gerust vaker uitvoeren. Het script wist elke keer de bestaande bestanden en genereert opnieuw. Handig als je de structuur van de init-scripts hebt aangepast of een schone set testdata wilt.
 
-## Testserver starten
+## Testserver standalone starten
 
 Vanuit de projectroot:
 
 ```sh
-bun run testserver
+bun run testserver:standalone
 ```
 
-Dit start de server op de poort uit `.env` (bijv. 3000). In de terminal zie je welke routes er geladen zijn.
+Dit start de Bun-server op de poort uit `.env` (bijv. 3000). Alleen nodig als je de API los van de Vite dev-server wilt draaien.
 
 De server:
 
@@ -74,25 +80,28 @@ Zonder eerst `init` te draaien ontbreken de data-bestanden en kunnen requests fa
 
 ## Gebruik in de praktijk
 
-1. **Eenmalig:** in projectroot `.env` aanmaken met `VITE_TESTSERVER_PORT=3000` (of een andere vrije poort).
-2. **Eenmalig (of wanneer je schone data wilt):** `cd testserver && bun run init`.
-3. **Bij development:** in het ene terminalvenster `bun run testserver`, in het andere `bun run dev` voor de extensie. De extensie bouwt dan met `VITE_TESTSERVER_PORT` en praat in de browser met `http://localhost:3000`.
-4. Je opent de extensie (popup/venster) en gebruikt de app zoals normaal; de data komen van de testserver.
+1. **Eenmalig (of wanneer je schone data wilt):** `cd testserver && bun run init`.
+2. **Development:** alleen **`bun run dev`** — de extensie en de mock-API draaien samen op één poort.
+3. Je opent de extensie (popup/venster) en gebruikt de app; de data komen van de geïntegreerde test-API.
 
-In productie (`bun run build`) wordt de testserver-URL niet gebruikt; dan gaat de extensie alleen naar Magister.
+Optioneel: voor alleen de API apart, `.env` met `VITE_TESTSERVER_PORT=3000` en `bun run testserver:standalone`.
+
+In productie (`bun run build`) wordt geen testserver gebruikt; dan praat de extensie alleen met Magister.
 
 ## Overzicht commando’s
 
-| Actie              | Commando                          |
-|--------------------|-----------------------------------|
-| Data genereren     | `cd testserver && bun run init`   |
-| Testserver starten | `bun run testserver` (uit root)   |
-| Extensie in dev    | `bun run dev` (uit root)          |
+| Actie                    | Commando                            |
+|--------------------------|-------------------------------------|
+| Data genereren           | `cd testserver && bun run init`     |
+| Dev (app + API in één)   | `bun run dev` (uit root)            |
+| Alleen testserver (Bun)  | `bun run testserver:standalone`     |
 
 ## Mapstructuur (testserver)
 
-- `testserver/src/server.ts` — Hoofdserver, route-registratie, CORS.
+- `testserver/src/app.ts` — Hono-app: routing voor alle API-endpoints, CORS en 404. Wordt gebruikt door zowel de Vite-middleware als de standalone Bun-server.
+- `testserver/src/server.ts` — Bun-server voor standalone (`bun run testserver:standalone`); roept `app.fetch` aan.
 - `testserver/src/init/init.ts` — Init-script (aanmaken en vullen van `data/`).
 - `testserver/src/init/leerling.ts`, `medewerker.ts`, `locker.ts`, `agenda.ts` — Generatoren voor dummy-data.
-- `testserver/src/api/` — API-handlers (o.a. `leerlingen/zoeken`, `leerlingen/{id}/afspraken`, `v1/lockers/details`, etc.).
+- `testserver/src/api/` — API-handlers per endpoint (o.a. `leerlingen/zoeken`, `leerlingen/{id}/afspraken`, `v1/lockers/details`). Exporteren `GET(req)` of `GET(req, id)`; de routing staat in `app.ts`.
+- `testserver/src/api/utils/` — Gedeelde helpers (o.a. `helpers.ts`, `search.ts`, `sleep.ts`).
 - `testserver/data/` — Ontstaat door init; hier staan de JSON-bestanden en `all_photos/`.

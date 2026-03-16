@@ -1,5 +1,5 @@
-import { getAllLockers } from 'src/api/utils/helpers';
 import type { LockersResponse } from '@/magister/response/locker.types';
+import { getAllLockers } from '../../utils/helpers';
 
 export async function GET(_req: Request) {
 	const lockersResponse: LockersResponse = {

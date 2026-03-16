@@ -26,14 +26,15 @@ Meer uitleg staat in de map **`docs/`**:
 
 ## Quick start
 
-Clone, `bun install`, `bun run dev`. Zie **[docs/getting-started.md](docs/getting-started.md)** voor de volledige setup. Voor build en laden in Chrome: **[docs/build.md](docs/build.md)**.
+Clone, `bun install`, `bun run dev`. Voor dagelijks ontwikkelen volstaat één commando: de dev-server bedient zowel de app als de mock-API op dezelfde poort. Zie **[docs/getting-started.md](docs/getting-started.md)** voor de volledige setup. Voor build en laden in Chrome: **[docs/build.md](docs/build.md)**.
 
 ## Projectstructuur
 
 - `public/`: Statische bestanden en `manifest.json`.
 - `src/`: React-app (popup), background script, Magister-API en gedeelde code.
-- `vite.config.ts`: Vite-configuratie voor de extensie.
-- `tsconfig.json` / `tsconfig.app.json` / `tsconfig.node.json`: TypeScript-configuratie.
+- `testserver/`: Mock-API (Hono) voor lokaal testen; bij `bun run dev` geïntegreerd in de Vite-server.
+- `vite.config.ts`, `vite-plugin-api.ts`: Vite-configuratie en API-middleware voor dev.
+- `tsconfig.json`: Verwijst naar `tsconfig.app.json` (extensie), `tsconfig.node.json` (Vite/config) en `tsconfig.testserver.json` (testserver).
 
 ## License
 

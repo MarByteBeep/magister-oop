@@ -1,21 +1,16 @@
 import path from 'node:path';
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { apiPlugin } from './vite-plugin-api';
 
-export default defineConfig(({ mode }) => {
-	const env = loadEnv(mode, process.cwd(), 'VITE_');
-
-	const testServerPort = env.VITE_TESTSERVER_PORT;
-	if (!testServerPort) {
-		throw new Error('VITE_TESTSERVER_PORT is not defined in .env');
-	}
-
+export default defineConfig(() => {
 	return {
 		plugins: [
 			react(),
 			tailwindcss(),
+			apiPlugin(),
 			viteStaticCopy({
 				targets: [
 					{
@@ -36,17 +31,11 @@ export default defineConfig(({ mode }) => {
 		resolve: {
 			alias: {
 				'@': path.resolve(__dirname, './src'),
+				'@data': path.resolve(__dirname, 'testserver/data'),
 			},
 			dedupe: ['react', 'react-dom'],
 		},
-		server: {
-			proxy: {
-				'/api': {
-					target: `http://localhost:${testServerPort}`,
-					changeOrigin: true,
-				},
-			},
-		},
+		server: {},
 		build: {
 			outDir: 'build',
 			rollupOptions: {

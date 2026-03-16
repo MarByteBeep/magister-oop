@@ -1,8 +1,9 @@
 import { fakerNL as faker } from '@faker-js/faker';
 import type { ContactsResponse } from '@/magister/response/contact.types';
+import { sleep } from '../utils/sleep';
 
 export async function GET(_req: Request, _id: number): Promise<Response> {
-	Bun.sleepSync(100);
+	await sleep(100);
 	const response: ContactsResponse = {
 		items: [
 			{
