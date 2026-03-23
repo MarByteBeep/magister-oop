@@ -29,7 +29,7 @@ function App() {
 						<TabsTrigger value="terugkomers">Terugkomers</TabsTrigger>
 					</TabsList>
 
-					<div className="flex-1 overflow-y-auto pt-2">
+					<div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-2">
 						<TabsContent value="leerlingen">
 							<Students />
 						</TabsContent>

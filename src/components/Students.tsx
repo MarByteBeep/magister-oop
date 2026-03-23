@@ -1,23 +1,15 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { LuFilter, LuX } from 'react-icons/lu';
+import { useMemo, useState } from 'react';
 import ClickAvatarPreview from '@/components/ClickAvatarPreview';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { SearchAndFiltersBar } from '@/components/SearchAndFiltersBar';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { useAutoFocus } from '@/hooks/useAutofocus';
-import { storage } from '@/lib/storage';
 import { normalizeString } from '@/lib/stringUtils';
-import { cn } from '@/lib/utils';
 import type { AttendanceStaffMember } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
 import LessonHourBadge from './LessonHourBadge';
-import LoadingSpinner from './LoadingSpinner';
 import StudentModal from './StudentModal';
 import AgendaItemDisplay from './student/AgendaItemDisplay';
-import { Checkbox } from './ui/checkbox';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
 type SortColumn = 'naam' | 'klas' | 'lockerCode' | 'now' | 'next';
 type SortDirection = 'asc' | 'desc';
@@ -39,26 +31,7 @@ function Students() {
 	const [sortColumn, setSortColumn] = useState<SortColumn>('naam');
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 	const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-	const [showPermanentFilters, setShowPermanentFilters] = useState(false);
-	const [initializedSearchTerm, setInitializedSearchTerm] = useState(false);
-	const searchInput = useAutoFocus<HTMLInputElement>();
-
-	// Load search term from session storage on mount
-	useEffect(() => {
-		(async () => {
-			const stored = await storage.session.get<string>(STUDENTS_SEARCH_TERM_STORAGE_KEY);
-			if (stored) {
-				setSearchTerm(stored);
-			}
-			setInitializedSearchTerm(true);
-		})();
-	}, []);
-
-	// Save search term to session storage when it changes
-	useEffect(() => {
-		if (!initializedSearchTerm) return;
-		void storage.session.set(STUDENTS_SEARCH_TERM_STORAGE_KEY, searchTerm);
-	}, [searchTerm, initializedSearchTerm]);
+	const [activeQuickFilterId, setActiveQuickFilterId] = useState<string | null>(null);
 
 	const uniqueStudies = useMemo(() => {
 		const studies = new Set(students.flatMap((s) => s.studies));
@@ -175,83 +148,31 @@ function Students() {
 	const getSortIndicator = (column: SortColumn) =>
 		sortColumn === column ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '';
 
+	const permanentFilterOptions = useMemo(
+		() => uniqueStudies.map((study) => ({ value: study, label: study })),
+		[uniqueStudies],
+	);
+
+	const loadingTooltip =
+		studentsNeedingAgendaCount > 0 ? `${studentsNeedingAgendaCount} leerlingen nog te laden` : 'Laden...';
+
 	return (
 		<div className="w-full">
-			<div className="flex items-center mb-4 gap-2">
-				<div className="relative grow">
-					<input
-						ref={searchInput}
-						type="text"
-						placeholder="Zoek op naam, klas, kluisje of huidige les..."
-						className="w-full p-2 border rounded-md bg-input text-foreground text-md pr-10" // Added pr-10 for button space
-						value={searchTerm}
-						onChange={(e) => setSearchTerm(e.target.value)}
-					/>
-					{searchTerm && (
-						<Button
-							variant="ghost"
-							size="icon"
-							className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground"
-							onClick={() => setSearchTerm('')}
-							title="Wis filter"
-						>
-							<LuX className="h-4 w-4" />
-						</Button>
-					)}
-				</div>
-				{loading && (
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<div>
-								<LoadingSpinner />
-							</div>
-						</TooltipTrigger>
-						<TooltipContent>
-							{studentsNeedingAgendaCount > 0
-								? `${studentsNeedingAgendaCount} leerlingen nog te laden`
-								: 'Laden...'}
-						</TooltipContent>
-					</Tooltip>
-				)}
-				<Button
-					variant={showPermanentFilters ? 'default' : 'outline'}
-					size="icon"
-					className={selectedStudies.size > 0 ? 'relative mr-3' : 'relative'}
-					onClick={() => setShowPermanentFilters(!showPermanentFilters)}
-					title="Permanente filters"
-				>
-					{selectedStudies.size > 0 && (
-						<Badge variant="default" className="absolute -top-2.5 -right-2.5 h-5 min-w-5 px-1 tabular-nums">
-							{selectedStudies.size}
-						</Badge>
-					)}
-					<LuFilter className="h-4 w-4" />
-				</Button>
-			</div>
-
-			<div
-				className={cn(
-					'overflow-hidden transition-all duration-300 ease-in-out',
-					showPermanentFilters ? 'max-h-screen opacity-100 mb-4' : 'max-h-0 opacity-0 mb-0',
-				)}
-			>
-				<div className="p-4 border rounded-md bg-card shadow-sm">
-					<h3 className="text-sm font-medium text-foreground mb-2">Permanente filters</h3>
-					<div className="grid grid-cols-4 gap-2">
-						{uniqueStudies.map((study) => (
-							<div key={study} className="flex items-center space-x-2">
-								<Checkbox
-									id={`study-${study}`}
-									checked={selectedStudies.has(study)}
-									onCheckedChange={(checked) => handleStudyFilterChange(study, checked as boolean)}
-								/>
-								<label htmlFor={`study-${study}`} className="text-sm font-medium leading-none">
-									{study}
-								</label>
-							</div>
-						))}
-					</div>
-				</div>
+			<div className="mb-4">
+				<SearchAndFiltersBar
+					searchTerm={searchTerm}
+					onSearchTermChange={setSearchTerm}
+					searchPlaceholder="Zoek op naam, klas, kluisje of huidige les..."
+					searchStorageKey={STUDENTS_SEARCH_TERM_STORAGE_KEY}
+					permanentFilterOptions={permanentFilterOptions}
+					selectedPermanentFilters={selectedStudies}
+					onSelectedPermanentFiltersChange={handleStudyFilterChange}
+					quickFilters={[]}
+					activeQuickFilterId={activeQuickFilterId}
+					onActiveQuickFilterIdChange={setActiveQuickFilterId}
+					loading={loading}
+					loadingTooltip={loadingTooltip}
+				/>
 			</div>
 
 			{error && <p className="text-red-500">Fout bij het laden van leerlingen: {error}</p>}
