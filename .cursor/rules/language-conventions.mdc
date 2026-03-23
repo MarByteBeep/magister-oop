@@ -1,0 +1,11 @@
+---
+description: Code comments in English; user-facing UI copy in Dutch
+alwaysApply: true
+---
+
+# Language conventions
+
+- **Comments**: Write all code comments in **English** only — including `//`, `/* */`, and `/** */` (JSDoc). Do not use Dutch in comments.
+- **Frontend (user-facing text)**: Keep visible UI strings in **Dutch** — labels, buttons, dialog titles, descriptions, placeholders, tooltips, and `aria-label` / `aria-description` text that users or assistive tech encounter in the app UI.
+
+Technical identifiers (component names, props, URLs) stay as they are; this rule is about human-readable comment language vs. product language in the interface.

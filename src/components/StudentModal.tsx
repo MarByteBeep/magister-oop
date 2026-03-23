@@ -36,12 +36,18 @@ export default function StudentModal({ student, onClose }: StudentModalProps) {
 				{/* Scrollable */}
 				<div className="flex-1 overflow-y-auto">
 					<Tabs defaultValue="gegevens" className="flex flex-col h-full">
-						<TabsList className="bg-background sticky top-0 z-10 border-b gap-1 border p-1 w-full shrink-0">
-							<TabsTrigger value="gegevens">Gegevens</TabsTrigger>
-							<TabsTrigger value="agenda">Rooster</TabsTrigger>
-							<TabsTrigger value="verzuim">Verzuim</TabsTrigger>
-							<TabsTrigger value="logboek">Logboek</TabsTrigger>
-						</TabsList>
+						<div className="sticky top-0 z-10 border-b border-border bg-background">
+							<TabsList className="flex h-auto min-h-9 w-full shrink-0 gap-2 rounded-none border-0 bg-transparent p-0 shadow-none">
+								<TabsTrigger value="gegevens">Gegevens</TabsTrigger>
+								<TabsTrigger value="agenda">Rooster</TabsTrigger>
+								<TabsTrigger value="verzuim" disabled>
+									Verzuim
+								</TabsTrigger>
+								<TabsTrigger value="logboek" disabled>
+									Logboek
+								</TabsTrigger>
+							</TabsList>
+						</div>
 
 						<div className="flex-1 overflow-y-auto pt-2">
 							<TabsContent value="gegevens">

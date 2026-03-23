@@ -90,12 +90,20 @@ export function SearchAndFiltersBar({
 		<div className="w-full">
 			{/* Search row */}
 			<div className="flex items-center mb-2 gap-2 pr-4">
-				<div className="relative grow">
+				<div className="relative min-w-0 grow overflow-visible">
 					<input
 						ref={searchInputRef}
 						type="text"
 						placeholder={searchPlaceholder}
-						className="w-full p-2 border rounded-md bg-input text-foreground text-md pr-10"
+						className={cn(
+							'w-full rounded-md border border-input bg-input p-2 pr-10 text-md text-foreground',
+							// Native outline clips on rounded corners in light Chrome; inset ring matches radius and avoids overflow-x-hidden ancestors.
+							'outline-none focus-visible:ring-2 focus-visible:ring-inset',
+							// One ring-color slot: in dark, --ring is as dark as --input, so use a bright inset ring (merge-safe single line).
+							'focus-visible:ring-ring dark:focus-visible:ring-white/55',
+							// Slightly lift border on focus in dark so the edge reads against black chrome.
+							'dark:focus-visible:border-white/35',
+						)}
 						value={searchTerm}
 						onChange={(e) => onSearchTermChange(e.target.value)}
 					/>

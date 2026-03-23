@@ -321,13 +321,13 @@ export default function Details({ student }: DetailsProps) {
 							<CardTitle>Snelle acties</CardTitle>
 						</CardHeader>
 						<CardContent className="grid grid-cols-3 items-center gap-2 mt-1">
-							<Button variant="outline" size="sm" onClick={() => console.log('Ziek clicked')}>
+							<Button variant="outline" size="sm" disabled onClick={() => console.log('Ziek clicked')}>
 								<LuHeartPulse className="h-4 w-4" /> Ziek
 							</Button>
 							<Button variant="outline" size="sm" onClick={() => setIsTardyModalOpen(true)}>
 								<LuClock className="h-4 w-4" /> Te Laat
 							</Button>
-							<Button variant="outline" size="sm" onClick={() => console.log('Afwezig clicked')}>
+							<Button variant="outline" size="sm" disabled onClick={() => console.log('Afwezig clicked')}>
 								<LuUserX className="h-4 w-4" /> Afwezig
 							</Button>
 						</CardContent>

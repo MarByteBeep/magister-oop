@@ -50,12 +50,17 @@ const ToggleGroupItem = React.forwardRef<
 			ref={ref}
 			data-slot="toggle-group-item"
 			className={cn(
-				'group inline-flex items-center justify-center gap-1.5 rounded-md text-sm font-medium transition-all',
+				'group inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-md text-sm font-medium transition-none',
 				'border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground',
-				'dark:bg-input/30 dark:border-input dark:hover:bg-input/50',
+				// Dark + unselected: clear hover background without fighting the selected state.
+				'dark:border-input dark:data-[state=off]:bg-input/30',
+				'dark:data-[state=off]:hover:bg-muted dark:data-[state=off]:hover:text-foreground',
 				'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
 				'disabled:pointer-events-none disabled:opacity-50',
 				'data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-xs',
+				// Selected + hover: slightly different fill; keep primary-foreground for contrast in light and dark.
+				'data-[state=on]:hover:bg-primary/90 data-[state=on]:hover:text-primary-foreground',
+				'dark:data-[state=on]:hover:bg-primary/85 dark:data-[state=on]:hover:text-primary-foreground',
 				toggleItemSizes[size],
 				className,
 			)}

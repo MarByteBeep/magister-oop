@@ -28,6 +28,18 @@ export default function Occupancy() {
 	const [initializedLocations, setInitializedLocations] = useState(false);
 	const [showLocationFilters, setShowLocationFilters] = useState(false);
 	const [showChart, setShowChart] = useState(true);
+	const [chartIsDark, setChartIsDark] = useState(
+		() => typeof document !== 'undefined' && document.documentElement.classList.contains('dark'),
+	);
+
+	useEffect(() => {
+		const root = document.documentElement;
+		const sync = () => setChartIsDark(root.classList.contains('dark'));
+		sync();
+		const observer = new MutationObserver(sync);
+		observer.observe(root, { attributes: true, attributeFilter: ['class'] });
+		return () => observer.disconnect();
+	}, []);
 
 	// State for the student modal
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -185,10 +197,15 @@ export default function Occupancy() {
 		];
 	}, [chartData]);
 
-	const apexOptions: ApexOptions = useMemo(
-		() => ({
+	const apexOptions: ApexOptions = useMemo(() => {
+		const xLabelActive = chartIsDark ? '#fbbf24' : '#a16207';
+		const xLabelDefault = chartIsDark ? '#e5e7eb' : '#4b5563';
+		const gridBorder = chartIsDark ? '#374151' : '#e5e7eb';
+		const nuLabelFg = chartIsDark ? '#fff' : '#1f2937';
+
+		return {
 			theme: {
-				mode: 'dark',
+				mode: chartIsDark ? 'dark' : 'light',
 			},
 			// FIX: fontWeight must be a single value, not an array (fix TS error)
 			chart: {
@@ -196,6 +213,8 @@ export default function Occupancy() {
 				stacked: true,
 				toolbar: { show: false },
 				zoom: { enabled: false },
+				background: 'transparent',
+				foreColor: chartIsDark ? '#e5e7eb' : '#374151',
 				animations: {
 					enabled: true,
 					speed: 600,
@@ -206,20 +225,35 @@ export default function Occupancy() {
 				categories: chartData.map((d) => d.lessonRange),
 				labels: {
 					style: {
-						colors: chartData.map((_, index) => (index === activeLessonIndex ? '#fbbf24' : '#e5e7eb')),
+						colors: chartData.map((_, index) =>
+							index === activeLessonIndex ? xLabelActive : xLabelDefault,
+						),
 					},
 				},
 			},
 			yaxis: {
 				axisBorder: {
 					show: true,
+					color: gridBorder,
 				},
 				axisTicks: {
 					show: true,
+					color: gridBorder,
+				},
+				labels: {
+					style: {
+						colors: xLabelDefault,
+					},
 				},
 			},
 			grid: {
 				show: true,
+				borderColor: gridBorder,
+			},
+			legend: {
+				labels: {
+					colors: chartIsDark ? '#e5e7eb' : '#374151',
+				},
 			},
 			annotations: {
 				// ApexCharts expects annotations.images to exist; avoid undefined in library code
@@ -234,7 +268,7 @@ export default function Occupancy() {
 							label: {
 								borderColor: '#fbbf24',
 								style: {
-									color: '#fff',
+									color: nuLabelFg,
 									background: '#fbbf24',
 									fontSize: '12px',
 									fontWeight: 'bold',
@@ -248,9 +282,8 @@ export default function Occupancy() {
 					],
 				}),
 			},
-		}),
-		[chartData, activeLessonIndex],
-	);
+		};
+	}, [chartData, activeLessonIndex, chartIsDark]);
 
 	/* ---------------- Modal handlers ---------------- */
 	const handleCardClick = (location: string, lessonRange: string) => {

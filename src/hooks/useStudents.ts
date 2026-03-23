@@ -104,8 +104,15 @@ export function useStudents() {
 					}
 
 					const updatedAgenda = { ...student.agenda };
+					// Persist every calendar day the API returned; items can fall on a different
+					// local day than the requested range (timezone / Magister vs. client dates).
+					for (const [key, items] of Object.entries(dailyItems)) {
+						updatedAgenda[key] = items;
+					}
 					for (const dateKey of dateRange) {
-						updatedAgenda[dateKey] = dailyItems[dateKey] ?? [];
+						if (dailyItems[dateKey] === undefined) {
+							updatedAgenda[dateKey] = [];
+						}
 					}
 
 					if (deepEqual(student.agenda, updatedAgenda)) return prev;

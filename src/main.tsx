@@ -5,16 +5,19 @@ import './index.css';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { AbsencesProvider } from '@/context/AbsencesProvider';
 import { StudentsProvider } from '@/context/StudentsProvider';
+import { ThemeProvider } from '@/context/ThemeContext';
 
 // biome-ignore lint/style/noNonNullAssertion: root always exists
 ReactDOM.createRoot(document.getElementById('root')!).render(
 	<React.StrictMode>
-		<TooltipProvider delayDuration={200}>
-			<StudentsProvider>
-				<AbsencesProvider>
-					<App />
-				</AbsencesProvider>
-			</StudentsProvider>
-		</TooltipProvider>
+		<ThemeProvider>
+			<TooltipProvider delayDuration={200}>
+				<StudentsProvider>
+					<AbsencesProvider>
+						<App />
+					</AbsencesProvider>
+				</StudentsProvider>
+			</TooltipProvider>
+		</ThemeProvider>
 	</React.StrictMode>,
 );
