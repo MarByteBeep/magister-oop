@@ -28,3 +28,4 @@ anonymizer/data/
 *.sw?
 AI_RULES.md
 pnpm-lock.yaml
+.cursor/hooks/state/

@@ -1,0 +1,19 @@
+{
+	"version": 1,
+	"hooks": {
+		"beforeShellExecution": [
+			{
+				"command": "bun run .cursor/hooks/shellGuard.ts",
+				"failClosed": false
+			}
+		],
+		"stop": [
+			{
+				"command": "bun run .cursor/hooks/mdcReminder.ts"
+			},
+			{
+				"command": "bun check"
+			}
+		]
+	}
+}
