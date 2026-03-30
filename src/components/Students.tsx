@@ -257,7 +257,13 @@ function Students() {
 										<AgendaItemDisplay type="current" studentId={student.id} />
 									</td>
 									<td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground max-w-32">
-										<AgendaItemDisplay type="next" studentId={student.id} />
+										<AgendaItemDisplay
+											type="next"
+											studentId={student.id}
+											lessonRange={
+												nextLessonInfo.status === 'lesson' ? nextLessonInfo.range : undefined
+											}
+										/>
 									</td>
 								</tr>
 							))}

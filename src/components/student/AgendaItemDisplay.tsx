@@ -6,7 +6,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { findAgendaItem, findNextAgendaItem, getAgendaItemInfo } from '@/lib/agendaUtils';
+import { findAgendaItem, findAgendaItemOverlappingLessonRange, getAgendaItemInfo } from '@/lib/agendaUtils';
 import { getDateKey, getNow } from '@/lib/dateUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import AgendaTooltipContent from './AgendaTooltipContent';
@@ -14,9 +14,11 @@ import AgendaTooltipContent from './AgendaTooltipContent';
 interface AgendaItemDisplayProps {
 	studentId: number;
 	type: 'current' | 'next';
+	/** For type "next": time slot from the column header (e.g. nextLessonInfo.range). If omitted, no roster slot to match. */
+	lessonRange?: string;
 }
 
-export default function AgendaItemDisplay({ studentId, type }: AgendaItemDisplayProps) {
+export default function AgendaItemDisplay({ studentId, type, lessonRange }: AgendaItemDisplayProps) {
 	const { students, loadAgendaForStudent } = useStudentsContext();
 	const student = students.find((s) => s.id === studentId);
 	const [agendaItem, setAgendaItem] = useState<AgendaItem | null>(null);
@@ -25,9 +27,11 @@ export default function AgendaItemDisplay({ studentId, type }: AgendaItemDisplay
 
 	const findRelevantAgendaItem = useCallback(
 		(items: AgendaItem[], date: Date) => {
-			return type === 'current' ? findAgendaItem(date, items) : findNextAgendaItem(date, items);
+			if (type === 'current') return findAgendaItem(date, items);
+			if (lessonRange) return findAgendaItemOverlappingLessonRange(items, lessonRange);
+			return null;
 		},
-		[type],
+		[type, lessonRange],
 	);
 
 	useEffect(() => {
@@ -103,7 +107,7 @@ export default function AgendaItemDisplay({ studentId, type }: AgendaItemDisplay
 				size="icon"
 				onClick={handleSyncClick}
 				className="h-8 w-8 text-muted-foreground hover:text-primary"
-				title={`Laad agenda voor vandaag (${type === 'current' ? 'huidige' : 'volgende'})`}
+				title={`Laad agenda voor vandaag (${type === 'current' ? 'huidige les' : 'les in dit lesuur'})`}
 			>
 				<LuRotateCw className="h-4 w-4" />
 			</Button>

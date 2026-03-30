@@ -142,6 +142,29 @@ export function findNextAgendaItem(date: Date, agendaItems: AgendaItem[]) {
 	return futureItems.length > 0 ? futureItems[0] : null;
 }
 
+/** Same overlap rule as occupancy; lessonRange format "HH:MM-HH:MM" (e.g. from getLesson / timeTable). */
+export function findAgendaItemOverlappingLessonRange(
+	agendaItems: AgendaItem[],
+	lessonRange: string,
+): AgendaItem | null {
+	const [lessonStart, lessonEnd] = lessonRange.split('-').map((s) => s.trim());
+	if (!lessonStart || !lessonEnd) return null;
+
+	for (const item of agendaItems) {
+		const itemStart = new Date(item.begin);
+		const itemEnd = new Date(item.einde);
+		const itemStartTime = `${String(itemStart.getHours()).padStart(2, '0')}:${String(itemStart.getMinutes()).padStart(2, '0')}`;
+		const itemEndTime = `${String(itemEnd.getHours()).padStart(2, '0')}:${String(itemEnd.getMinutes()).padStart(2, '0')}`;
+
+		const overlaps =
+			(itemStartTime < lessonEnd && itemEndTime > lessonStart) ||
+			(itemStartTime === lessonStart && itemEndTime === lessonEnd);
+
+		if (overlaps) return item;
+	}
+	return null;
+}
+
 export function findCurrentAgendaItem(agendaItems: AgendaItem[]) {
 	return findAgendaItem(getNow(), agendaItems);
 }
