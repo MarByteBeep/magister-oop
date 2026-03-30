@@ -85,6 +85,8 @@ export function useStudents() {
 					}
 				}
 
+				let agendaChanged = false;
+
 				setStudents((prev) => {
 					const index = prev.findIndex((s) => s.id === studentId);
 					if (index === -1) return prev;
@@ -117,13 +119,15 @@ export function useStudents() {
 
 					if (deepEqual(student.agenda, updatedAgenda)) return prev;
 
+					agendaChanged = true;
+
 					const updatedStudent = { ...student, agenda: updatedAgenda };
 					const newStudents = [...prev];
 					newStudents[index] = updatedStudent;
 
 					return newStudents;
 				});
-				return data.items;
+				return { items: data.items, changed: agendaChanged };
 			} catch (e) {
 				console.error('Failed to fetch agenda for student', studentId, e);
 				throw e;

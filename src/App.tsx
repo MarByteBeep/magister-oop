@@ -1,8 +1,8 @@
-import { Toaster } from 'sonner';
 import Absences from '@/components/Absences';
 import Occupancy from '@/components/occupancy/Occupancy';
 import Settings from '@/components/Settings';
 import Students from '@/components/Students';
+import { ThemedToaster } from '@/components/ThemedToaster';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAbsencesContext } from '@/context/AbsencesContext';
@@ -58,7 +58,7 @@ function App() {
 					</div>
 				</Tabs>
 			</div>
-			<Toaster />
+			<ThemedToaster />
 		</main>
 	);
 }

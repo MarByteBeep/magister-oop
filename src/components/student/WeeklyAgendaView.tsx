@@ -15,6 +15,7 @@ import { formatTime, getDateKey, getDayNameShort, getNow, getStartOfWeek, getWee
 import { cn } from '@/lib/utils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import AgendaItemModal from './AgendaItemModal';
+import AgendaSyncButton from './AgendaSyncButton';
 import AgendaTooltipContent from './AgendaTooltipContent';
 
 interface WeeklyAgendaViewProps {
@@ -64,6 +65,13 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 
 	// Week key for tracking loads
 	const weekKey = useMemo(() => getDateKey(getStartOfWeek(selectedWeekDate)), [selectedWeekDate]);
+
+	const syncRange = useMemo(() => {
+		const monday = getStartOfWeek(selectedWeekDate);
+		const friday = new Date(monday);
+		friday.setDate(monday.getDate() + 4);
+		return { start: monday, end: friday };
+	}, [selectedWeekDate]);
 
 	// Calculate week days for the selected week
 	const weekDays = useMemo(() => {
@@ -251,9 +259,18 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 						)}
 					</div>
 
-					<Button variant="ghost" size="icon" onClick={goToNextWeek} title="Volgende week">
-						<LuChevronRight className="h-5 w-5" />
-					</Button>
+					<div className="flex items-center gap-0.5 shrink-0">
+						<AgendaSyncButton
+							studentId={studentId}
+							rangeStart={syncRange.start}
+							rangeEnd={syncRange.end}
+							tooltipReady="Vernieuw rooster voor deze week"
+							tooltipLoading="Rooster wordt geladen…"
+						/>
+						<Button variant="ghost" size="icon" onClick={goToNextWeek} title="Volgende week">
+							<LuChevronRight className="h-5 w-5" />
+						</Button>
+					</div>
 				</div>
 
 				{!hasAnyItems ? (

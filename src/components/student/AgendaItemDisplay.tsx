@@ -59,7 +59,7 @@ export default function AgendaItemDisplay({ studentId, type, lessonRange }: Agen
 		setIsLoadingAgenda(true);
 		try {
 			const now = getNow();
-			const items = await loadAgendaForStudent(student.id, now, now);
+			const { items } = await loadAgendaForStudent(student.id, now, now);
 			setAgendaItem(findRelevantAgendaItem(items, now));
 			setHasFetchedForToday(true);
 		} catch (error) {

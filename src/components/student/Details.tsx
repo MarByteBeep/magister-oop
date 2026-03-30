@@ -12,7 +12,7 @@ import { PhoneNumber } from '@/components/ui/phonenumber';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getOrCreateBlobUrl } from '@/lib/blobUtils';
-import { getAge } from '@/lib/dateUtils';
+import { getAge, getNow } from '@/lib/dateUtils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { Address, AddressesResponse } from '@/magister/response/address.types';
@@ -20,6 +20,7 @@ import type { ContactItem, ContactsResponse } from '@/magister/response/contact.
 import type { ParentsResponse } from '@/magister/response/parent.types';
 import type { StudentDetails } from '@/magister/response/student-details.types';
 import type { Student } from '@/magister/types';
+import AgendaSyncButton from './AgendaSyncButton';
 import DailyAgendaView from './DailyAgendaView';
 import TardyModal from './TardyModal';
 
@@ -399,10 +400,20 @@ export default function Details({ student }: DetailsProps) {
 						</CardContent>
 					</Card>
 
-					<Card className="row-span-2 col-start-3 row-start-1">
+					<Card className="relative row-span-2 col-start-3 row-start-1">
 						<CardHeader>
 							<CardTitle>Agenda</CardTitle>
 						</CardHeader>
+						{student && (
+							<AgendaSyncButton
+								studentId={student.id}
+								rangeStart={getNow()}
+								rangeEnd={getNow()}
+								className="absolute top-4 right-4 z-10"
+								tooltipReady="Vernieuw agenda voor vandaag"
+								tooltipLoading="Agenda wordt geladen…"
+							/>
+						)}
 						<CardContent className="p-0">
 							<DailyAgendaView studentId={student.id} />
 						</CardContent>

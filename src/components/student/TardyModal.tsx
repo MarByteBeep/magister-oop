@@ -64,7 +64,7 @@ export default function TardyModal({ student, isOpen, onClose }: TardyModalProps
 			// Load agenda for today
 			setIsLoading(true);
 			loadAgendaForStudent(studentId, today, today)
-				.then((items) => {
+				.then(({ items }) => {
 					if (!cancelled) {
 						setAgendaItems(items);
 					}

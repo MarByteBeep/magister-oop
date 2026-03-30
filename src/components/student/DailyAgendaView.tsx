@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import LessonHourBadge from '@/components/LessonHourBadge';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -36,33 +36,44 @@ export default function DailyAgendaView({ studentId }: DailyAgendaViewProps) {
 	const { students, loadAgendaForStudent } = useStudentsContext();
 	const student = students.find((s) => s.id === studentId);
 
-	const [agendaItems, setAgendaItems] = useState<AgendaItem[] | undefined>(undefined);
+	const todayKey = useMemo(() => getDateKey(currentTime), [currentTime]);
+	const agendaFromContext = student?.agenda?.[todayKey];
+
+	const [bootstrapAgenda, setBootstrapAgenda] = useState<AgendaItem[] | undefined>(undefined);
 	const [isLoading, setIsLoading] = useState(false);
 	const [selectedItem, setSelectedItem] = useState<AgendaItem | null>(null);
 
 	useEffect(() => {
-		const now = getNow();
-		const todayKey = getDateKey(now);
-
 		if (!student) {
-			setAgendaItems(undefined);
+			setBootstrapAgenda(undefined);
 			setIsLoading(false);
 			return;
 		}
 
-		if (student.agenda?.[todayKey]) {
-			setAgendaItems(student.agenda[todayKey]);
+		if (student.agenda?.[todayKey] !== undefined) {
+			setBootstrapAgenda(undefined);
 			setIsLoading(false);
-		} else {
-			setIsLoading(true);
-			loadAgendaForStudent(student.id, now, now)
-				.then((items) => {
-					setAgendaItems(items);
-				})
-				.catch((err) => console.error('Failed to load agenda:', err))
-				.finally(() => setIsLoading(false));
+			return;
 		}
-	}, [student, loadAgendaForStudent]);
+
+		let cancelled = false;
+		setIsLoading(true);
+		const now = getNow();
+		loadAgendaForStudent(student.id, now, now)
+			.then(({ items }) => {
+				if (!cancelled) setBootstrapAgenda(items);
+			})
+			.catch((err) => console.error('Failed to load agenda:', err))
+			.finally(() => {
+				if (!cancelled) setIsLoading(false);
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [student, student?.agenda, todayKey, loadAgendaForStudent]);
+
+	const agendaItems: AgendaItem[] | undefined = agendaFromContext !== undefined ? agendaFromContext : bootstrapAgenda;
 
 	const activeAgendaItem = findAgendaItem(currentTime, agendaItems || []);
 
