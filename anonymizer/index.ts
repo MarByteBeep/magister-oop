@@ -74,6 +74,15 @@ function collectReplacements(json: JSONValue, rep: ReplacementMap, parentKey: st
 				rep.stringMap.set(value, faker.string.alpha({ casing: 'upper', length: 2 }));
 			}
 
+			// --- infix / tussenvoegsel ---
+			if (
+				(lower === 'infix' || lower.includes('tussenvoegsel')) &&
+				typeof value === 'string' &&
+				value.length > 0
+			) {
+				rep.stringMap.set(value, faker.helpers.arrayElement(['van', 'van de', 'de', 'ten', 'van der']));
+			}
+
 			// --- id fields (UUID) ---
 			if (lower.includes('id') && typeof value === 'string' && uuidRegex.test(value)) {
 				if (!rep.stringMap.has(value)) {

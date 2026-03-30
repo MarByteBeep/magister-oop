@@ -15,7 +15,7 @@ dist-ssr
 build
 
 testserver/data/
-anonymizer/data/
+anonymizer/*.json
 
 # Editor directories and files
 !.vscode/extensions.json
