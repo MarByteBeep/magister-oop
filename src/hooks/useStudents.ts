@@ -186,9 +186,9 @@ export function useStudents() {
 			if (cancelled) return;
 			setStudents(stored);
 
-			await fetchStudentsPaginated().catch((err) => setError(String(err)));
+			await fetchStudentsPaginated().catch((err) => setError(err instanceof Error ? err.message : String(err)));
 			if (cancelled) return;
-			await fetchLockers().catch((err) => setError(String(err)));
+			await fetchLockers().catch((err) => setError(err instanceof Error ? err.message : String(err)));
 
 			setLoading(false);
 		}

@@ -92,6 +92,16 @@ async function postJsonImpl(url: string, body: unknown, credentials: Credentials
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** Shown when Magister returns 404 (session cookies invalid or expired). */
+const MAGISTER_SESSION_EXPIRED_MESSAGE =
+	'De Magister-sessie is ongeldig of verlopen. ' +
+	'Log opnieuw in op Magister in een browsertab en open daarna deze extensie opnieuw.';
+
+function httpErrorMessage(status: number): string {
+	if (status === 404) return MAGISTER_SESSION_EXPIRED_MESSAGE;
+	return `HTTP error ${status}`;
+}
+
 await loadJsonCache();
 
 async function getJsonImpl<T>(
@@ -115,7 +125,7 @@ async function getJsonImpl<T>(
 			console.log(`[DEV] fetch json`, url);
 			const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
 
-			if (!res.ok) return { ok: false, error: `HTTP error ${res.status}` };
+			if (!res.ok) return { ok: false, error: httpErrorMessage(res.status) };
 
 			const data = (await res.json()) as T;
 			if (cache !== 'no-cache') {
@@ -132,14 +142,21 @@ async function getJsonImpl<T>(
 		const [result] = await chrome.scripting.executeScript({
 			target: { tabId },
 			world: 'MAIN',
-			func: async (fetchUrl: string, credentials: CredentialsOption): Promise<FetchResult<T>> => {
+			func: async (
+				fetchUrl: string,
+				credentials: CredentialsOption,
+				sessionExpiredMessage: string,
+			): Promise<FetchResult<T>> => {
 				try {
 					const res = await fetch(fetchUrl, {
 						method: 'GET',
 						credentials,
 					});
 
-					if (!res.ok) return { ok: false, error: `HTTP error ${res.status}` };
+					if (!res.ok) {
+						const error = res.status === 404 ? sessionExpiredMessage : `HTTP error ${res.status}`;
+						return { ok: false, error };
+					}
 
 					const data = (await res.json()) as T;
 					return { ok: true, data };
@@ -147,7 +164,7 @@ async function getJsonImpl<T>(
 					return { ok: false, error: (err as Error).message };
 				}
 			},
-			args: [url, credentials],
+			args: [url, credentials, MAGISTER_SESSION_EXPIRED_MESSAGE],
 		});
 
 		if (result.result) {
@@ -168,7 +185,7 @@ async function getBlobImpl(url: string): Promise<FetchBlobResult> {
 			console.log(`[DEV] fetch blob`, url);
 			const res = await fetch(url, { method: 'GET' });
 
-			if (!res.ok) return { ok: false, error: `HTTP error ${res.status}` };
+			if (!res.ok) return { ok: false, error: httpErrorMessage(res.status) };
 
 			const blob = await res.blob();
 			const buffer = await blob.arrayBuffer();
@@ -191,14 +208,17 @@ async function getBlobImpl(url: string): Promise<FetchBlobResult> {
 		const [result] = await chrome.scripting.executeScript({
 			target: { tabId },
 			world: 'MAIN',
-			func: async (fetchUrl: string): Promise<FetchBlobResult> => {
+			func: async (fetchUrl: string, sessionExpiredMessage: string): Promise<FetchBlobResult> => {
 				try {
 					const res = await fetch(fetchUrl, {
 						method: 'GET',
 						credentials: 'include',
 					});
 
-					if (!res.ok) return { ok: false, error: `HTTP error ${res.status}` };
+					if (!res.ok) {
+						const error = res.status === 404 ? sessionExpiredMessage : `HTTP error ${res.status}`;
+						return { ok: false, error };
+					}
 
 					const blob = await res.blob();
 					const buffer = await blob.arrayBuffer();
@@ -214,7 +234,7 @@ async function getBlobImpl(url: string): Promise<FetchBlobResult> {
 					return { ok: false, error: (err as Error).message };
 				}
 			},
-			args: [url],
+			args: [url, MAGISTER_SESSION_EXPIRED_MESSAGE],
 		});
 
 		if (result.result) return result.result;

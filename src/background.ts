@@ -1,4 +1,4 @@
-import { updateTab } from './popup-utils/tabs';
+import { isAllowedUrl, updateTab } from './popup-utils/tabs';
 
 chrome.runtime.onInstalled.addListener(() => {
 	console.log('Chrome extension installed');
@@ -16,6 +16,10 @@ let popupWindowId: number | undefined;
 
 chrome.action.onClicked.addListener(async (tab) => {
 	console.log('Extension icon clicked', tab, tab.id);
+
+	if (!tab.url || !isAllowedUrl(tab.url)) {
+		return;
+	}
 
 	if (popupWindowId) {
 		// Focus existing window

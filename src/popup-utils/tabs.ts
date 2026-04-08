@@ -16,13 +16,20 @@ export function setTabIcon(tabId: number, active: boolean) {
 	chrome.action.setIcon({ tabId, path: icons });
 }
 
+/** Hosts where the extension toolbar action must stay disabled (no popup). */
+const BLOCKED_MAGISTER_HOSTS = new Set(['accounts.magister.net']);
+
 export function isAllowedUrl(urlString: string) {
-	const allowed = ['magister.net'];
+	const allowedSuffix = 'magister.net';
 	try {
 		const url = new URL(urlString);
 		const hostname = url.hostname.toLowerCase();
 
-		return allowed.some((domain) => hostname.endsWith(domain));
+		if (BLOCKED_MAGISTER_HOSTS.has(hostname)) {
+			return false;
+		}
+
+		return hostname.endsWith(allowedSuffix);
 	} catch (_) {
 		// Invalid URL
 		return false;
