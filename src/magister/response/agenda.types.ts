@@ -51,6 +51,8 @@ export type AgendaItemLocation = {
 	links: Links;
 };
 
+export type AgendaItemRepeatStatus = 'geen' | 'gewijzigd' | 'herhaling';
+
 export type AgendaItem = {
 	id: number;
 	heeftInhoud: boolean;
@@ -58,7 +60,7 @@ export type AgendaItem = {
 	onderwijstijd: number;
 	subtype: string;
 	heeftBijlagen: boolean;
-	herhaalStatus: string;
+	herhaalStatus: AgendaItemRepeatStatus;
 	begin: string; // ISO string
 	einde: string; // ISO string
 	lesuur?: { begin: number; einde: number };

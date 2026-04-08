@@ -1,0 +1,180 @@
+@import "react-big-calendar/lib/css/react-big-calendar.css";
+
+/*
+ * react-big-calendar — full theme override
+ *
+ * Light-mode gridlines use oklch grays; dark-mode uses rgba white
+ * so alpha compositing works correctly on both backgrounds.
+ */
+
+.rbc-calendar {
+	font-family: inherit;
+	color: var(--foreground);
+}
+
+/* ── palette tokens ───────────────────────────────────────────── */
+:root {
+	--rbc-surface: oklch(1 0 0);
+	--rbc-border: oklch(0 0 0 / 8%);
+	--rbc-grid: oklch(0 0 0 / 6%);
+	--rbc-grid-half: oklch(0 0 0 / 3%);
+	--rbc-text-muted: var(--muted-foreground);
+	--rbc-today: oklch(0 0 0 / 2.5%);
+	--rbc-now: #eab308;
+}
+
+.dark {
+	--rbc-surface: oklch(0.25 0 0);
+	--rbc-border: oklch(1 0 0 / 8%);
+	--rbc-grid: oklch(1 0 0 / 10%);
+	--rbc-today: oklch(1 0 0 / 3%);
+}
+
+/* ── outer container ──────────────────────────────────────────── */
+.rbc-time-view,
+.rbc-month-view,
+.rbc-agenda-view {
+	border: 1px solid var(--rbc-border);
+	border-radius: calc(var(--radius) + 2px);
+	background: var(--rbc-surface);
+	overflow: hidden;
+}
+
+/* ── nuke every default background/border ─────────────────────── */
+.rbc-time-view,
+.rbc-time-header,
+.rbc-time-header-content,
+.rbc-time-content,
+.rbc-day-slot,
+.rbc-month-view,
+.rbc-agenda-view,
+.rbc-row-bg,
+.rbc-day-bg,
+.rbc-time-gutter,
+.rbc-time-header-gutter,
+.rbc-time-slot,
+.rbc-header {
+	background-color: var(--rbc-surface);
+}
+
+.rbc-time-view *,
+.rbc-month-view *,
+.rbc-agenda-view * {
+	border-color: var(--rbc-grid);
+}
+
+/* ── header row ───────────────────────────────────────────────── */
+
+.rbc-time-header {
+	border-bottom: 1px solid var(--rbc-border);
+}
+
+/* ── time gutter ──────────────────────────────────────────────── */
+.rbc-time-gutter,
+.rbc-time-header-gutter {
+	color: var(--rbc-text-muted);
+	width: 46px;
+}
+
+.rbc-time-gutter .rbc-label {
+	padding: 0 4px 0 0;
+	font-size: 0.8rem;
+	line-height: 1;
+}
+
+/* ── grid lines ───────────────────────────────────────────────── */
+.rbc-time-content {
+	border-top: 0;
+	background-image: none;
+	overflow: hidden;
+}
+
+.rbc-timeslot-group {
+	border-bottom: 1px solid var(--rbc-grid);
+	position: relative;
+}
+
+.rbc-day-slot .rbc-time-slot {
+	border-top: 1px solid var(--rbc-grid-half);
+}
+
+.rbc-day-bg + .rbc-day-bg,
+.rbc-time-content > * + * {
+	border-left: 1px solid var(--rbc-grid);
+}
+
+/* ── today column ─────────────────────────────────────────────── */
+.rbc-today {
+	background: var(--rbc-today);
+}
+
+.agenda-today-column {
+	background: color-mix(in oklch, var(--rbc-surface) 82%, oklch(0.92 0.02 95) 18%);
+}
+
+.dark .agenda-today-column {
+	background: color-mix(in oklch, var(--rbc-surface) 82%, white 18%);
+}
+
+/* Slots stay transparent so the column tint from .agenda-today-column (on the day-slot) shows through */
+.agenda-today-column .rbc-time-slot,
+.agenda-today-column .rbc-timeslot-group {
+	background: transparent;
+}
+
+/* ── current-time indicator ───────────────────────────────────── */
+.rbc-current-time-indicator {
+	background-color: var(--rbc-now);
+	height: 2px;
+	opacity: 0.85;
+}
+
+/* ── events ───────────────────────────────────────────────────── */
+.rbc-event,
+.rbc-day-slot .rbc-event,
+.rbc-day-slot .rbc-background-event {
+	background: transparent;
+	border: 0;
+	padding: 0;
+	box-shadow: none;
+}
+
+.rbc-day-slot .rbc-event {
+	border-radius: 8px;
+}
+
+.rbc-day-slot .rbc-event-label {
+	display: none;
+}
+
+.rbc-day-slot .rbc-event-content {
+	height: 100%;
+}
+
+.rbc-event:focus,
+.rbc-event:focus-visible {
+	outline: none;
+}
+
+/* ── compact layout ──────────────────────────────────────────── */
+.rbc-time-view .rbc-row {
+	min-height: 20px;
+}
+
+.rbc-day-slot .rbc-events-container {
+	margin-right: 0;
+}
+
+.rbc-time-content::-webkit-scrollbar,
+.rbc-time-view::-webkit-scrollbar,
+.rbc-day-slot::-webkit-scrollbar {
+	display: none;
+}
+
+.rbc-allday-cell {
+	display: none;
+}
+
+.rbc-toolbar {
+	gap: 0.5rem;
+}

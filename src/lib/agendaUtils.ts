@@ -1,4 +1,5 @@
 import { formatTime, getNow } from '@/lib/dateUtils';
+import { formatLocations } from '@/lib/locationUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 
 export const timeTable = [
@@ -21,13 +22,7 @@ export type LessonInfo = {
 };
 
 export function getAgendaItemInfo(item: AgendaItem) {
-	const locations =
-		item.locaties.length > 0
-			? item.locaties
-					.map((e) => e.code?.toLowerCase() ?? e.omschrijving)
-					.filter(Boolean)
-					.join(', ')
-			: undefined;
+	const locations = formatLocations(item.locaties);
 
 	const courseCodes =
 		item.vakken.length > 0

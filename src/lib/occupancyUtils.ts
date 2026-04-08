@@ -1,5 +1,6 @@
 import { timeTable } from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
+import { formatLocation } from '@/lib/locationUtils';
 import type { Student } from '@/magister/types';
 
 /**
@@ -33,10 +34,7 @@ export function getOccupancyForDay(students: Student[], dateKey: string): Record
 					for (let i = begin; i <= end; ++i) {
 						const lessonRange = `${timeTable[i].begin}-${timeTable[i].einde}`;
 						for (const location of item.locaties) {
-							const locationCode = (location.code ?? location.omschrijving)
-								?.trim()
-								.toLowerCase()
-								.replace(/[^a-z0-9]/g, '');
+							const locationCode = formatLocation(location);
 							if (locationCode) {
 								if (!occupancy[locationCode]) {
 									occupancy[locationCode] = {};

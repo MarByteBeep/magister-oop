@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
 import { formatTime, getDateKey } from '@/lib/dateUtils';
+import { formatLocation } from '@/lib/locationUtils';
 import { groupBy } from '@/lib/utils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
@@ -34,8 +35,7 @@ export default function AgendaItemModal({ item, isOpen, onClose }: AgendaItemMod
 	const lessonStart = formatTime(beginTime);
 	const lessonEnd = formatTime(endTime);
 
-	const firstLocationCode =
-		item.locaties[0]?.code?.trim().toLowerCase() || item.locaties[0]?.omschrijving?.trim().toLowerCase() || '';
+	const firstLocationCode = formatLocation(item.locaties[0]) ?? '';
 
 	const hasLocation = firstLocationCode !== '';
 
@@ -60,9 +60,7 @@ export default function AgendaItemModal({ item, isOpen, onClose }: AgendaItemMod
 						(itemStartTime === lessonStart && itemEndTime === lessonEnd);
 
 					if (overlaps) {
-						const itemLocations = agendaItem.locaties
-							.map((loc) => (loc.code ?? loc.omschrijving)?.trim().toLowerCase())
-							.filter(Boolean);
+						const itemLocations = agendaItem.locaties.map((loc) => formatLocation(loc)).filter(Boolean);
 						if (itemLocations.includes(firstLocationCode)) {
 							studentsFound.push(student);
 							break;

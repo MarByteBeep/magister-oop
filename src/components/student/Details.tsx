@@ -400,9 +400,9 @@ export default function Details({ student }: DetailsProps) {
 						</CardContent>
 					</Card>
 
-					<Card className="relative row-span-2 col-start-3 row-start-1">
+					<Card className="relative row-span-2 col-start-3 row-start-1 flex flex-col">
 						<CardHeader>
-							<CardTitle>Agenda</CardTitle>
+							<CardTitle>Rooster</CardTitle>
 						</CardHeader>
 						{student && (
 							<AgendaSyncButton
@@ -414,7 +414,7 @@ export default function Details({ student }: DetailsProps) {
 								tooltipLoading="Agenda wordt geladen…"
 							/>
 						)}
-						<CardContent className="p-0">
+						<CardContent className="flex-1 min-h-0 p-0">
 							<DailyAgendaView studentId={student.id} />
 						</CardContent>
 					</Card>
