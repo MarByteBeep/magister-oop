@@ -2,44 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { getOrCreateBlobUrl } from '@/lib/blobUtils';
-import { getJson } from '@/magister/api';
-import { endpoints } from '@/magister/endpoints';
-import type { Address, AddressesResponse } from '@/magister/response/address.types';
-import type { ContactItem, ContactsResponse } from '@/magister/response/contact.types';
-import type { ParentsResponse } from '@/magister/response/parent.types';
+import type { Address } from '@/magister/response/address.types';
 import type { StudentDetails } from '@/magister/response/student-details.types';
 import type { Student } from '@/magister/types';
+import { loadAllStudentDetails } from './studentDetailsFetchers';
+import type { ParentContact } from './studentDetailsTypes';
 
-export type ParentContact = {
-	id: number;
-	parentName: string;
-	verzorgerType?: string | null;
-	geslacht: string;
-	contacts: ContactItem[];
-};
-
-function filterAndDeduplicateContacts(contacts: ContactItem[]): ContactItem[] {
-	const uniqueContacts: ContactItem[] = [];
-	const seenValues = new Set<string>();
-
-	for (const contact of contacts) {
-		let value: string | null = null;
-
-		if (contact.type === 'telefoonnummer') {
-			value = contact.telefoonnummer;
-		} else if (contact.type === 'emailadres') {
-			value = contact.emailadres;
-		}
-
-		if (value && !seenValues.has(value)) {
-			seenValues.add(value);
-			uniqueContacts.push(contact);
-		}
-	}
-
-	return uniqueContacts;
-}
+export type { ParentContact } from './studentDetailsTypes';
 
 export function useStudentDetailsData(student?: Student) {
 	const [personalDetails, setPersonalDetails] = useState<StudentDetails | undefined>(undefined);
@@ -55,88 +24,36 @@ export function useStudentDetailsData(student?: Student) {
 	const photoHref = student?.links.foto?.href;
 
 	useEffect(() => {
-		if (studentId === null || studentId === undefined || student === null) {
+		if (studentId == null || student == null) {
 			setPersonalDetails(undefined);
 			setPhotoBlobUrl(undefined);
+			setAddress(undefined);
+			setParentContacts([]);
+			setError(null);
 			setLoadingPersonalDetails(false);
 			setLoadingAddress(false);
-			setAddress(undefined);
-			setError(null);
-			setParentContacts([]);
 			setLoadingParentContacts(false);
 			return;
 		}
 
 		let isCancelled = false;
+		setLoadingPersonalDetails(true);
+		setLoadingAddress(true);
+		setLoadingParentContacts(true);
+		setError(null);
 
-		const fetchAllData = async () => {
-			setPersonalDetails(undefined);
-			setPhotoBlobUrl(undefined);
-			setLoadingPersonalDetails(true);
-			setLoadingAddress(true);
-			setAddress(undefined);
-			setError(null);
-			setParentContacts([]);
-			setLoadingParentContacts(true);
-
-			try {
-				if (photoHref) {
-					const photoUrl = await getOrCreateBlobUrl(photoHref);
-					if (!isCancelled) {
-						setPhotoBlobUrl(photoUrl);
-					}
-				}
-
-				{
-					const data = await getJson<StudentDetails>(endpoints.studentPersonalDetails(studentId));
-					if (isCancelled) return;
-					setPersonalDetails(data);
-					setLoadingPersonalDetails(false);
-				}
-
-				{
-					const data = await getJson<AddressesResponse>(endpoints.studentAddress(studentId));
-					if (isCancelled) return;
-					setAddress(data.items.find((t) => t.type === 'woon'));
-					setLoadingAddress(false);
-				}
-
-				const parentsResponse = await getJson<ParentsResponse>(endpoints.studentParents(studentId));
+		void loadAllStudentDetails(studentId, photoHref)
+			.then((data) => {
 				if (isCancelled) return;
-
-				const parentContactPromises = parentsResponse.items.map(async (parent) => {
-					const parentName = `${parent.voorletters} ${parent.tussenvoegsel ? `${parent.tussenvoegsel} ` : ''}${parent.achternaam}`;
-					try {
-						const contactDetailsResponse = await getJson<ContactsResponse>(
-							endpoints.parentContactDetails(parent.id),
-						);
-						const filteredContacts = filterAndDeduplicateContacts(contactDetailsResponse.items);
-
-						return {
-							id: parent.id,
-							parentName,
-							verzorgerType: parent.verzorgerType,
-							geslacht: parent.geslacht,
-							contacts: filteredContacts,
-						};
-					} catch (err) {
-						console.error(`Error fetching contact details for parent ${parent.id}:`, err);
-						return {
-							id: parent.id,
-							parentName,
-							verzorgerType: parent.verzorgerType,
-							geslacht: parent.geslacht,
-							contacts: [],
-						};
-					}
-				});
-
-				const parentContactsData = await Promise.all(parentContactPromises);
-				if (!isCancelled) {
-					setParentContacts(parentContactsData);
-					setLoadingParentContacts(false);
-				}
-			} catch (err) {
+				setPhotoBlobUrl(data.photoBlobUrl);
+				setPersonalDetails(data.personalDetails);
+				setAddress(data.address);
+				setParentContacts(data.parentContacts);
+				setLoadingPersonalDetails(false);
+				setLoadingAddress(false);
+				setLoadingParentContacts(false);
+			})
+			.catch((err) => {
 				if (isCancelled) return;
 				console.error('Error fetching student details:', err);
 
@@ -150,11 +67,10 @@ export function useStudentDetailsData(student?: Student) {
 				} else {
 					setError('Fout bij het laden van leerlingdetails.');
 				}
+				setLoadingPersonalDetails(false);
+				setLoadingAddress(false);
 				setLoadingParentContacts(false);
-			}
-		};
-
-		void fetchAllData();
+			});
 
 		return () => {
 			isCancelled = true;

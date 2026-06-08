@@ -7,6 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
 
+export function deepEqual<T>(a: T, b: T): boolean {
+	return JSON.stringify(a) === JSON.stringify(b);
+}
+
 export function groupBy<T, K extends string | number | symbol>(items: T[], getKey: (item: T) => K): Record<K, T[]> {
 	const result = {} as Record<K, T[]>;
 

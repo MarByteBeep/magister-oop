@@ -1,14 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { LuFilter, LuX } from 'react-icons/lu';
-import LoadingSpinner from '@/components/LoadingSpinner';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useState } from 'react';
+import { PermanentFiltersPanel } from '@/components/PermanentFiltersPanel';
+import { QuickFiltersBar } from '@/components/QuickFiltersBar';
+import { SearchInputRow } from '@/components/SearchInputRow';
 import { useAutoFocus } from '@/hooks/useAutofocus';
-import { cn } from '@/lib/utils';
+import { useSearchTermStorage } from '@/hooks/useSearchTermStorage';
 
 export type QuickFilterItem = {
 	id: string;
@@ -25,7 +22,6 @@ export interface SearchAndFiltersBarProps {
 	searchTerm: string;
 	onSearchTermChange: (value: string) => void;
 	searchPlaceholder?: string;
-	/** When provided, search term is persisted to session storage under this key (load on mount, save on change). */
 	searchStorageKey?: string;
 	permanentFilterTitle?: string;
 	permanentFilterOptions: PermanentFilterOption[];
@@ -35,7 +31,6 @@ export interface SearchAndFiltersBarProps {
 	activeQuickFilterId: string | null;
 	onActiveQuickFilterIdChange: (id: string | null) => void;
 	loading?: boolean;
-	/** Optional content for tooltip when loading (e.g. "X leerlingen nog te laden") */
 	loadingTooltip?: string;
 }
 
@@ -56,31 +51,8 @@ export function SearchAndFiltersBar({
 }: SearchAndFiltersBarProps) {
 	const searchInputRef = useAutoFocus<HTMLInputElement>();
 	const [showPermanentFilters, setShowPermanentFilters] = useState(false);
-	/** Avoid writing to session storage before the initial load finishes (prevents wiping a stored term). */
-	const [searchStorageReady, setSearchStorageReady] = useState(!searchStorageKey);
 
-	// Optional: load search term from session storage on mount
-	useEffect(() => {
-		if (!searchStorageKey) return;
-		let cancelled = false;
-		(async () => {
-			const { storage } = await import('@/lib/storage');
-			const stored = await storage.session.get<string>(searchStorageKey);
-			if (!cancelled && stored != null) onSearchTermChange(stored);
-			if (!cancelled) setSearchStorageReady(true);
-		})();
-		return () => {
-			cancelled = true;
-		};
-	}, [searchStorageKey, onSearchTermChange]);
-
-	useEffect(() => {
-		if (!searchStorageKey || !searchStorageReady) return;
-		(async () => {
-			const { storage } = await import('@/lib/storage');
-			await storage.session.set(searchStorageKey, searchTerm);
-		})();
-	}, [searchTerm, searchStorageKey, searchStorageReady]);
+	useSearchTermStorage(searchTerm, searchStorageKey, onSearchTermChange);
 
 	const handleQuickFilterClick = (id: string) => {
 		onActiveQuickFilterIdChange(activeQuickFilterId === id ? null : id);
@@ -88,125 +60,28 @@ export function SearchAndFiltersBar({
 
 	return (
 		<div className="w-full">
-			{/* Search row */}
-			<div className="flex items-center mb-2 gap-2 pr-4">
-				<div className="relative min-w-0 grow overflow-visible">
-					<input
-						ref={searchInputRef}
-						type="text"
-						placeholder={searchPlaceholder}
-						className={cn(
-							'w-full rounded-md border border-input bg-input p-2 pr-10 text-md text-foreground',
-							// Native outline clips on rounded corners in light Chrome; inset ring matches radius and avoids overflow-x-hidden ancestors.
-							'outline-none focus-visible:ring-2 focus-visible:ring-inset',
-							// One ring-color slot: in dark, --ring is as dark as --input, so use a bright inset ring (merge-safe single line).
-							'focus-visible:ring-ring dark:focus-visible:ring-white/55',
-							// Slightly lift border on focus in dark so the edge reads against black chrome.
-							'dark:focus-visible:border-white/35',
-						)}
-						value={searchTerm}
-						onChange={(e) => onSearchTermChange(e.target.value)}
-					/>
-					{searchTerm && (
-						<Button
-							variant="ghost"
-							size="icon"
-							className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground"
-							onClick={() => onSearchTermChange('')}
-							title="Wis filter"
-						>
-							<LuX className="h-4 w-4" />
-						</Button>
-					)}
-				</div>
-				{loading && (
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<div>
-								<LoadingSpinner />
-							</div>
-						</TooltipTrigger>
-						{loadingTooltip && <TooltipContent>{loadingTooltip}</TooltipContent>}
-					</Tooltip>
-				)}
-				<Button
-					variant={showPermanentFilters ? 'default' : 'outline'}
-					size="icon"
-					className="relative"
-					onClick={() => setShowPermanentFilters(!showPermanentFilters)}
-					title={permanentFilterTitle}
-				>
-					{selectedPermanentFilters.size > 0 && (
-						<Badge
-							variant="default"
-							className="absolute -top-3 -right-3 h-5 min-w-5 px-1 tabular-nums rounded-full"
-						>
-							{selectedPermanentFilters.size}
-						</Badge>
-					)}
-					<LuFilter className="h-4 w-4" />
-				</Button>
-			</div>
+			<SearchInputRow
+				searchTerm={searchTerm}
+				searchPlaceholder={searchPlaceholder}
+				searchInputRef={searchInputRef}
+				loading={loading}
+				loadingTooltip={loadingTooltip}
+				showPermanentFilters={showPermanentFilters}
+				permanentFilterTitle={permanentFilterTitle}
+				selectedFilterCount={selectedPermanentFilters.size}
+				onSearchTermChange={onSearchTermChange}
+				onTogglePermanentFilters={() => setShowPermanentFilters((v) => !v)}
+			/>
 
-			{/* Permanent filters (collapsible) */}
-			<div
-				className={cn(
-					'overflow-hidden transition-all duration-300 ease-in-out',
-					showPermanentFilters ? 'max-h-screen opacity-100 mb-2' : 'max-h-0 opacity-0 mb-0',
-				)}
-			>
-				<div className="p-4 border rounded-md bg-card shadow-sm">
-					<h3 className="text-sm font-medium text-foreground mb-2">{permanentFilterTitle}</h3>
-					<div className="grid grid-cols-4 gap-2">
-						{permanentFilterOptions.map((opt) => (
-							<div key={opt.value} className="flex items-center space-x-2">
-								<Checkbox
-									id={`perm-${opt.value}`}
-									checked={selectedPermanentFilters.has(opt.value)}
-									onCheckedChange={(checked) =>
-										onSelectedPermanentFiltersChange(opt.value, checked === true)
-									}
-								/>
-								<label
-									htmlFor={`perm-${opt.value}`}
-									className="text-sm font-medium leading-none cursor-pointer"
-								>
-									{opt.label}
-								</label>
-							</div>
-						))}
-					</div>
-				</div>
-			</div>
+			<PermanentFiltersPanel
+				show={showPermanentFilters}
+				title={permanentFilterTitle}
+				options={permanentFilterOptions}
+				selected={selectedPermanentFilters}
+				onChange={onSelectedPermanentFiltersChange}
+			/>
 
-			{/* Quick filter bar: full width, narrow chips with optional badge */}
-			{quickFilters.length > 0 && (
-				<div className="w-full flex flex-wrap items-center gap-1.5 mb-4">
-					{quickFilters.map((qf) => {
-						const isActive = activeQuickFilterId === qf.id;
-						return (
-							<Button
-								key={qf.id}
-								variant={isActive ? 'default' : 'outline'}
-								size="sm"
-								className="h-8 py-1.5 px-3 text-sm gap-1.5"
-								onClick={() => handleQuickFilterClick(qf.id)}
-								aria-pressed={isActive}
-							>
-								<span>{qf.label}</span>
-								{qf.count !== undefined && (
-									<Badge
-										variant={isActive ? 'secondary' : 'outline'}
-										className="h-5 min-w-5 px-1.5 tabular-nums text-xs"
-									>
-										{qf.count}
-									</Badge>
-								)}
-							</Button>
-						);
-					})}
-				</div>
-			)}
+			<QuickFiltersBar filters={quickFilters} activeId={activeQuickFilterId} onToggle={handleQuickFilterClick} />
 		</div>
 	);
 }

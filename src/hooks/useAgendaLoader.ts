@@ -1,13 +1,11 @@
 import { type Dispatch, type SetStateAction, useCallback } from 'react';
 import { getDateKey } from '@/lib/dateUtils';
-import { groupBy } from '@/lib/utils';
+import { deepEqual, groupBy } from '@/lib/utils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { AgendaResponse } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
-
-const deepEqual = <T>(a: T, b: T) => JSON.stringify(a) === JSON.stringify(b);
 
 export function useAgendaLoader(setStudents: Dispatch<SetStateAction<Student[]>>) {
 	return useCallback<LoadAgendaForStudentFn>(

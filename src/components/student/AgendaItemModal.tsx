@@ -1,19 +1,15 @@
 'use client';
 
-import { useMemo } from 'react';
-import { LuClock, LuGraduationCap, LuMapPin, LuUsers } from 'react-icons/lu';
+import { LuClock, LuGraduationCap, LuMapPin } from 'react-icons/lu';
 import LessonHourBadge from '@/components/LessonHourBadge';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { agendaItemOverlapsLesson, getAgendaItemInfo } from '@/lib/agendaUtils';
-import { formatTime, getDateKey } from '@/lib/dateUtils';
-import { formatLocation } from '@/lib/locationUtils';
-import { sortAndGroupStudentsByClass } from '@/lib/utils';
+import { useAgendaItemStudents } from '@/hooks/useAgendaItemStudents';
+import { getAgendaItemInfo } from '@/lib/agendaUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
-import StudentListItem from './StudentListItem';
+import AgendaItemStudentsList from './AgendaItemStudentsList';
 
 interface AgendaItemModalProps {
 	item: AgendaItem;
@@ -24,45 +20,8 @@ interface AgendaItemModalProps {
 
 export default function AgendaItemModal({ item, isOpen, onClose, onOpenStudent }: AgendaItemModalProps) {
 	const { students } = useStudentsContext();
-
 	const { courseDescriptions, courseCodes, teachers, locations, subject } = getAgendaItemInfo(item);
-
-	const beginTime = new Date(item.begin);
-	const endTime = new Date(item.einde);
-	const dateKey = getDateKey(beginTime);
-
-	const lessonStart = formatTime(beginTime);
-	const lessonEnd = formatTime(endTime);
-
-	const firstLocationCode = formatLocation(item.locaties[0]) ?? '';
-
-	const hasLocation = firstLocationCode !== '';
-
-	// Find all students in the same lesson/location
-	const studentsInLocation = useMemo(() => {
-		if (!hasLocation) return {};
-
-		const studentsFound: Student[] = [];
-
-		for (const student of students) {
-			const agendaForDay = student.agenda?.[dateKey];
-			if (agendaForDay) {
-				for (const agendaItem of agendaForDay) {
-					if (!agendaItemOverlapsLesson(agendaItem, lessonStart, lessonEnd)) continue;
-
-					const itemLocations = agendaItem.locaties.map((loc) => formatLocation(loc)).filter(Boolean);
-					if (itemLocations.includes(firstLocationCode)) {
-						studentsFound.push(student);
-						break;
-					}
-				}
-			}
-		}
-
-		return sortAndGroupStudentsByClass(studentsFound);
-	}, [students, dateKey, firstLocationCode, lessonStart, lessonEnd, hasLocation]);
-
-	const totalStudents = Object.values(studentsInLocation).flat().length;
+	const { lessonStart, lessonEnd, hasLocation, studentsInLocation } = useAgendaItemStudents(item, students);
 
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -83,7 +42,6 @@ export default function AgendaItemModal({ item, isOpen, onClose, onOpenStudent }
 					<DialogDescription>Agenda item details en leerlingen in hetzelfde lokaal.</DialogDescription>
 				</DialogHeader>
 
-				{/* Compact info row */}
 				<div className="flex flex-wrap gap-4 text-sm">
 					<div className="flex items-center gap-1.5 text-muted-foreground">
 						<LuClock className="h-4 w-4" />
@@ -91,14 +49,12 @@ export default function AgendaItemModal({ item, isOpen, onClose, onOpenStudent }
 							{lessonStart} - {lessonEnd}
 						</span>
 					</div>
-
 					{locations && (
 						<div className="flex items-center gap-1.5 text-muted-foreground">
 							<LuMapPin className="h-4 w-4" />
 							<span className="font-medium text-foreground">{locations}</span>
 						</div>
 					)}
-
 					{teachers && (
 						<div className="flex items-center gap-1.5 text-muted-foreground">
 							<LuGraduationCap className="h-4 w-4" />
@@ -107,46 +63,12 @@ export default function AgendaItemModal({ item, isOpen, onClose, onOpenStudent }
 					)}
 				</div>
 
-				{/* Remark */}
 				{item.opmerking && (
 					<div className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">{item.opmerking}</div>
 				)}
 
-				{/* Students section */}
 				{hasLocation && (
-					<>
-						<hr className="border-border" />
-
-						<div className="flex items-center gap-2">
-							<LuUsers className="h-4 w-4 text-muted-foreground" />
-							<span className="font-medium">Leerlingen ({totalStudents})</span>
-						</div>
-
-						{totalStudents === 0 ? (
-							<p className="text-muted-foreground text-sm py-2">Geen andere leerlingen gevonden.</p>
-						) : (
-							<ScrollArea className="max-h-[400px] pr-2">
-								<div className="space-y-3">
-									{Object.entries(studentsInLocation).map(([className, studentsInClass]) => (
-										<div key={className}>
-											<p className="text-xs font-medium text-muted-foreground mb-1.5">
-												{className}
-											</p>
-											<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-												{studentsInClass.map((student) => (
-													<StudentListItem
-														key={student.id}
-														student={student}
-														onClick={(student) => onOpenStudent?.(student)}
-													/>
-												))}
-											</div>
-										</div>
-									))}
-								</div>
-							</ScrollArea>
-						)}
-					</>
+					<AgendaItemStudentsList studentsByClass={studentsInLocation} onOpenStudent={onOpenStudent} />
 				)}
 			</DialogContent>
 		</Dialog>
