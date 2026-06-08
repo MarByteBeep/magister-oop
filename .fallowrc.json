@@ -1,0 +1,16 @@
+{
+	"$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+	"entry": ["src/main.tsx", "src/background.ts", "vite.config.ts", "vite-plugin-api.ts"],
+	"ignoreExportsUsedInFile": true,
+	"ignoreExports": [
+		{
+			"file": "testserver/src/api/**",
+			"exports": ["*"]
+		}
+	],
+	"rules": {
+		"unused-files": "error",
+		"unused-exports": "warn",
+		"circular-dependencies": "warn"
+	}
+}
