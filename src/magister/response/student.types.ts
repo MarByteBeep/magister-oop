@@ -1,4 +1,4 @@
-export type Student = {
+export type StudentBase = {
 	id: number;
 	voorletters: string;
 	roepnaam: string;
@@ -22,7 +22,7 @@ export type Student = {
 };
 
 export type StudentsResponse = {
-	items: Student[];
+	items: StudentBase[];
 	totalCount: number;
 	links: Record<string, { href: string } | null>;
 };

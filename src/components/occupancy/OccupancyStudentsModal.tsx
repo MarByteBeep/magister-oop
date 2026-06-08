@@ -1,14 +1,15 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import StudentModal from '@/components/StudentModal';
+import { useCallback, useMemo, useState } from 'react';
+import StudentDetailDialog from '@/components/student/StudentDetailDialog';
 import StudentListItem from '@/components/student/StudentListItem';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { groupBy } from '@/lib/utils';
+import { agendaItemOverlapsLesson, getItemLocationCodes } from '@/lib/agendaUtils';
+import { sortAndGroupStudentsByClass } from '@/lib/utils';
 import type { AttendanceStaffMember } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
 
@@ -31,114 +32,64 @@ export default function OccupancyStudentsModal({
 	const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
 	const [lessonStart, lessonEnd] = lessonRange.split('-');
+	const normalizedLocationCode = locationCode.trim().toLowerCase();
+
+	const matchingAgendaItems = useCallback(
+		(agendaForDay: NonNullable<Student['agenda']>[string]) =>
+			agendaForDay.filter(
+				(item) =>
+					agendaItemOverlapsLesson(item, lessonStart, lessonEnd) &&
+					getItemLocationCodes(item).includes(normalizedLocationCode),
+			),
+		[lessonStart, lessonEnd, normalizedLocationCode],
+	);
 
 	const studentsInLocation = useMemo(() => {
 		const studentsFound: Student[] = [];
 
 		for (const student of students) {
 			const agendaForDay = student.agenda?.[dateKey];
-			if (agendaForDay) {
-				for (const item of agendaForDay) {
-					const itemStart = new Date(item.begin);
-					const itemEnd = new Date(item.einde);
-
-					// Check if the agenda item overlaps with the lesson range
-					const itemStartTime = `${String(itemStart.getHours()).padStart(2, '0')}:${String(itemStart.getMinutes()).padStart(2, '0')}`;
-					const itemEndTime = `${String(itemEnd.getHours()).padStart(2, '0')}:${String(itemEnd.getMinutes()).padStart(2, '0')}`;
-
-					const overlaps =
-						(itemStartTime < lessonEnd && itemEndTime > lessonStart) ||
-						(itemStartTime === lessonStart && itemEndTime === lessonEnd);
-
-					if (overlaps) {
-						const itemLocations = item.locaties
-							.map((loc) => (loc.code ?? loc.omschrijving)?.trim().toLowerCase())
-							.filter(Boolean);
-						if (itemLocations.includes(locationCode)) {
-							studentsFound.push(student);
-							break; // Student found for this location/lesson, move to next student
-						}
-					}
-				}
+			if (agendaForDay && matchingAgendaItems(agendaForDay).length > 0) {
+				studentsFound.push(student);
 			}
 		}
 
-		// Sort students by first name
-		studentsFound.sort((a, b) => a.roepnaam.localeCompare(b.roepnaam));
-
-		// Group by class
-		return groupBy(studentsFound, (student) => student.klassen.join(', '));
-	}, [students, dateKey, locationCode, lessonStart, lessonEnd]);
+		return sortAndGroupStudentsByClass(studentsFound);
+	}, [students, dateKey, matchingAgendaItems]);
 
 	const uniqueTeachers = useMemo(() => {
 		const teachersMap = new Map<number, AttendanceStaffMember>();
 
 		for (const student of students) {
 			const agendaForDay = student.agenda?.[dateKey];
-			if (agendaForDay) {
-				for (const item of agendaForDay) {
-					const itemStart = new Date(item.begin);
-					const itemEnd = new Date(item.einde);
+			if (!agendaForDay) continue;
 
-					const itemStartTime = `${String(itemStart.getHours()).padStart(2, '0')}:${String(itemStart.getMinutes()).padStart(2, '0')}`;
-					const itemEndTime = `${String(itemEnd.getHours()).padStart(2, '0')}:${String(itemEnd.getMinutes()).padStart(2, '0')}`;
-
-					const overlaps =
-						(itemStartTime < lessonEnd && itemEndTime > lessonStart) ||
-						(itemStartTime === lessonStart && itemEndTime === lessonEnd);
-
-					if (overlaps) {
-						const itemLocations = item.locaties
-							.map((loc) => (loc.code ?? loc.omschrijving)?.trim().toLowerCase())
-							.filter(Boolean);
-						if (itemLocations.includes(locationCode)) {
-							item.deelnames
-								.filter((p) => p.type === 'medewerker')
-								.forEach((teacher) => {
-									teachersMap.set(teacher.id, teacher as AttendanceStaffMember);
-								});
-						}
-					}
+			for (const item of matchingAgendaItems(agendaForDay)) {
+				for (const teacher of item.deelnames.filter((p) => p.type === 'medewerker')) {
+					teachersMap.set(teacher.id, teacher as AttendanceStaffMember);
 				}
 			}
 		}
 		return Array.from(teachersMap.values()).sort((a, b) => a.achternaam.localeCompare(b.achternaam));
-	}, [students, dateKey, locationCode, lessonStart, lessonEnd]);
+	}, [students, dateKey, matchingAgendaItems]);
 
 	const uniqueSubjects = useMemo(() => {
 		const subjects = new Set<string>();
 
 		for (const student of students) {
 			const agendaForDay = student.agenda?.[dateKey];
-			if (agendaForDay) {
-				for (const item of agendaForDay) {
-					const itemStart = new Date(item.begin);
-					const itemEnd = new Date(item.einde);
+			if (!agendaForDay) continue;
 
-					const itemStartTime = `${String(itemStart.getHours()).padStart(2, '0')}:${String(itemStart.getMinutes()).padStart(2, '0')}`;
-					const itemEndTime = `${String(itemEnd.getHours()).padStart(2, '0')}:${String(itemEnd.getMinutes()).padStart(2, '0')}`;
-
-					const overlaps =
-						(itemStartTime < lessonEnd && itemEndTime > lessonStart) ||
-						(itemStartTime === lessonStart && itemEndTime === lessonEnd);
-
-					if (overlaps) {
-						const itemLocations = item.locaties
-							.map((loc) => (loc.code ?? loc.omschrijving)?.trim().toLowerCase())
-							.filter(Boolean);
-						if (itemLocations.includes(locationCode)) {
-							item.vakken.forEach((vak) => {
-								if (vak.omschrijving) {
-									subjects.add(vak.omschrijving);
-								}
-							});
-						}
+			for (const item of matchingAgendaItems(agendaForDay)) {
+				for (const vak of item.vakken) {
+					if (vak.omschrijving) {
+						subjects.add(vak.omschrijving);
 					}
 				}
 			}
 		}
 		return Array.from(subjects).sort();
-	}, [students, dateKey, locationCode, lessonStart, lessonEnd]);
+	}, [students, dateKey, matchingAgendaItems]);
 
 	const handleStudentClick = (student: Student) => {
 		setSelectedStudent(student);
@@ -229,7 +180,7 @@ export default function OccupancyStudentsModal({
 				</DialogContent>
 			</Dialog>
 
-			{selectedStudent && <StudentModal student={selectedStudent} onClose={handleCloseStudentModal} />}
+			{selectedStudent && <StudentDetailDialog student={selectedStudent} onClose={handleCloseStudentModal} />}
 		</>
 	);
 }

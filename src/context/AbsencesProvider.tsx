@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStudentsContext } from '@/context/StudentsContext';
+import { useAllowedStudentIds } from '@/hooks/useAllowedStudentIds';
+import { countAbsentForAllowedStudents } from '@/lib/absenceUtils';
 import { getTodayKey } from '@/lib/dateUtils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
@@ -71,32 +73,12 @@ export function AbsencesProvider({ children }: { children: ReactNode }) {
 		return () => clearInterval(interval);
 	}, [backgroundRefresh]);
 
-	// Build set of allowed student IDs based on selected studies filter
-	const allowedStudentIds = useMemo(() => {
-		if (!selectedStudies.size) {
-			return new Set(students.map((s) => s.id));
-		}
-		return new Set(students.filter((s) => s.studies.some((st) => selectedStudies.has(st))).map((s) => s.id));
-	}, [students, selectedStudies]);
+	const allowedStudentIds = useAllowedStudentIds(students, selectedStudies);
 
-	// Count "Absent" type absences (filtered by allowed students)
-	const absentCount = useMemo(() => {
-		if (!data) return 0;
-		let count = 0;
-		for (const item of data.items ?? []) {
-			// Only count if student is in allowed list
-			if (!allowedStudentIds.has(item.id)) continue;
-
-			for (const afspraak of item.afspraken ?? []) {
-				for (const v of afspraak.verantwoordingen ?? []) {
-					if (v.reden?.type?.toLowerCase() === 'absent') {
-						count++;
-					}
-				}
-			}
-		}
-		return count;
-	}, [data, allowedStudentIds]);
+	const absentCount = useMemo(
+		() => (data ? countAbsentForAllowedStudents(data, allowedStudentIds) : 0),
+		[data, allowedStudentIds],
+	);
 
 	const state: AbsencesState = useMemo(
 		() => ({

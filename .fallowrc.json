@@ -2,6 +2,7 @@
 	"$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
 	"entry": ["src/main.tsx", "src/background.ts", "vite.config.ts", "vite-plugin-api.ts"],
 	"ignoreExportsUsedInFile": true,
+	"ignoreDependencies": ["hono"],
 	"ignoreExports": [
 		{
 			"file": "testserver/src/api/**",
@@ -12,5 +13,8 @@
 		"unused-files": "error",
 		"unused-exports": "warn",
 		"circular-dependencies": "warn"
+	},
+	"health": {
+		"maxCrap": 500
 	}
 }

@@ -27,29 +27,3 @@ export async function getOrCreateBlobUrl(href: string): Promise<string> {
 		throw error;
 	}
 }
-
-/**
- * Revokes a specific object URL from the cache and the browser.
- * Note: This should only be called when you are certain no other component
- * is using this object URL. For simplicity, in this context, we might
- * let the cache grow or implement a global cleanup on extension close.
- * @param href The original URL (key in cache) for which to revoke the object URL.
- */
-export function revokeBlobUrl(href: string) {
-	const objectUrl = objectUrlCache.get(href);
-	if (objectUrl) {
-		URL.revokeObjectURL(objectUrl);
-		objectUrlCache.delete(href);
-	}
-}
-
-/**
- * Revokes all cached object URLs.
- * This could be called when the extension popup is closed to free up memory.
- */
-export function revokeAllBlobUrls() {
-	for (const objectUrl of objectUrlCache.values()) {
-		URL.revokeObjectURL(objectUrl);
-	}
-	objectUrlCache.clear();
-}

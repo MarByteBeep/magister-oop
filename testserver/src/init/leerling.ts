@@ -1,9 +1,8 @@
-import { join } from 'node:path';
 import { fakerNL as faker } from '@faker-js/faker';
-import type { Student } from '@/magister/response/student.types';
-import { ALL_PHOTOS_DIR } from './init';
+import type { StudentBase } from '@/magister/response/student.types';
+import { downloadEntityPhoto } from './shared';
 
-export async function generateDummyLeerling(id: number): Promise<Student> {
+export async function generateDummyLeerling(id: number): Promise<StudentBase> {
 	faker.seed(id);
 
 	const firstName = faker.person.firstName();
@@ -13,7 +12,7 @@ export async function generateDummyLeerling(id: number): Promise<Student> {
 	const email = `${code}@edu.somedomain.nl`;
 	const externeId = faker.string.uuid();
 
-	const klassenOptions: Student['klassen'][number][] = [
+	const klassenOptions: StudentBase['klassen'][number][] = [
 		'1B1',
 		'1K1',
 		'1K2',
@@ -37,7 +36,7 @@ export async function generateDummyLeerling(id: number): Promise<Student> {
 		'4T1',
 		'4T2',
 	];
-	const studiesOptions: Student['studies'][number][] = [
+	const studiesOptions: StudentBase['studies'][number][] = [
 		'1B',
 		'1K',
 		'1T',
@@ -57,7 +56,7 @@ export async function generateDummyLeerling(id: number): Promise<Student> {
 	const tStudies = studiesOptions.filter((s) => s.endsWith('T'));
 	const nonTStudies = studiesOptions.filter((s) => !s.endsWith('T'));
 
-	let studies: Student['studies'];
+	let studies: StudentBase['studies'];
 	if (Math.random() < 0.8 && tStudies.length > 0) {
 		studies = faker.helpers.arrayElements(tStudies, { min: 1, max: 1 });
 	} else if (nonTStudies.length > 0) {
@@ -66,39 +65,23 @@ export async function generateDummyLeerling(id: number): Promise<Student> {
 		studies = faker.helpers.arrayElements(studiesOptions, { min: 1, max: 1 });
 	}
 
-	// Determine class based on the chosen study
-	const chosenStudy = studies[0]; // A student always has at least one study
-	const studyYear = chosenStudy.charAt(0); // e.g., '1' from '1T'
-	const studyType = chosenStudy.substring(1); // e.g., 'T' from '1T'
+	const chosenStudy = studies[0];
+	const studyYear = chosenStudy.charAt(0);
+	const studyType = chosenStudy.substring(1);
 
 	const matchingKlassen = klassenOptions.filter((klas) => klas.startsWith(studyYear) && klas.includes(studyType));
 
 	const klassen =
 		matchingKlassen.length > 0
-			? [faker.helpers.arrayElement(matchingKlassen)] // Pick one matching class
-			: [faker.helpers.arrayElement(klassenOptions)]; // Fallback to any class if no specific match
+			? [faker.helpers.arrayElement(matchingKlassen)]
+			: [faker.helpers.arrayElement(klassenOptions)];
 
 	const hasPhoto = Math.random() > 0.05;
 
 	let photoHref: string | undefined;
 	if (hasPhoto) {
 		const fakerImageUrl = faker.image.urlLoremFlickr({ category: 'cat', width: 192, height: 192 });
-
-		const photoFileName = `${id}.jpg`;
-		const photoFilePath = join(ALL_PHOTOS_DIR, photoFileName);
-
-		try {
-			const response = await fetch(fakerImageUrl);
-			if (response.ok && response.body) {
-				const imageBuffer = await response.arrayBuffer();
-				await Bun.write(photoFilePath, imageBuffer);
-				photoHref = `/api/leerlingen/${id}/foto`;
-			} else {
-				console.warn(`Failed to download image for ID ${id} from ${fakerImageUrl}: ${response.statusText}`);
-			}
-		} catch (error) {
-			console.error(`Error downloading image for ID ${id}:`, error);
-		}
+		photoHref = await downloadEntityPhoto(id, fakerImageUrl, `/api/leerlingen/${id}/foto`);
 	}
 
 	return {

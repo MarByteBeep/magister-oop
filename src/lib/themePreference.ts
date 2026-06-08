@@ -4,7 +4,7 @@ import { storage } from '@/lib/storage';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 
-export const THEME_STORAGE_KEY = 'themePreference';
+const THEME_STORAGE_KEY = 'themePreference';
 const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)';
 
 let systemMediaQuery: MediaQueryList | null = null;

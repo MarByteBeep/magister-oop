@@ -4,15 +4,11 @@ import { useMemo, useState } from 'react';
 import ClickAvatarPreview from '@/components/ClickAvatarPreview';
 import { SearchAndFiltersBar } from '@/components/SearchAndFiltersBar';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { normalizeString } from '@/lib/stringUtils';
-import type { AttendanceStaffMember } from '@/magister/response/agenda.types';
+import { type SortColumn, type SortDirection, useStudentListFilters } from '@/hooks/useStudentListFilters';
 import type { Student } from '@/magister/types';
 import LessonHourBadge from './LessonHourBadge';
 import StudentModal from './StudentModal';
 import AgendaItemDisplay from './student/AgendaItemDisplay';
-
-type SortColumn = 'naam' | 'klas' | 'lockerCode' | 'now' | 'next';
-type SortDirection = 'asc' | 'desc';
 
 const STUDENTS_SEARCH_TERM_STORAGE_KEY = 'studentsSearchTerm';
 
@@ -33,10 +29,13 @@ function Students() {
 	const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 	const [activeQuickFilterId, setActiveQuickFilterId] = useState<string | null>(null);
 
-	const uniqueStudies = useMemo(() => {
-		const studies = new Set(students.flatMap((s) => s.studies));
-		return Array.from(studies).sort();
-	}, [students]);
+	const { uniqueStudies, filteredStudents, sortedStudents } = useStudentListFilters(
+		students,
+		selectedStudies,
+		searchTerm,
+		sortColumn,
+		sortDirection,
+	);
 
 	const handleSort = (column: SortColumn) => {
 		if (sortColumn === column) {
@@ -58,92 +57,6 @@ function Students() {
 			return newSet;
 		});
 	};
-
-	const filteredStudents = students.filter((student) =>
-		selectedStudies.size ? student.studies.some((s) => selectedStudies.has(s)) : true,
-	);
-
-	const matchedStudents = filteredStudents.filter((student) => {
-		let matchesSearchTerm = true;
-		if (searchTerm) {
-			const searchLowerNormalized = normalizeString(searchTerm);
-			const isLockerSearch = searchLowerNormalized.startsWith('k:');
-
-			if (isLockerSearch) {
-				const lockerSearchTerm = searchLowerNormalized.slice(2).padStart(3, '0');
-				const studentLocker = normalizeString(student.lockerCode?.padStart(3, '0') || '');
-				matchesSearchTerm = studentLocker.includes(lockerSearchTerm);
-			} else {
-				// General text search
-				const fullName = normalizeString(
-					`${student.roepnaam} ${student.tussenvoegsel ?? ''} ${student.achternaam}`,
-				);
-				const classes = normalizeString(student.klassen.join(' '));
-				const locker = normalizeString(student.lockerCode || ''); // Include locker in general search too, if not specifically 'k:'
-
-				// Check current lesson info
-				let matchesLessonInfo = false;
-				if (student.currentAgendaItem) {
-					const currentItem = student.currentAgendaItem;
-					const courses = normalizeString(currentItem.vakken.map((v) => v.code).join(' '));
-					const locations = normalizeString(
-						currentItem.locaties
-							.map((l) => l.code ?? l.omschrijving)
-							.filter(Boolean)
-							.join(' '),
-					);
-					const teachers = normalizeString(
-						currentItem.deelnames
-							.filter((p) => p.type === 'medewerker')
-							.map((p) => (p as AttendanceStaffMember).code)
-							.join(' '),
-					);
-
-					matchesLessonInfo =
-						courses.includes(searchLowerNormalized) ||
-						locations.includes(searchLowerNormalized) ||
-						teachers.includes(searchLowerNormalized);
-				}
-
-				matchesSearchTerm =
-					fullName.includes(searchLowerNormalized) ||
-					classes.includes(searchLowerNormalized) ||
-					locker.includes(searchLowerNormalized) ||
-					matchesLessonInfo;
-			}
-		}
-
-		return matchesSearchTerm;
-	});
-
-	const sortedStudents = [...matchedStudents].sort((a, b) => {
-		let valA: string | number = '';
-		let valB: string | number = '';
-
-		switch (sortColumn) {
-			case 'naam':
-				valA = normalizeString(`${a.achternaam} ${a.roepnaam}`);
-				valB = normalizeString(`${b.achternaam} ${b.roepnaam}`);
-				break;
-			case 'klas':
-				valA = normalizeString(a.klassen.join(', '));
-				valB = normalizeString(b.klassen.join(', '));
-				break;
-			case 'lockerCode':
-				valA = normalizeString(a.lockerCode || '');
-				valB = normalizeString(b.lockerCode || '');
-				break;
-			case 'next':
-			case 'now':
-				// Sorting by agenda items is complex and not directly supported by simple string/number comparison.
-				// For simplicity, these columns will not have a direct sorting effect.
-				return 0;
-		}
-
-		if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
-		if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
-		return 0;
-	});
 
 	const getSortIndicator = (column: SortColumn) =>
 		sortColumn === column ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : '';

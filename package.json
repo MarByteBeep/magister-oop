@@ -3,7 +3,7 @@
 	"author": "Blij Ei",
 	"copyright": "Copyright (c) 2026 Blij Ei",
 	"private": true,
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"license": "GPL-3.0-or-later",
 	"licenseUrl": "https://github.com/MarByteBeep/magister-oop/blob/master/LICENSE",
 	"repository": {
@@ -17,7 +17,8 @@
 		"preview": "vite preview",
 		"format": "bunx @biomejs/biome format --write",
 		"check": "bunx @biomejs/biome check --write",
-		"check:ci": "bunx @biomejs/biome ci && bunx tsc -b --noEmit && echo 'no errors'",
+		"check:fallow": "fallow dead-code --format json --quiet --ci",
+		"check:ci": "bunx @biomejs/biome ci && bunx tsc -b --noEmit && bun run check:fallow && echo 'no errors'",
 		"testserver:init": "bun run ./testserver/src/init/init.ts"
 	},
 	"dependencies": {
@@ -28,7 +29,6 @@
 		"@radix-ui/react-tabs": "^1.1.13",
 		"@radix-ui/react-toggle-group": "^1.1.11",
 		"@radix-ui/react-tooltip": "^1.2.8",
-		"@tailwindcss/vite": "^4.1.18",
 		"apexcharts": "^5.3.6",
 		"class-variance-authority": "^0.7.1",
 		"clsx": "^2.1.1",
@@ -47,6 +47,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.3.13",
+		"@tailwindcss/vite": "^4.1.18",
 		"@types/bun": "^1.3.7",
 		"@types/chrome": "^0.1.36",
 		"@types/node": "^24.10.9",
@@ -55,6 +56,7 @@
 		"@types/react-dom": "^19.2.2",
 		"@vitejs/plugin-react": "^5.1.2",
 		"dotenv": "^17.2.3",
+		"fallow": "^2.89.0",
 		"hono": "^4.6.0",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1",

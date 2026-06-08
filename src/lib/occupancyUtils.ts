@@ -1,76 +1,152 @@
-import { timeTable } from '@/lib/agendaUtils';
+import { agendaItemOverlapsLesson, getItemLocationCodes, getItemTimeRange, timeTable } from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
 import { formatLocation } from '@/lib/locationUtils';
+import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
+
+export type OccupancyChartPoint = {
+	lessonRange: string;
+	total: number;
+	breakTotal: number;
+};
+
+function getLessonHourIndices(beginTime: string, endTime: string) {
+	let begin = timeTable.findIndex((e) => beginTime >= e.begin && beginTime < e.einde);
+	let end = timeTable.findIndex((e) => endTime >= e.begin && endTime < e.einde);
+
+	if (begin < 0) begin = end;
+	if (end < 0) end = begin;
+
+	return { begin, end };
+}
+
+function incrementOccupancy(
+	occupancy: Record<string, Record<string, number>>,
+	locationCode: string,
+	lessonRange: string,
+) {
+	if (!occupancy[locationCode]) {
+		occupancy[locationCode] = {};
+	}
+	occupancy[locationCode][lessonRange] = (occupancy[locationCode][lessonRange] ?? 0) + 1;
+}
+
+function addAgendaItemToOccupancy(occupancy: Record<string, Record<string, number>>, item: AgendaItem) {
+	const beginTime = formatTime(new Date(item.begin));
+	const endDate = new Date(item.einde);
+	endDate.setMinutes(endDate.getMinutes() - 1);
+	const endTime = formatTime(endDate);
+
+	const { begin, end } = getLessonHourIndices(beginTime, endTime);
+	if (begin < 0 || end < 0) return;
+
+	for (let i = begin; i <= end; ++i) {
+		const lessonRange = `${timeTable[i].begin}-${timeTable[i].einde}`;
+		for (const location of item.locaties) {
+			const locationCode = formatLocation(location);
+			if (locationCode) {
+				incrementOccupancy(occupancy, locationCode, lessonRange);
+			}
+		}
+	}
+}
+
+function sortOccupancyForLocation(locationOccupancy: Record<string, number>) {
+	for (const slot of timeTable) {
+		const lessonRange = `${slot.begin}-${slot.einde}`;
+		if (!locationOccupancy[lessonRange]) {
+			locationOccupancy[lessonRange] = 0;
+		}
+	}
+
+	const sortedLessonRanges = Object.keys(locationOccupancy).sort((a, b) => {
+		const [aStart] = a.split('-');
+		const [bStart] = b.split('-');
+		return aStart.localeCompare(bStart);
+	});
+
+	const sorted: Record<string, number> = {};
+	for (const range of sortedLessonRanges) {
+		sorted[range] = locationOccupancy[range];
+	}
+	return sorted;
+}
 
 /**
  * Calculates the occupancy for each location per lesson hour for a given day.
- * @param students An array of student objects, each potentially containing agenda data.
- * @param dateKey The date in 'YYYY-MM-DD' format for which to calculate occupancy.
- * @returns A nested object where the first key is the location, the second key is the lesson range (e.g., '08:30-09:10'), and the value is the count of students.
  */
 export function getOccupancyForDay(students: Student[], dateKey: string): Record<string, Record<string, number>> {
 	const occupancy: Record<string, Record<string, number>> = {};
 
 	for (const student of students) {
 		const agendaForDay = student.agenda?.[dateKey];
+		if (!agendaForDay) continue;
 
-		if (agendaForDay) {
-			for (const item of agendaForDay) {
-				const beginTime = formatTime(new Date(item.begin));
-				const endDate = new Date(item.einde);
-				endDate.setMinutes(endDate.getMinutes() - 1);
-				const endTime = formatTime(endDate);
-
-				// find hours in which this item falls
-				let begin = timeTable.findIndex((e) => beginTime >= e.begin && beginTime < e.einde);
-				let end = timeTable.findIndex((e) => endTime >= e.begin && endTime < e.einde);
-
-				// check for pauze
-				if (begin < 0) begin = end;
-				if (end < 0) end = begin;
-
-				if (end >= 0 && begin >= 0) {
-					for (let i = begin; i <= end; ++i) {
-						const lessonRange = `${timeTable[i].begin}-${timeTable[i].einde}`;
-						for (const location of item.locaties) {
-							const locationCode = formatLocation(location);
-							if (locationCode) {
-								if (!occupancy[locationCode]) {
-									occupancy[locationCode] = {};
-								}
-								if (!occupancy[locationCode][lessonRange]) {
-									occupancy[locationCode][lessonRange] = 0;
-								}
-								occupancy[locationCode][lessonRange]++;
-							}
-						}
-					}
-				}
-			}
+		for (const item of agendaForDay) {
+			addAgendaItemToOccupancy(occupancy, item);
 		}
 	}
 
-	// Ensure all lesson ranges are present for each location, even if 0 students
 	for (const location in occupancy) {
-		for (const slot of timeTable) {
-			const lessonRange = `${slot.begin}-${slot.einde}`;
-			if (!occupancy[location][lessonRange]) {
-				occupancy[location][lessonRange] = 0;
-			}
-		}
-		// Sort lesson ranges for consistent display
-		const sortedLessonRanges = Object.keys(occupancy[location]).sort((a, b) => {
-			const [aStart] = a.split('-');
-			const [bStart] = b.split('-');
-			return aStart.localeCompare(bStart);
-		});
-		const sortedOccupancyForLocation: Record<string, number> = {};
-		for (const range of sortedLessonRanges) {
-			sortedOccupancyForLocation[range] = occupancy[location][range];
-		}
-		occupancy[location] = sortedOccupancyForLocation;
+		occupancy[location] = sortOccupancyForLocation(occupancy[location]);
 	}
 
 	return occupancy;
+}
+
+function analyzeStudentLessonPresence(
+	agendaForDay: AgendaItem[],
+	lessonStart: string,
+	lessonEnd: string,
+	allLocations: string[],
+) {
+	let hasLessonInThisRange = false;
+	let hasLessonBefore = false;
+	let hasLessonAfter = false;
+
+	for (const item of agendaForDay) {
+		const { startTime: itemStartTime, endTime: itemEndTime } = getItemTimeRange(item);
+
+		if (agendaItemOverlapsLesson(item, lessonStart, lessonEnd)) {
+			const itemLocations = getItemLocationCodes(item);
+			if (itemLocations.some((loc) => allLocations.includes(loc))) {
+				hasLessonInThisRange = true;
+			}
+		}
+
+		if (itemEndTime <= lessonStart) hasLessonBefore = true;
+		if (itemStartTime >= lessonEnd) hasLessonAfter = true;
+	}
+
+	return { hasLessonInThisRange, hasLessonBefore, hasLessonAfter };
+}
+
+export function countStudentsForLessonRange(
+	lessonRange: string,
+	students: Student[],
+	todayKey: string,
+	allLocations: string[],
+): Pick<OccupancyChartPoint, 'total' | 'breakTotal'> {
+	const uniqueStudentIds = new Set<number>();
+	const uniqueBreakStudentIds = new Set<number>();
+	const [lessonStart, lessonEnd] = lessonRange.split('-') as [string, string];
+
+	for (const student of students) {
+		const agendaForDay = student.agenda?.[todayKey];
+		if (!agendaForDay?.length) continue;
+
+		const { hasLessonInThisRange, hasLessonBefore, hasLessonAfter } = analyzeStudentLessonPresence(
+			agendaForDay,
+			lessonStart,
+			lessonEnd,
+			allLocations,
+		);
+
+		if (hasLessonInThisRange) uniqueStudentIds.add(student.id);
+		if (!hasLessonInThisRange && hasLessonBefore && hasLessonAfter) {
+			uniqueBreakStudentIds.add(student.id);
+		}
+	}
+
+	return { total: uniqueStudentIds.size, breakTotal: uniqueBreakStudentIds.size };
 }

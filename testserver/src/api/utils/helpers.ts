@@ -5,9 +5,9 @@ import staffMembers from '@data/medewerkers.json' with { type: 'json' };
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Locker } from '@/magister/response/locker.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
-import type { Student } from '@/magister/response/student.types';
+import type { StudentBase } from '@/magister/response/student.types';
 
-export function getAllStudents(): Student[] {
+export function getAllStudents(): StudentBase[] {
 	return students.data;
 }
 

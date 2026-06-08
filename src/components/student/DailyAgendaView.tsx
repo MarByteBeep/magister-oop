@@ -7,14 +7,16 @@ import { useCurrentTime } from '@/hooks/useCurrentTime';
 import { findAgendaItem } from '@/lib/agendaUtils';
 import { getDateKey, getNow } from '@/lib/dateUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { Student } from '@/magister/types';
 import Agenda from './Agenda';
 import AgendaItemModal from './AgendaItemModal';
 
 interface DailyAgendaViewProps {
 	studentId: number;
+	onOpenStudent?: (student: Student) => void;
 }
 
-export default function DailyAgendaView({ studentId }: DailyAgendaViewProps) {
+export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgendaViewProps) {
 	const currentTime = useCurrentTime();
 
 	const { students, loadAgendaForStudent } = useStudentsContext();
@@ -98,6 +100,7 @@ export default function DailyAgendaView({ studentId }: DailyAgendaViewProps) {
 					item={selectedItem}
 					isOpen={selectedItem !== null}
 					onClose={() => setSelectedItem(null)}
+					onOpenStudent={onOpenStudent}
 				/>
 			)}
 		</>

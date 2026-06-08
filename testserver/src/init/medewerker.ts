@@ -1,7 +1,6 @@
-import { join } from 'node:path';
 import { fakerNL as faker } from '@faker-js/faker';
 import type { StaffMember } from '@/magister/response/staffmember.types';
-import { ALL_PHOTOS_DIR } from './init';
+import { downloadEntityPhoto } from './shared';
 
 export async function generateDummyMedewerker(id: number): Promise<StaffMember> {
 	faker.seed(id);
@@ -16,22 +15,7 @@ export async function generateDummyMedewerker(id: number): Promise<StaffMember> 
 	let photoHref: string | undefined;
 	if (hasPhoto) {
 		const fakerImageUrl = faker.image.urlLoremFlickr({ category: 'people', width: 192, height: 192 });
-
-		const photoFileName = `${id}.jpg`;
-		const photoFilePath = join(ALL_PHOTOS_DIR, photoFileName);
-
-		try {
-			const response = await fetch(fakerImageUrl);
-			if (response.ok && response.body) {
-				const imageBuffer = await response.arrayBuffer();
-				await Bun.write(photoFilePath, imageBuffer);
-				photoHref = `/api/medewerkers/${id}/foto`;
-			} else {
-				console.warn(`Failed to download image for ID ${id} from ${fakerImageUrl}: ${response.statusText}`);
-			}
-		} catch (error) {
-			console.error(`Error downloading image for ID ${id}:`, error);
-		}
+		photoHref = await downloadEntityPhoto(id, fakerImageUrl, `/api/medewerkers/${id}/foto`);
 	}
 
 	return {

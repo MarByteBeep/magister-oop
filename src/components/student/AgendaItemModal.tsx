@@ -1,17 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { LuClock, LuGraduationCap, LuMapPin, LuUsers } from 'react-icons/lu';
 import LessonHourBadge from '@/components/LessonHourBadge';
-import StudentModal from '@/components/StudentModal';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { getAgendaItemInfo } from '@/lib/agendaUtils';
+import { agendaItemOverlapsLesson, getAgendaItemInfo } from '@/lib/agendaUtils';
 import { formatTime, getDateKey } from '@/lib/dateUtils';
 import { formatLocation } from '@/lib/locationUtils';
-import { groupBy } from '@/lib/utils';
+import { sortAndGroupStudentsByClass } from '@/lib/utils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
 import StudentListItem from './StudentListItem';
@@ -20,11 +19,11 @@ interface AgendaItemModalProps {
 	item: AgendaItem;
 	isOpen: boolean;
 	onClose: () => void;
+	onOpenStudent?: (student: Student) => void;
 }
 
-export default function AgendaItemModal({ item, isOpen, onClose }: AgendaItemModalProps) {
+export default function AgendaItemModal({ item, isOpen, onClose, onOpenStudent }: AgendaItemModalProps) {
 	const { students } = useStudentsContext();
-	const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
 	const { courseDescriptions, courseCodes, teachers, locations, subject } = getAgendaItemInfo(item);
 
@@ -49,122 +48,107 @@ export default function AgendaItemModal({ item, isOpen, onClose }: AgendaItemMod
 			const agendaForDay = student.agenda?.[dateKey];
 			if (agendaForDay) {
 				for (const agendaItem of agendaForDay) {
-					const itemStart = new Date(agendaItem.begin);
-					const itemEnd = new Date(agendaItem.einde);
+					if (!agendaItemOverlapsLesson(agendaItem, lessonStart, lessonEnd)) continue;
 
-					const itemStartTime = formatTime(itemStart);
-					const itemEndTime = formatTime(itemEnd);
-
-					const overlaps =
-						(itemStartTime < lessonEnd && itemEndTime > lessonStart) ||
-						(itemStartTime === lessonStart && itemEndTime === lessonEnd);
-
-					if (overlaps) {
-						const itemLocations = agendaItem.locaties.map((loc) => formatLocation(loc)).filter(Boolean);
-						if (itemLocations.includes(firstLocationCode)) {
-							studentsFound.push(student);
-							break;
-						}
+					const itemLocations = agendaItem.locaties.map((loc) => formatLocation(loc)).filter(Boolean);
+					if (itemLocations.includes(firstLocationCode)) {
+						studentsFound.push(student);
+						break;
 					}
 				}
 			}
 		}
 
-		studentsFound.sort((a, b) => a.roepnaam.localeCompare(b.roepnaam));
-		return groupBy(studentsFound, (student) => student.klassen.join(', '));
+		return sortAndGroupStudentsByClass(studentsFound);
 	}, [students, dateKey, firstLocationCode, lessonStart, lessonEnd, hasLocation]);
 
 	const totalStudents = Object.values(studentsInLocation).flat().length;
 
 	return (
-		<>
-			<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-				<DialogContent className="max-w-[800px]">
-					<DialogHeader>
-						<DialogTitle className="flex items-center gap-2">
-							{item.lesuur?.begin && (
-								<LessonHourBadge
-									lessonInfo={{ status: 'lesson', lesson: item.lesuur.begin }}
-									className="h-7 w-7 text-sm"
-								/>
-							)}
-							<span>{courseDescriptions ?? subject ?? 'Agenda item'}</span>
-							{courseCodes && courseCodes !== courseDescriptions && (
-								<Badge variant="secondary">{courseCodes}</Badge>
-							)}
-						</DialogTitle>
-						<DialogDescription>Agenda item details en leerlingen in hetzelfde lokaal.</DialogDescription>
-					</DialogHeader>
-
-					{/* Compact info row */}
-					<div className="flex flex-wrap gap-4 text-sm">
-						<div className="flex items-center gap-1.5 text-muted-foreground">
-							<LuClock className="h-4 w-4" />
-							<span className="font-medium text-foreground">
-								{lessonStart} - {lessonEnd}
-							</span>
-						</div>
-
-						{locations && (
-							<div className="flex items-center gap-1.5 text-muted-foreground">
-								<LuMapPin className="h-4 w-4" />
-								<span className="font-medium text-foreground">{locations}</span>
-							</div>
+		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+			<DialogContent className="max-w-[800px]">
+				<DialogHeader>
+					<DialogTitle className="flex items-center gap-2">
+						{item.lesuur?.begin && (
+							<LessonHourBadge
+								lessonInfo={{ status: 'lesson', lesson: item.lesuur.begin }}
+								className="h-7 w-7 text-sm"
+							/>
 						)}
-
-						{teachers && (
-							<div className="flex items-center gap-1.5 text-muted-foreground">
-								<LuGraduationCap className="h-4 w-4" />
-								<span className="font-medium text-foreground">{teachers}</span>
-							</div>
+						<span>{courseDescriptions ?? subject ?? 'Agenda item'}</span>
+						{courseCodes && courseCodes !== courseDescriptions && (
+							<Badge variant="secondary">{courseCodes}</Badge>
 						)}
+					</DialogTitle>
+					<DialogDescription>Agenda item details en leerlingen in hetzelfde lokaal.</DialogDescription>
+				</DialogHeader>
+
+				{/* Compact info row */}
+				<div className="flex flex-wrap gap-4 text-sm">
+					<div className="flex items-center gap-1.5 text-muted-foreground">
+						<LuClock className="h-4 w-4" />
+						<span className="font-medium text-foreground">
+							{lessonStart} - {lessonEnd}
+						</span>
 					</div>
 
-					{/* Remark */}
-					{item.opmerking && (
-						<div className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">{item.opmerking}</div>
+					{locations && (
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<LuMapPin className="h-4 w-4" />
+							<span className="font-medium text-foreground">{locations}</span>
+						</div>
 					)}
 
-					{/* Students section */}
-					{hasLocation && (
-						<>
-							<hr className="border-border" />
+					{teachers && (
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<LuGraduationCap className="h-4 w-4" />
+							<span className="font-medium text-foreground">{teachers}</span>
+						</div>
+					)}
+				</div>
 
-							<div className="flex items-center gap-2">
-								<LuUsers className="h-4 w-4 text-muted-foreground" />
-								<span className="font-medium">Leerlingen ({totalStudents})</span>
-							</div>
+				{/* Remark */}
+				{item.opmerking && (
+					<div className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">{item.opmerking}</div>
+				)}
 
-							{totalStudents === 0 ? (
-								<p className="text-muted-foreground text-sm py-2">Geen andere leerlingen gevonden.</p>
-							) : (
-								<ScrollArea className="max-h-[400px] pr-2">
-									<div className="space-y-3">
-										{Object.entries(studentsInLocation).map(([className, studentsInClass]) => (
-											<div key={className}>
-												<p className="text-xs font-medium text-muted-foreground mb-1.5">
-													{className}
-												</p>
-												<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-													{studentsInClass.map((student) => (
-														<StudentListItem
-															key={student.id}
-															student={student}
-															onClick={setSelectedStudent}
-														/>
-													))}
-												</div>
+				{/* Students section */}
+				{hasLocation && (
+					<>
+						<hr className="border-border" />
+
+						<div className="flex items-center gap-2">
+							<LuUsers className="h-4 w-4 text-muted-foreground" />
+							<span className="font-medium">Leerlingen ({totalStudents})</span>
+						</div>
+
+						{totalStudents === 0 ? (
+							<p className="text-muted-foreground text-sm py-2">Geen andere leerlingen gevonden.</p>
+						) : (
+							<ScrollArea className="max-h-[400px] pr-2">
+								<div className="space-y-3">
+									{Object.entries(studentsInLocation).map(([className, studentsInClass]) => (
+										<div key={className}>
+											<p className="text-xs font-medium text-muted-foreground mb-1.5">
+												{className}
+											</p>
+											<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+												{studentsInClass.map((student) => (
+													<StudentListItem
+														key={student.id}
+														student={student}
+														onClick={(student) => onOpenStudent?.(student)}
+													/>
+												))}
 											</div>
-										))}
-									</div>
-								</ScrollArea>
-							)}
-						</>
-					)}
-				</DialogContent>
-			</Dialog>
-
-			{selectedStudent && <StudentModal student={selectedStudent} onClose={() => setSelectedStudent(null)} />}
-		</>
+										</div>
+									))}
+								</div>
+							</ScrollArea>
+						)}
+					</>
+				)}
+			</DialogContent>
+		</Dialog>
 	);
 }

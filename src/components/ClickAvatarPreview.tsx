@@ -1,8 +1,8 @@
 'use client';
 import type React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Avatar from '@/components/ui/avatar';
-import { getOrCreateBlobUrl } from '@/lib/blobUtils'; // Import from new utility
+import { useLazyBlobUrl } from '@/hooks/useLazyBlobUrl';
 import { cn } from '@/lib/utils';
 
 interface ClickAvatarPreviewProps {
@@ -13,10 +13,8 @@ interface ClickAvatarPreviewProps {
 }
 
 const ClickAvatarPreview: React.FC<ClickAvatarPreviewProps> = ({ src, alt, initials, className }) => {
-	const [isVisible, setIsVisible] = useState(false);
+	const { blobUrl, elementRef } = useLazyBlobUrl<HTMLButtonElement>(src);
 	const [isShowingPreview, setIsShowingPreview] = useState(false);
-	const [blobUrl, setBlobUrl] = useState<string | undefined>();
-	const avatarRef = useRef<HTMLButtonElement>(null);
 	const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({
 		position: 'fixed',
 		visibility: 'hidden',
@@ -27,58 +25,9 @@ const ClickAvatarPreview: React.FC<ClickAvatarPreviewProps> = ({ src, alt, initi
 	});
 
 	useEffect(() => {
-		if (!avatarRef.current) return;
-
-		const observer = new IntersectionObserver(
-			(entries) => {
-				if (entries[0].isIntersecting) {
-					setIsVisible(true);
-					observer.disconnect();
-				}
-			},
-			{ threshold: 0.1 }, // 10% of component should be visible to trigger
-		);
-
-		observer.observe(avatarRef.current);
-
-		return () => observer.disconnect();
-	}, []);
-
-	// Lazy load blob only when avatar is observed and src is available
-	useEffect(() => {
-		const currentSrc = src; // Capture src for cleanup
-		if (!currentSrc) {
-			setBlobUrl(undefined);
-			return;
-		}
-
-		if (!isVisible) return;
-
-		let cancelled = false;
-
-		getOrCreateBlobUrl(currentSrc)
-			.then((url) => {
-				if (!cancelled) {
-					setBlobUrl(url);
-				}
-			})
-			.catch((err) => {
-				console.error('Error loading avatar blob', err);
-				if (!cancelled) {
-					setBlobUrl(undefined);
-				}
-			});
-
-		return () => {
-			cancelled = true;
-			// object URLs are managed by blobUtils cache, no need to revoke here
-		};
-	}, [src, isVisible]);
-
-	// Position popover when showing preview
-	useEffect(() => {
-		if (isShowingPreview && avatarRef.current) {
-			const rect = avatarRef.current.getBoundingClientRect();
+		const element = elementRef.current;
+		if (isShowingPreview && element) {
+			const rect = element.getBoundingClientRect();
 			setPopoverStyle((prev) => ({
 				...prev,
 				top: rect.top + rect.height / 2,
@@ -88,7 +37,7 @@ const ClickAvatarPreview: React.FC<ClickAvatarPreviewProps> = ({ src, alt, initi
 		} else {
 			setPopoverStyle((prev) => ({ ...prev, visibility: 'hidden' }));
 		}
-	}, [isShowingPreview]);
+	}, [isShowingPreview, elementRef]);
 
 	const handleMouseDown = () => {
 		if (blobUrl) setIsShowingPreview(true);
@@ -102,7 +51,7 @@ const ClickAvatarPreview: React.FC<ClickAvatarPreviewProps> = ({ src, alt, initi
 
 	return (
 		<button
-			ref={avatarRef}
+			ref={elementRef}
 			type="button"
 			className={cn(
 				'relative inline-block cursor-pointer p-0 border-none bg-transparent focus:outline-none',

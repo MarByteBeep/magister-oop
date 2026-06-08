@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { timeTable } from '@/lib/agendaUtils';
 import type { AgendaItem, AttendanceStaffMember, AttendanceStudent } from '@/magister/response/agenda.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
-import type { Student } from '@/magister/response/student.types';
+import type { StudentBase } from '@/magister/response/student.types';
 import { pickRandom } from '../api/utils/random';
 
 const vakken = [
@@ -108,29 +108,56 @@ function generateBaseAgendaItem(classCode: string, teacher: StaffMember, hour: n
 	};
 }
 
-export function generateAgendaData(
-	allStudents: Student[],
-	allStaffMembers: StaffMember[],
-): Record<number, AgendaItem[]> {
-	const allStudentsAgenda: Record<number, AgendaItem[]> = {};
+function createStudentParticipant(student: StudentBase): AttendanceStudent {
+	return {
+		stamklas: student.klassen[0],
+		voorletters: student.voorletters,
+		roepnaam: student.roepnaam,
+		tussenvoegsel: student.tussenvoegsel,
+		achternaam: student.achternaam,
+		id: student.id,
+		type: 'leerling',
+		links: {
+			self: {
+				href: `/api/leerlingen/${student.id}`,
+			},
+		},
+	};
+}
 
-	// Select 30% of staff members as active teachers
-	const numActiveTeachers = Math.floor(allStaffMembers.length * 0.3);
-	const activeTeachers = faker.helpers.shuffle([...allStaffMembers]).slice(0, numActiveTeachers);
+function addStudentToAgenda(student: StudentBase, baseItem: AgendaItem, studentAgenda: AgendaItem[]): void {
+	const itemForStudent: AgendaItem = JSON.parse(JSON.stringify(baseItem));
+	itemForStudent.deelnames.push(createStudentParticipant(student));
+	studentAgenda.push(itemForStudent);
+}
 
-	if (activeTeachers.length === 0) {
-		console.warn('No active teachers selected. Agenda generation might be limited.');
+function buildClassSchedule(classCode: string, classTeacher: StaffMember): AgendaItem[] {
+	const classSchedule: AgendaItem[] = [];
+	const numLessonsForClass = faker.number.int({ min: 4, max: 8 });
+	const usedHours = new Set<number>();
+
+	for (let i = 0; i < numLessonsForClass; i++) {
+		let hour: number;
+		do {
+			hour = faker.number.int({ min: 1, max: timeTable.length });
+		} while (usedHours.has(hour));
+		usedHours.add(hour);
+
+		classSchedule.push(generateBaseAgendaItem(classCode, classTeacher, hour));
 	}
 
-	// Identify some focus classes for consistent schedules
-	const uniqueClasses = Array.from(new Set(allStudents.flatMap((s) => s.klassen)));
-	const focusClasses = faker.helpers.shuffle(uniqueClasses).slice(0, Math.min(uniqueClasses.length, 3)); // Pick up to 3 classes
+	return classSchedule;
+}
 
-	const studentsWithGeneratedAgenda = new Set<number>();
-
-	// Generate consistent schedules for focus classes
+function assignClassAgendas(
+	allStudents: StudentBase[],
+	focusClasses: string[],
+	activeTeachers: StaffMember[],
+	allStudentsAgenda: Record<number, AgendaItem[]>,
+	studentsWithGeneratedAgenda: Set<number>,
+) {
 	for (const classCode of focusClasses) {
-		faker.seed(classCode.charCodeAt(0)); // Seed for consistent class schedule
+		faker.seed(classCode.charCodeAt(0));
 		const studentsInClass = allStudents.filter((s) => s.klassen.includes(classCode));
 		if (studentsInClass.length === 0) continue;
 
@@ -140,58 +167,30 @@ export function generateAgendaData(
 			continue;
 		}
 
-		const classSchedule: AgendaItem[] = [];
-		const numLessonsForClass = faker.number.int({ min: 4, max: 8 }); // 4-8 lessons for a class
-		const usedHours = new Set<number>();
+		const classSchedule = buildClassSchedule(classCode, classTeacher);
 
-		for (let i = 0; i < numLessonsForClass; i++) {
-			let hour: number;
-			do {
-				hour = faker.number.int({ min: 1, max: timeTable.length });
-			} while (usedHours.has(hour));
-			usedHours.add(hour);
-
-			const baseItem = generateBaseAgendaItem(classCode, classTeacher, hour);
-			classSchedule.push(baseItem);
-		}
-
-		// Assign this consistent schedule to all students in the class
 		for (const student of studentsInClass) {
 			const studentAgenda: AgendaItem[] = [];
 			for (const baseItem of classSchedule) {
-				const studentParticipant: AttendanceStudent = {
-					stamklas: student.klassen[0],
-					voorletters: student.voorletters,
-					roepnaam: student.roepnaam,
-					tussenvoegsel: student.tussenvoegsel,
-					achternaam: student.achternaam,
-					id: student.id,
-					type: 'leerling',
-					links: {
-						self: {
-							href: `/api/leerlingen/${student.id}`,
-						},
-					},
-				};
-
-				// Deep copy the base item and add student as participant
-				const itemForStudent: AgendaItem = JSON.parse(JSON.stringify(baseItem));
-				itemForStudent.deelnames.push(studentParticipant);
-				studentAgenda.push(itemForStudent);
+				addStudentToAgenda(student, baseItem, studentAgenda);
 			}
 			studentAgenda.sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
 			allStudentsAgenda[student.id] = studentAgenda;
 			studentsWithGeneratedAgenda.add(student.id);
 		}
 	}
+}
 
-	// Generate individual random agendas for students not in focus classes
+function assignIndividualAgendas(
+	allStudents: StudentBase[],
+	activeTeachers: StaffMember[],
+	allStudentsAgenda: Record<number, AgendaItem[]>,
+	studentsWithGeneratedAgenda: Set<number>,
+) {
 	for (const student of allStudents) {
-		if (studentsWithGeneratedAgenda.has(student.id)) {
-			continue; // Already has a class-based agenda
-		}
+		if (studentsWithGeneratedAgenda.has(student.id)) continue;
 
-		faker.seed(student.id); // Seed faker for consistent agenda per student
+		faker.seed(student.id);
 		const numLessons = faker.number.int({ min: 4, max: 10 });
 		const studentAgenda: AgendaItem[] = [];
 		const usedHours = new Set<number>();
@@ -204,32 +203,35 @@ export function generateAgendaData(
 			usedHours.add(hour);
 
 			const teacher = activeTeachers.length > 0 ? pickRandom(activeTeachers) : undefined;
-			if (!teacher) continue; // Skip if no teacher available
+			if (!teacher) continue;
 
 			const baseItem = generateBaseAgendaItem(student.klassen[0], teacher, hour);
-
-			const studentParticipant: AttendanceStudent = {
-				stamklas: student.klassen[0],
-				voorletters: student.voorletters,
-				roepnaam: student.roepnaam,
-				tussenvoegsel: student.tussenvoegsel,
-				achternaam: student.achternaam,
-				id: student.id,
-				type: 'leerling',
-				links: {
-					self: {
-						href: `/api/leerlingen/${student.id}`,
-					},
-				},
-			};
-
-			const itemForStudent: AgendaItem = JSON.parse(JSON.stringify(baseItem));
-			itemForStudent.deelnames.push(studentParticipant);
-			studentAgenda.push(itemForStudent);
+			addStudentToAgenda(student, baseItem, studentAgenda);
 		}
+
 		studentAgenda.sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
 		allStudentsAgenda[student.id] = studentAgenda;
 	}
+}
+
+export function generateAgendaData(
+	allStudents: StudentBase[],
+	allStaffMembers: StaffMember[],
+): Record<number, AgendaItem[]> {
+	const allStudentsAgenda: Record<number, AgendaItem[]> = {};
+	const numActiveTeachers = Math.floor(allStaffMembers.length * 0.3);
+	const activeTeachers = faker.helpers.shuffle([...allStaffMembers]).slice(0, numActiveTeachers);
+
+	if (activeTeachers.length === 0) {
+		console.warn('No active teachers selected. Agenda generation might be limited.');
+	}
+
+	const uniqueClasses = Array.from(new Set(allStudents.flatMap((s) => s.klassen)));
+	const focusClasses = faker.helpers.shuffle(uniqueClasses).slice(0, Math.min(uniqueClasses.length, 3));
+	const studentsWithGeneratedAgenda = new Set<number>();
+
+	assignClassAgendas(allStudents, focusClasses, activeTeachers, allStudentsAgenda, studentsWithGeneratedAgenda);
+	assignIndividualAgendas(allStudents, activeTeachers, allStudentsAgenda, studentsWithGeneratedAgenda);
 
 	return allStudentsAgenda;
 }

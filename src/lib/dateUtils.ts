@@ -22,23 +22,6 @@ export function formatTime(date: Date) {
 	return `${hh}:${mm}`;
 }
 
-export function format(date: Date, format: string): string {
-	const yyyy = String(date.getFullYear());
-	const MM = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed for some strange reason
-	const dd = String(date.getDate()).padStart(2, '0');
-	const HH = String(date.getHours()).padStart(2, '0');
-	const mm = String(date.getMinutes()).padStart(2, '0');
-	const ss = String(date.getSeconds()).padStart(2, '0');
-
-	return format
-		.replace('yyyy', yyyy)
-		.replace('MM', MM)
-		.replace('dd', dd)
-		.replace('HH', HH)
-		.replace('mm', mm)
-		.replace('ss', ss);
-}
-
 export function getAge(date: Date) {
 	const today = getNow();
 
@@ -64,25 +47,6 @@ export function getStartOfWeek(date: Date): Date {
 	d.setDate(d.getDate() - diff);
 	d.setHours(0, 0, 0, 0);
 	return d;
-}
-
-/**
- * Get the Friday of the week for a given date
- */
-export function getEndOfWeek(date: Date): Date {
-	const monday = getStartOfWeek(date);
-	const friday = new Date(monday);
-	friday.setDate(monday.getDate() + 4);
-	friday.setHours(23, 59, 59, 999);
-	return friday;
-}
-
-/**
- * Get short Dutch day name (ma, di, wo, do, vr, za, zo)
- */
-export function getDayNameShort(date: Date): string {
-	const days = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
-	return days[date.getDay()];
 }
 
 /**

@@ -8,20 +8,30 @@ const USE_COMPRESSION = true;
 
 const jsonCache = new Map<string, unknown>();
 
+function loadCompressedCacheEntries(stored: Record<string, string>) {
+	for (const [k, compressed] of Object.entries(stored)) {
+		try {
+			const jsonStr = LZString.decompress(compressed);
+			if (jsonStr) {
+				jsonCache.set(k, JSON.parse(jsonStr));
+			}
+		} catch (e) {
+			console.warn(`Failed to decompress JSON cache for key "${k}"`, e);
+		}
+	}
+}
+
+function loadUncompressedCacheEntries(stored: Record<string, unknown>) {
+	for (const [k, v] of Object.entries(stored)) {
+		jsonCache.set(k, v);
+	}
+}
+
 export async function loadJsonCache() {
 	if (USE_COMPRESSION) {
 		const storedCompressed = await storage.session.get<Record<string, string>>(STORAGE_KEY);
 		if (storedCompressed) {
-			for (const [k, compressed] of Object.entries(storedCompressed)) {
-				try {
-					const jsonStr = LZString.decompress(compressed);
-					if (jsonStr) {
-						jsonCache.set(k, JSON.parse(jsonStr));
-					}
-				} catch (e) {
-					console.warn(`Failed to decompress JSON cache for key "${k}"`, e);
-				}
-			}
+			loadCompressedCacheEntries(storedCompressed);
 		}
 		console.info('Loaded JSON cache from session storage (compressed)');
 		return;
@@ -29,9 +39,7 @@ export async function loadJsonCache() {
 
 	const stored = await storage.session.get<Record<string, unknown>>(STORAGE_KEY);
 	if (stored) {
-		for (const [k, v] of Object.entries(stored)) {
-			jsonCache.set(k, v);
-		}
+		loadUncompressedCacheEntries(stored);
 	}
 	console.info('Loaded JSON cache from session storage (uncompressed)');
 }

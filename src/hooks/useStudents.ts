@@ -1,17 +1,15 @@
 import mergeOriginal, { type Options } from 'deepmerge';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAgendaLoader } from '@/hooks/useAgendaLoader';
 import { useAutoLoadAgenda } from '@/hooks/useAutoLoadAgenda';
 import { findAgendaItem, findNextAgendaItem, getLesson, getNextLesson, type LessonInfo } from '@/lib/agendaUtils';
-import { getDateKey, getTodayKey } from '@/lib/dateUtils';
+import { getTodayKey } from '@/lib/dateUtils';
 import { storage, syncFromChrome } from '@/lib/storage';
-import { groupBy } from '@/lib/utils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
-import type { AgendaResponse } from '@/magister/response/agenda.types';
 import type { LockersResponse } from '@/magister/response/locker.types';
 import type { StudentsResponse } from '@/magister/response/student.types';
 import type { Student } from '@/magister/types';
-import type { LoadAgendaForStudentFn } from '@/types/students.types';
 import { useCurrentTime } from './useCurrentTime';
 
 const deepEqual = <T>(a: T, b: T) => JSON.stringify(a) === JSON.stringify(b);
@@ -67,74 +65,7 @@ export function useStudents() {
 		}
 	}, [students]);
 
-	// ---- Load agenda for student ----
-	const loadAgendaForStudent: LoadAgendaForStudentFn = useCallback(
-		async (studentId: number, startDate: Date, endDate: Date) => {
-			try {
-				const startDateKey = getDateKey(startDate);
-				const endDateKey = getDateKey(endDate);
-				const url = endpoints.agenda(studentId, startDateKey, endDateKey);
-				const data = await getJson<AgendaResponse>(url, 'include', 'no-cache');
-
-				// FIXME: Refactor this to a more generic compress function that can be used for all data
-				for (const item of data.items) {
-					item.deelnames = item.deelnames.filter((e) => e.type === 'medewerker' || e.type === 'groep');
-
-					for (const person of item.deelnames) {
-						person.links = undefined;
-					}
-				}
-
-				let agendaChanged = false;
-
-				setStudents((prev) => {
-					const index = prev.findIndex((s) => s.id === studentId);
-					if (index === -1) return prev;
-
-					const student = prev[index];
-
-					const dailyItems = groupBy(data.items, (item) => getDateKey(new Date(item.begin)));
-
-					// Ensure all dates in the range have an entry (empty array if no items)
-					// This allows us to distinguish between "not loaded" and "loaded but empty"
-					const dateRange: string[] = [];
-					const currentDate = new Date(startDate);
-					while (currentDate <= endDate) {
-						const dateKey = getDateKey(currentDate);
-						dateRange.push(dateKey);
-						currentDate.setDate(currentDate.getDate() + 1);
-					}
-
-					const updatedAgenda = { ...student.agenda };
-					// Persist every calendar day the API returned; items can fall on a different
-					// local day than the requested range (timezone / Magister vs. client dates).
-					for (const [key, items] of Object.entries(dailyItems)) {
-						updatedAgenda[key] = items;
-					}
-					for (const dateKey of dateRange) {
-						if (dailyItems[dateKey] === undefined) {
-							updatedAgenda[dateKey] = [];
-						}
-					}
-
-					if (deepEqual(student.agenda, updatedAgenda)) return prev;
-
-					agendaChanged = true;
-
-					const updatedStudent = { ...student, agenda: updatedAgenda };
-					const newStudents = [...prev];
-					newStudents[index] = updatedStudent;
-
-					return newStudents;
-				});
-				return { items: data.items, changed: agendaChanged };
-			} catch (e) {
-				console.error('Failed to fetch agenda for student', studentId, e);
-				throw e;
-			}
-		},
-		[],
-	);
+	const loadAgendaForStudent = useAgendaLoader(setStudents);
 
 	// ---- Fetch lockers ----
 	const fetchLockers = useCallback(async () => {

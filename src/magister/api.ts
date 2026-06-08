@@ -54,15 +54,8 @@ async function postJsonImpl(url: string, body: unknown, credentials: Credentials
 			return { ok: true, status: res.status };
 		}
 
-		const tabId = Number((await chrome.storage.session.get('activeTabId')).activeTabId);
-
-		if (Number.isNaN(tabId)) return { ok: false, error: 'no active magister tab' };
-		await sleep(Math.random() * 250);
-
-		const [result] = await chrome.scripting.executeScript({
-			target: { tabId },
-			world: 'MAIN',
-			func: async (
+		const result = await executeInActiveMagisterTab(
+			async (
 				fetchUrl: string,
 				requestBody: unknown,
 				requestCredentials: CredentialsOption,
@@ -80,17 +73,38 @@ async function postJsonImpl(url: string, body: unknown, credentials: Credentials
 					return { ok: false, error: (err as Error).message };
 				}
 			},
-			args: [url, body, credentials],
-		});
+			[url, body, credentials],
+		);
 
-		if (result.result) return result.result;
-		return { ok: false, error: 'unknown' };
+		return result;
 	} catch (err) {
 		return { ok: false, error: (err as Error).message };
 	}
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+type ScriptError = { ok: false; error: string };
+
+async function executeInActiveMagisterTab<T, Args extends unknown[]>(
+	func: (...args: Args) => Promise<T>,
+	args: Args,
+): Promise<T | ScriptError> {
+	const tabId = Number((await chrome.storage.session.get('activeTabId')).activeTabId);
+
+	if (Number.isNaN(tabId)) return { ok: false, error: 'no active magister tab' };
+	await sleep(Math.random() * 250);
+
+	const [result] = await chrome.scripting.executeScript({
+		target: { tabId },
+		world: 'MAIN',
+		func,
+		args,
+	});
+
+	if (result.result) return result.result;
+	return { ok: false, error: 'unknown' };
+}
 
 /** Shown when Magister returns 404 (session cookies invalid or expired). */
 const MAGISTER_SESSION_EXPIRED_MESSAGE =
@@ -134,15 +148,8 @@ async function getJsonImpl<T>(
 			return { ok: true, data };
 		}
 
-		const tabId = Number((await chrome.storage.session.get('activeTabId')).activeTabId);
-
-		if (Number.isNaN(tabId)) return { ok: false, error: 'no active magister tab' };
-		await sleep(Math.random() * 250);
-
-		const [result] = await chrome.scripting.executeScript({
-			target: { tabId },
-			world: 'MAIN',
-			func: async (
+		const result = await executeInActiveMagisterTab(
+			async (
 				fetchUrl: string,
 				credentials: CredentialsOption,
 				sessionExpiredMessage: string,
@@ -164,16 +171,13 @@ async function getJsonImpl<T>(
 					return { ok: false, error: (err as Error).message };
 				}
 			},
-			args: [url, credentials, MAGISTER_SESSION_EXPIRED_MESSAGE],
-		});
+			[url, credentials, MAGISTER_SESSION_EXPIRED_MESSAGE],
+		);
 
-		if (result.result) {
-			if (result.result.ok && cache !== 'no-cache') {
-				await jsonCacheSet(url, result.result.data);
-			}
-			return result.result;
+		if (result.ok && cache !== 'no-cache') {
+			await jsonCacheSet(url, result.data);
 		}
-		return { ok: false, error: 'unknown' };
+		return result;
 	} catch (err) {
 		return { ok: false, error: (err as Error).message };
 	}
@@ -199,16 +203,8 @@ async function getBlobImpl(url: string): Promise<FetchBlobResult> {
 			};
 		}
 
-		const tabId = Number((await chrome.storage.session.get('activeTabId')).activeTabId);
-
-		if (Number.isNaN(tabId)) return { ok: false, error: 'no active magister tab' };
-
-		await sleep(Math.random() * 250);
-
-		const [result] = await chrome.scripting.executeScript({
-			target: { tabId },
-			world: 'MAIN',
-			func: async (fetchUrl: string, sessionExpiredMessage: string): Promise<FetchBlobResult> => {
+		return executeInActiveMagisterTab(
+			async (fetchUrl: string, sessionExpiredMessage: string): Promise<FetchBlobResult> => {
 				try {
 					const res = await fetch(fetchUrl, {
 						method: 'GET',
@@ -234,11 +230,8 @@ async function getBlobImpl(url: string): Promise<FetchBlobResult> {
 					return { ok: false, error: (err as Error).message };
 				}
 			},
-			args: [url, MAGISTER_SESSION_EXPIRED_MESSAGE],
-		});
-
-		if (result.result) return result.result;
-		return { ok: false, error: 'unknown' };
+			[url, MAGISTER_SESSION_EXPIRED_MESSAGE],
+		);
 	} catch (err) {
 		return { ok: false, error: (err as Error).message };
 	}

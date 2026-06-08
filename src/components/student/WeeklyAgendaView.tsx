@@ -1,25 +1,25 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
 import { findAgendaItem } from '@/lib/agendaUtils';
 import { getDateKey, getNow, getStartOfWeek, getWeekDays } from '@/lib/dateUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { Student } from '@/magister/types';
 import Agenda from './Agenda';
 import AgendaItemModal from './AgendaItemModal';
-import AgendaSyncButton from './AgendaSyncButton';
+import WeeklyAgendaNavigation from './WeeklyAgendaNavigation';
 
 interface WeeklyAgendaViewProps {
 	studentId: number;
+	onOpenStudent?: (student: Student) => void;
 }
 
 const WEEKDAYS = ['ma', 'di', 'wo', 'do', 'vr'];
 
-export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
+export default function WeeklyAgendaView({ studentId, onOpenStudent }: WeeklyAgendaViewProps) {
 	const currentTime = useCurrentTime();
 	const { students, loadAgendaForStudent } = useStudentsContext();
 	const student = students.find((s) => s.id === studentId);
@@ -180,33 +180,16 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 		<>
 			<div className="flex flex-col h-[520px]">
 				{/* Navigation header */}
-				<div className="flex items-center justify-between px-2 py-1 border-b shrink-0">
-					<Button variant="ghost" size="icon" onClick={goToPreviousWeek} title="Vorige week">
-						<LuChevronLeft className="h-5 w-5" />
-					</Button>
-
-					<div className="flex items-center gap-2">
-						<span className="text-sm font-medium">{weekRangeText}</span>
-						{!isCurrentWeek && (
-							<Button variant="outline" size="sm" onClick={goToCurrentWeek} className="text-xs h-7">
-								Vandaag
-							</Button>
-						)}
-					</div>
-
-					<div className="flex items-center gap-0.5 shrink-0">
-						<AgendaSyncButton
-							studentId={studentId}
-							rangeStart={syncRange.start}
-							rangeEnd={syncRange.end}
-							tooltipReady="Vernieuw rooster voor deze week"
-							tooltipLoading="Rooster wordt geladen…"
-						/>
-						<Button variant="ghost" size="icon" onClick={goToNextWeek} title="Volgende week">
-							<LuChevronRight className="h-5 w-5" />
-						</Button>
-					</div>
-				</div>
+				<WeeklyAgendaNavigation
+					weekRangeText={weekRangeText}
+					isCurrentWeek={isCurrentWeek}
+					studentId={studentId}
+					syncRangeStart={syncRange.start}
+					syncRangeEnd={syncRange.end}
+					onPreviousWeek={goToPreviousWeek}
+					onNextWeek={goToNextWeek}
+					onCurrentWeek={goToCurrentWeek}
+				/>
 
 				{!hasAnyItems ? (
 					<p className="text-muted-foreground text-center py-4">Geen lessen gepland voor deze week.</p>
@@ -228,6 +211,7 @@ export default function WeeklyAgendaView({ studentId }: WeeklyAgendaViewProps) {
 					item={selectedItem}
 					isOpen={selectedItem !== null}
 					onClose={() => setSelectedItem(null)}
+					onOpenStudent={onOpenStudent}
 				/>
 			)}
 		</>

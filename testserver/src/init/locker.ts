@@ -1,10 +1,10 @@
 import { faker } from '@faker-js/faker';
 import type { Locker } from '@/magister/response/locker.types';
-import type { Student } from '@/magister/response/student.types';
+import type { StudentBase } from '@/magister/response/student.types';
 
 export function generateDummyLocker(
 	lockerIndex: number, // Use an index to generate sequential locker codes
-	assignedStudent?: Student,
+	assignedStudent?: StudentBase,
 ): Locker {
 	faker.seed(lockerIndex); // Seed for consistent locker properties based on index
 

@@ -3,19 +3,17 @@ import { join } from 'node:path';
 import { faker } from '@faker-js/faker';
 import type { Locker, LockersResponse } from '@/magister/response/locker.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
-import type { Student } from '@/magister/response/student.types';
+import type { StudentBase } from '@/magister/response/student.types';
 import { generateAgendaData } from './agenda';
 import { generateDummyLeerling } from './leerling';
 import { generateDummyLocker } from './locker';
 import { generateDummyMedewerker } from './medewerker';
-
-const DATA_DIR = join(import.meta.dir, '../../data');
+import { ALL_PHOTOS_DIR, DATA_DIR } from './shared';
 
 const MEDEWERKERS_FILE_PATH = join(DATA_DIR, 'medewerkers.json');
 const LEERLINGEN_FILE_PATH = join(DATA_DIR, 'leerlingen.json');
 const LOCKERS_FILE_PATH = join(DATA_DIR, 'lockers.json');
 const AGENDA_FILE_PATH = join(DATA_DIR, 'agenda.json');
-export const ALL_PHOTOS_DIR = join(DATA_DIR, 'all_photos');
 
 const totalLeerlingen = 400;
 const totalMedewerkers = 100;
@@ -74,7 +72,7 @@ async function init() {
 	console.log(`Generated ${medewerkers.length} medewerkers and saved to ${MEDEWERKERS_FILE_PATH}`);
 
 	console.log('Generating dummy leerling data using faker...');
-	const leerlingen: Student[] = [];
+	const leerlingen: StudentBase[] = [];
 	for (const id of leerlingIds) {
 		leerlingen.push(await generateDummyLeerling(id));
 	}
@@ -109,7 +107,7 @@ async function init() {
 	let studentIndex = 0; // To iterate through studentsToAssignLockers
 
 	for (let i = 0; i < totalLockers; i++) {
-		let assignedStudent: Student | undefined;
+		let assignedStudent: StudentBase | undefined;
 
 		// Assign a student if we still have lockers that need a rental period
 		// AND we still have students available to assign

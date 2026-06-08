@@ -1,6 +1,8 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+import type { Student } from '@/magister/types';
+
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
@@ -19,4 +21,9 @@ export function groupBy<T, K extends string | number | symbol>(items: T[], getKe
 	}
 
 	return result;
+}
+
+export function sortAndGroupStudentsByClass(students: Student[]): Record<string, Student[]> {
+	const sorted = [...students].sort((a, b) => a.roepnaam.localeCompare(b.roepnaam));
+	return groupBy(sorted, (student) => student.klassen.join(', '));
 }
