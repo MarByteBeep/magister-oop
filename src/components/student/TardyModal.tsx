@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import LazyAvatar from '@/components/LazyAvatar';
 import LoadingSpinner from '@/components/LoadingSpinner';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
@@ -73,9 +73,6 @@ export default function TardyModal({ student, isOpen, onClose }: TardyModalProps
 							)}
 							<span>{fullName} - Te laat melding</span>
 						</DialogTitle>
-						<DialogDescription>
-							Overzicht van alle afspraken voor vandaag met lesuur en onderwerp.
-						</DialogDescription>
 					</DialogHeader>
 
 					{isLoading ? (

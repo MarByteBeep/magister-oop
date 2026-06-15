@@ -8,6 +8,7 @@ interface OccupancyChartPanelProps {
 	chartData: OccupancyChartPoint[];
 	currentLessonInfo: LessonInfo;
 	chartIsDark: boolean;
+	onLessonRangeClick: (lessonRange: string) => void;
 }
 
 export default function OccupancyChartPanel({
@@ -15,6 +16,7 @@ export default function OccupancyChartPanel({
 	chartData,
 	currentLessonInfo,
 	chartIsDark,
+	onLessonRangeClick,
 }: OccupancyChartPanelProps) {
 	return (
 		<div
@@ -23,7 +25,12 @@ export default function OccupancyChartPanel({
 				show ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0',
 			)}
 		>
-			<OccupancyChart chartData={chartData} currentLessonInfo={currentLessonInfo} chartIsDark={chartIsDark} />
+			<OccupancyChart
+				chartData={chartData}
+				currentLessonInfo={currentLessonInfo}
+				chartIsDark={chartIsDark}
+				onLessonRangeClick={onLessonRangeClick}
+			/>
 		</div>
 	);
 }

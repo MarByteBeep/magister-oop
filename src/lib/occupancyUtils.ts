@@ -120,6 +120,34 @@ function analyzeStudentLessonPresence(
 	return { hasLessonInThisRange, hasLessonBefore, hasLessonAfter };
 }
 
+export function getStudentsForLessonRange(
+	lessonRange: string,
+	students: Student[],
+	dateKey: string,
+	locations: string[],
+): { withLesson: Student[]; withBreak: Student[] } {
+	const withLesson: Student[] = [];
+	const withBreak: Student[] = [];
+	const [lessonStart, lessonEnd] = lessonRange.split('-') as [string, string];
+
+	for (const student of students) {
+		const agendaForDay = student.agenda?.[dateKey];
+		if (!agendaForDay?.length) continue;
+
+		const { hasLessonInThisRange, hasLessonBefore, hasLessonAfter } = analyzeStudentLessonPresence(
+			agendaForDay,
+			lessonStart,
+			lessonEnd,
+			locations,
+		);
+
+		if (hasLessonInThisRange) withLesson.push(student);
+		else if (hasLessonBefore && hasLessonAfter) withBreak.push(student);
+	}
+
+	return { withLesson, withBreak };
+}
+
 export function countStudentsForLessonRange(
 	lessonRange: string,
 	students: Student[],

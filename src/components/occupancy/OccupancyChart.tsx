@@ -10,9 +10,15 @@ interface OccupancyChartProps {
 	chartData: OccupancyChartPoint[];
 	currentLessonInfo: LessonInfo;
 	chartIsDark: boolean;
+	onLessonRangeClick: (lessonRange: string) => void;
 }
 
-export default function OccupancyChart({ chartData, currentLessonInfo, chartIsDark }: OccupancyChartProps) {
+export default function OccupancyChart({
+	chartData,
+	currentLessonInfo,
+	chartIsDark,
+	onLessonRangeClick,
+}: OccupancyChartProps) {
 	const activeLessonIndex = useMemo(() => {
 		if (!currentLessonInfo.range || currentLessonInfo.status !== 'lesson') {
 			return -1;
@@ -44,6 +50,12 @@ export default function OccupancyChart({ chartData, currentLessonInfo, chartIsDa
 				background: 'transparent',
 				foreColor: chartIsDark ? '#e5e7eb' : '#374151',
 				animations: { enabled: true, speed: 600 },
+				events: {
+					dataPointSelection: (_event, _chartContext, config) => {
+						const lessonRange = chartData[config.dataPointIndex]?.lessonRange;
+						if (lessonRange) onLessonRangeClick(lessonRange);
+					},
+				},
 			},
 			colors: ['#3b82f6', '#10b981'],
 			xaxis: {
@@ -90,18 +102,20 @@ export default function OccupancyChart({ chartData, currentLessonInfo, chartIsDa
 				}),
 			},
 		};
-	}, [chartData, activeLessonIndex, chartIsDark]);
+	}, [chartData, activeLessonIndex, chartIsDark, onLessonRangeClick]);
 
 	return (
 		<div className="border rounded-lg p-4 bg-card shadow-sm h-[350px]">
 			<h3 className="text-sm font-medium mb-3 text-muted-foreground">Totaal aantal leerlingen per lesblok</h3>
-			<Chart
-				key={`chart-${activeLessonIndex}-${chartData.length}`}
-				options={apexOptions}
-				series={apexSeries}
-				type="bar"
-				height={280}
-			/>
+			<div className="cursor-pointer">
+				<Chart
+					key={`chart-${activeLessonIndex}-${chartData.length}`}
+					options={apexOptions}
+					series={apexSeries}
+					type="bar"
+					height={280}
+				/>
+			</div>
 		</div>
 	);
 }

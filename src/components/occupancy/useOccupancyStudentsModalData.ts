@@ -1,66 +1,98 @@
 import { useCallback, useMemo } from 'react';
-import { agendaItemOverlapsLesson, getItemLocationCodes } from '@/lib/agendaUtils';
+import { agendaItemOverlapsLesson, getAgendaItemInfo, getItemLocationCodes } from '@/lib/agendaUtils';
+import { getStudentsForLessonRange } from '@/lib/occupancyUtils';
 import { sortAndGroupStudentsByClass } from '@/lib/utils';
-import type { AttendanceStaffMember } from '@/magister/response/agenda.types';
+import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
+
+export type OccupancyClassGroup = {
+	className: string;
+	subject?: string;
+	teacher?: string;
+	students: Student[];
+};
+
+function formatTeacherLabel(item: AgendaItem): string | undefined {
+	const teachers = item.deelnames.filter((participant) => participant.type === 'medewerker');
+	if (teachers.length === 0) return undefined;
+
+	return teachers
+		.map((teacher) => {
+			const name = `${teacher.roepnaam} ${teacher.tussenvoegsel ?? ''} ${teacher.achternaam}`.trim();
+			return `${name} (${teacher.code})`;
+		})
+		.join(', ');
+}
+
+function buildClassGroups(
+	students: Student[],
+	dateKey: string,
+	matchingAgendaItems: (agendaForDay: NonNullable<Student['agenda']>[string]) => AgendaItem[],
+	includeLessonInfo: boolean,
+): OccupancyClassGroup[] {
+	const grouped = sortAndGroupStudentsByClass(students);
+
+	return Object.entries(grouped).map(([className, studentsInClass]) => {
+		if (!includeLessonInfo) {
+			return { className, students: studentsInClass };
+		}
+
+		const agendaForDay = studentsInClass[0]?.agenda?.[dateKey];
+		const item = agendaForDay ? matchingAgendaItems(agendaForDay)[0] : undefined;
+
+		if (!item) {
+			return { className, students: studentsInClass };
+		}
+
+		const { courseDescriptions, subject } = getAgendaItemInfo(item);
+		const rawSubject = courseDescriptions ?? subject;
+		const rawTeacher = formatTeacherLabel(item);
+
+		return {
+			className,
+			subject: rawSubject,
+			teacher: rawTeacher,
+			students: studentsInClass,
+		};
+	});
+}
 
 export function useOccupancyStudentsModalData(
 	students: Student[],
 	dateKey: string,
 	lessonRange: string,
-	locationCode: string,
+	locations: string[],
 ) {
 	const [lessonStart, lessonEnd] = lessonRange.split('-');
-	const normalizedLocationCode = locationCode.trim().toLowerCase();
+	const normalizedLocations = useMemo(
+		() => new Set(locations.map((location) => location.trim().toLowerCase())),
+		[locations],
+	);
 
 	const matchingAgendaItems = useCallback(
 		(agendaForDay: NonNullable<Student['agenda']>[string]) =>
 			agendaForDay.filter(
 				(item) =>
 					agendaItemOverlapsLesson(item, lessonStart, lessonEnd) &&
-					getItemLocationCodes(item).includes(normalizedLocationCode),
+					getItemLocationCodes(item).some((code) => normalizedLocations.has(code)),
 			),
-		[lessonStart, lessonEnd, normalizedLocationCode],
+		[lessonStart, lessonEnd, normalizedLocations],
 	);
 
-	const studentsInLocation = useMemo(() => {
-		const studentsFound: Student[] = [];
-		for (const student of students) {
-			const agendaForDay = student.agenda?.[dateKey];
-			if (agendaForDay && matchingAgendaItems(agendaForDay).length > 0) {
-				studentsFound.push(student);
-			}
-		}
-		return sortAndGroupStudentsByClass(studentsFound);
-	}, [students, dateKey, matchingAgendaItems]);
+	const { withLesson, withBreak } = useMemo(
+		() => getStudentsForLessonRange(lessonRange, students, dateKey, locations),
+		[lessonRange, students, dateKey, locations],
+	);
 
-	const uniqueTeachers = useMemo(() => {
-		const teachersMap = new Map<number, AttendanceStaffMember>();
-		for (const student of students) {
-			const agendaForDay = student.agenda?.[dateKey];
-			if (!agendaForDay) continue;
-			for (const item of matchingAgendaItems(agendaForDay)) {
-				for (const teacher of item.deelnames.filter((p) => p.type === 'medewerker')) {
-					teachersMap.set(teacher.id, teacher as AttendanceStaffMember);
-				}
-			}
-		}
-		return Array.from(teachersMap.values()).sort((a, b) => a.achternaam.localeCompare(b.achternaam));
-	}, [students, dateKey, matchingAgendaItems]);
+	const studentsWithLesson = useMemo(
+		() => buildClassGroups(withLesson, dateKey, matchingAgendaItems, true),
+		[withLesson, dateKey, matchingAgendaItems],
+	);
 
-	const uniqueSubjects = useMemo(() => {
-		const subjects = new Set<string>();
-		for (const student of students) {
-			const agendaForDay = student.agenda?.[dateKey];
-			if (!agendaForDay) continue;
-			for (const item of matchingAgendaItems(agendaForDay)) {
-				for (const vak of item.vakken) {
-					if (vak.omschrijving) subjects.add(vak.omschrijving);
-				}
-			}
-		}
-		return Array.from(subjects).sort();
-	}, [students, dateKey, matchingAgendaItems]);
+	const studentsWithBreak = useMemo(
+		() => buildClassGroups(withBreak, dateKey, matchingAgendaItems, false),
+		[withBreak, dateKey, matchingAgendaItems],
+	);
 
-	return { studentsInLocation, uniqueTeachers, uniqueSubjects };
+	return { studentsWithLesson, studentsWithBreak };
 }

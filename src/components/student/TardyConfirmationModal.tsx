@@ -2,14 +2,7 @@
 
 import { LuPrinter } from 'react-icons/lu';
 import { Button } from '@/components/ui/button';
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatTime, getNow } from '@/lib/dateUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import templateHtml from '@/templates/tardySlip.html?raw';
@@ -107,10 +100,10 @@ export default function TardyConfirmationModal({
 			<DialogContent className="max-w-[500px]">
 				<DialogHeader>
 					<DialogTitle>Te laat melding aanmaken</DialogTitle>
-					<DialogDescription>
-						Weet je zeker dat je een te laat melding wilt aanmaken voor {lessonInfo} ({subject})?
-					</DialogDescription>
 				</DialogHeader>
+				<p className="text-sm text-muted-foreground">
+					Weet je zeker dat je een te laat melding wilt aanmaken voor {lessonInfo} ({subject})?
+				</p>
 				<DialogFooter>
 					<Button variant="outline" onClick={handlePrint}>
 						<LuPrinter className="h-4 w-4" />

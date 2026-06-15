@@ -3,7 +3,7 @@
 import { LuClock, LuGraduationCap, LuMapPin } from 'react-icons/lu';
 import LessonHourBadge from '@/components/LessonHourBadge';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useAgendaItemStudents } from '@/hooks/useAgendaItemStudents';
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
@@ -39,7 +39,6 @@ export default function AgendaItemModal({ item, isOpen, onClose, onOpenStudent }
 							<Badge variant="secondary">{courseCodes}</Badge>
 						)}
 					</DialogTitle>
-					<DialogDescription>Agenda item details en leerlingen in hetzelfde lokaal.</DialogDescription>
 				</DialogHeader>
 
 				<div className="flex flex-wrap gap-4 text-sm">

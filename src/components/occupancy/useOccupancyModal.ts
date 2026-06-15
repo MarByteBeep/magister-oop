@@ -1,21 +1,34 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 export function useOccupancyModal() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [modalLocation, setModalLocation] = useState('');
+	const [modalLocation, setModalLocation] = useState<string | null>(null);
 	const [modalLessonRange, setModalLessonRange] = useState('');
 
-	const openModal = (location: string, lessonRange: string) => {
+	const openLocationModal = useCallback((location: string, lessonRange: string) => {
 		setModalLocation(location);
 		setModalLessonRange(lessonRange);
 		setIsModalOpen(true);
-	};
+	}, []);
 
-	const closeModal = () => {
+	const openChartModal = useCallback((lessonRange: string) => {
+		setModalLocation(null);
+		setModalLessonRange(lessonRange);
+		setIsModalOpen(true);
+	}, []);
+
+	const closeModal = useCallback(() => {
 		setIsModalOpen(false);
-		setModalLocation('');
+		setModalLocation(null);
 		setModalLessonRange('');
-	};
+	}, []);
 
-	return { isModalOpen, modalLocation, modalLessonRange, openModal, closeModal };
+	return {
+		isModalOpen,
+		modalLocation,
+		modalLessonRange,
+		openLocationModal,
+		openChartModal,
+		closeModal,
+	};
 }

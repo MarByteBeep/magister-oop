@@ -20,7 +20,8 @@ export default function Occupancy() {
 	const [showLocationFilters, setShowLocationFilters] = useState(false);
 	const [showChart, setShowChart] = useState(true);
 	const chartIsDark = useChartDarkMode();
-	const { isModalOpen, modalLocation, modalLessonRange, openModal, closeModal } = useOccupancyModal();
+	const { isModalOpen, modalLocation, modalLessonRange, openLocationModal, openChartModal, closeModal } =
+		useOccupancyModal();
 
 	const { selectedLocations, filteredLocations, handleLocationFilterChange, handleSelectAll, handleDeselectAll } =
 		useOccupancyLocationSelection(allLocations);
@@ -49,6 +50,7 @@ export default function Occupancy() {
 				chartData={chartData}
 				currentLessonInfo={currentLessonInfo}
 				chartIsDark={chartIsDark}
+				onLessonRangeClick={openChartModal}
 			/>
 
 			<OccupancyFilters
@@ -64,16 +66,18 @@ export default function Occupancy() {
 				filteredLocations={filteredLocations}
 				occupancyData={occupancyData}
 				currentLessonInfo={currentLessonInfo}
-				onCardClick={openModal}
+				onCardClick={openLocationModal}
 			/>
 
 			{isModalOpen && (
 				<OccupancyStudentsModal
+					key={`${modalLessonRange}-${modalLocation ?? 'chart'}`}
 					isOpen={isModalOpen}
 					onClose={closeModal}
-					locationCode={modalLocation}
 					lessonRange={modalLessonRange}
 					dateKey={todayKey}
+					locations={modalLocation ? [modalLocation] : filteredLocations}
+					showBreakStudents={modalLocation === null}
 				/>
 			)}
 		</div>
