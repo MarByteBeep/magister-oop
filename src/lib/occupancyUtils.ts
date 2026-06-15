@@ -98,7 +98,7 @@ function analyzeStudentLessonPresence(
 	agendaForDay: AgendaItem[],
 	lessonStart: string,
 	lessonEnd: string,
-	allLocations: string[],
+	locations: string[],
 ) {
 	let hasLessonInThisRange = false;
 	let hasLessonBefore = false;
@@ -106,16 +106,15 @@ function analyzeStudentLessonPresence(
 
 	for (const item of agendaForDay) {
 		const { startTime: itemStartTime, endTime: itemEndTime } = getItemTimeRange(item);
+		const itemLocations = getItemLocationCodes(item);
+		const isInSelectedLocation = itemLocations.some((loc) => locations.includes(loc));
 
-		if (agendaItemOverlapsLesson(item, lessonStart, lessonEnd)) {
-			const itemLocations = getItemLocationCodes(item);
-			if (itemLocations.some((loc) => allLocations.includes(loc))) {
-				hasLessonInThisRange = true;
-			}
+		if (agendaItemOverlapsLesson(item, lessonStart, lessonEnd) && isInSelectedLocation) {
+			hasLessonInThisRange = true;
 		}
 
-		if (itemEndTime <= lessonStart) hasLessonBefore = true;
-		if (itemStartTime >= lessonEnd) hasLessonAfter = true;
+		if (itemEndTime <= lessonStart && isInSelectedLocation) hasLessonBefore = true;
+		if (itemStartTime >= lessonEnd && isInSelectedLocation) hasLessonAfter = true;
 	}
 
 	return { hasLessonInThisRange, hasLessonBefore, hasLessonAfter };
@@ -125,7 +124,7 @@ export function countStudentsForLessonRange(
 	lessonRange: string,
 	students: Student[],
 	todayKey: string,
-	allLocations: string[],
+	locations: string[],
 ): Pick<OccupancyChartPoint, 'total' | 'breakTotal'> {
 	const uniqueStudentIds = new Set<number>();
 	const uniqueBreakStudentIds = new Set<number>();
@@ -139,7 +138,7 @@ export function countStudentsForLessonRange(
 			agendaForDay,
 			lessonStart,
 			lessonEnd,
-			allLocations,
+			locations,
 		);
 
 		if (hasLessonInThisRange) uniqueStudentIds.add(student.id);

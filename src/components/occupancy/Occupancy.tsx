@@ -25,7 +25,7 @@ export default function Occupancy() {
 	const { selectedLocations, filteredLocations, handleLocationFilterChange, handleSelectAll, handleDeselectAll } =
 		useOccupancyLocationSelection(allLocations);
 
-	const chartData = useOccupancyChartData(filteredLocations, occupancyData, students, todayKey, allLocations);
+	const chartData = useOccupancyChartData(filteredLocations, occupancyData, students, todayKey);
 
 	if (!hasData) {
 		return (

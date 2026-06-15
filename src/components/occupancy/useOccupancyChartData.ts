@@ -9,7 +9,6 @@ export function useOccupancyChartData(
 	occupancyData: Record<string, Record<string, number>>,
 	students: Student[],
 	todayKey: string,
-	allLocations: string[],
 ) {
 	return useMemo(() => {
 		if (filteredLocations.length === 0) return [];
@@ -18,7 +17,7 @@ export function useOccupancyChartData(
 
 		return lessonRanges.map((lessonRange) => ({
 			lessonRange,
-			...countStudentsForLessonRange(lessonRange, students, todayKey, allLocations),
+			...countStudentsForLessonRange(lessonRange, students, todayKey, filteredLocations),
 		}));
-	}, [filteredLocations, occupancyData, students, todayKey, allLocations]);
+	}, [filteredLocations, occupancyData, students, todayKey]);
 }
