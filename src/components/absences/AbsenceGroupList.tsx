@@ -1,6 +1,6 @@
 'use client';
 
-import { groupAbsenceRowsByStudent, type AbsenceRow } from '@/lib/absenceUtils';
+import { type AbsenceRow, groupAbsenceRowsByStudent } from '@/lib/absenceUtils';
 import type { Student } from '@/magister/types';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';

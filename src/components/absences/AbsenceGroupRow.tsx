@@ -78,13 +78,7 @@ function AbsenceFallbackTooltipContent({ row }: { row: AbsenceRow }) {
 	);
 }
 
-function AbsenceHourIndicator({
-	row,
-	student,
-}: {
-	row: AbsenceRow;
-	student?: Student;
-}) {
+function AbsenceHourIndicator({ row, student }: { row: AbsenceRow; student?: Student }) {
 	const agendaItem = student ? resolveAgendaItem(student, row) : null;
 
 	if (agendaItem) {
@@ -176,7 +170,11 @@ export default function AbsenceGroupRow({ absences, student, onSelectStudent }: 
 			</div>
 			<div className="flex items-center gap-1 shrink-0">
 				{absences.map((row, idx) => (
-					<AbsenceHourIndicator key={`${row.lesuurBegin}-${row.lesuurEinde}-${row.begin}-${idx}`} row={row} student={student} />
+					<AbsenceHourIndicator
+						key={`${row.lesuurBegin}-${row.lesuurEinde}-${row.begin}-${idx}`}
+						row={row}
+						student={student}
+					/>
 				))}
 			</div>
 		</button>
