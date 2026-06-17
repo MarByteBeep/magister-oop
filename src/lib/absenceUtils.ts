@@ -13,6 +13,13 @@ export type AbsenceRow = {
 	einde?: string;
 };
 
+export type GroupedAbsenceStudent = {
+	studentId: number;
+	studentName: string;
+	classCode?: string;
+	absences: AbsenceRow[];
+};
+
 function normalizeKey(s: string) {
 	return s.replace(/[^a-z0-9]/gi, '').toLowerCase();
 }
@@ -106,6 +113,38 @@ export function sortAbsenceRows(byReason: Map<string, AbsenceRow[]>) {
 			return a.studentName.localeCompare(b.studentName);
 		});
 	}
+}
+
+export function groupAbsenceRowsByStudent(rows: AbsenceRow[]): GroupedAbsenceStudent[] {
+	const byStudent = new Map<number, GroupedAbsenceStudent>();
+
+	for (const row of rows) {
+		let group = byStudent.get(row.studentId);
+		if (!group) {
+			group = {
+				studentId: row.studentId,
+				studentName: row.studentName,
+				classCode: row.classCode,
+				absences: [],
+			};
+			byStudent.set(row.studentId, group);
+		}
+		group.absences.push(row);
+	}
+
+	const groups = Array.from(byStudent.values());
+	for (const group of groups) {
+		group.absences.sort((a, b) => (a.lesuurBegin ?? 0) - (b.lesuurBegin ?? 0));
+	}
+
+	groups.sort((a, b) => {
+		const maxHourA = Math.max(...a.absences.map((x) => x.lesuurBegin ?? 0));
+		const maxHourB = Math.max(...b.absences.map((x) => x.lesuurBegin ?? 0));
+		if (maxHourA !== maxHourB) return maxHourB - maxHourA;
+		return a.studentName.localeCompare(b.studentName);
+	});
+
+	return groups;
 }
 
 export function buildOrderedReasons(

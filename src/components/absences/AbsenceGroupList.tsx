@@ -1,6 +1,6 @@
 'use client';
 
-import type { AbsenceRow } from '@/lib/absenceUtils';
+import { groupAbsenceRowsByStudent, type AbsenceRow } from '@/lib/absenceUtils';
 import type { Student } from '@/magister/types';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
@@ -40,11 +40,11 @@ export default function AbsenceGroupList({
 						</CardHeader>
 						<CardContent>
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-								{rows.map((row, idx) => (
+								{groupAbsenceRowsByStudent(rows).map((group) => (
 									<AbsenceGroupRow
-										key={`${row.studentId}-${row.lesuurBegin}-${row.lesuurEinde}-${idx}`}
-										row={row}
-										student={studentById.get(row.studentId)}
+										key={group.studentId}
+										absences={group.absences}
+										student={studentById.get(group.studentId)}
 										onSelectStudent={onSelectStudent}
 									/>
 								))}

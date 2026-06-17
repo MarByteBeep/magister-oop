@@ -1,7 +1,7 @@
 'use client';
 
 import type { AbsenceRow } from '@/lib/absenceUtils';
-import { findAgendaItem, getAgendaItemInfo } from '@/lib/agendaUtils';
+import { findAgendaItem } from '@/lib/agendaUtils';
 import { formatTime, getDateKey } from '@/lib/dateUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
@@ -62,20 +62,91 @@ function getInitials(studentName: string) {
 		.toUpperCase();
 }
 
-interface AbsenceGroupRowProps {
+function AbsenceFallbackTooltipContent({ row }: { row: AbsenceRow }) {
+	const beginTime = parseDate(row.begin);
+	const endTime = parseDate(row.einde);
+
+	return (
+		<div className="space-y-1">
+			<div>Lesuur: {formatLessonRange(row)}</div>
+			{beginTime && endTime ? (
+				<div>
+					Tijd: {formatTime(beginTime)} - {formatTime(endTime)}
+				</div>
+			) : null}
+		</div>
+	);
+}
+
+function AbsenceHourIndicator({
+	row,
+	student,
+}: {
 	row: AbsenceRow;
+	student?: Student;
+}) {
+	const agendaItem = student ? resolveAgendaItem(student, row) : null;
+
+	if (agendaItem) {
+		return (
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<span className="inline-flex">
+						{row.lesuurBegin ? (
+							<LessonHourBadge
+								lessonInfo={{ status: 'lesson', lesson: row.lesuurBegin }}
+								className="h-5 w-5 text-xs shrink-0"
+							/>
+						) : (
+							<Badge variant="secondary" className="shrink-0 text-xs">
+								les {formatLessonRange(row)}
+							</Badge>
+						)}
+					</span>
+				</TooltipTrigger>
+				<TooltipContent>
+					<AgendaTooltipContent item={agendaItem} />
+				</TooltipContent>
+			</Tooltip>
+		);
+	}
+
+	if (row.lesuurBegin) {
+		return (
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<span className="inline-flex">
+						<LessonHourBadge
+							lessonInfo={{ status: 'lesson', lesson: row.lesuurBegin }}
+							className="h-5 w-5 text-xs shrink-0"
+						/>
+					</span>
+				</TooltipTrigger>
+				<TooltipContent>
+					<AbsenceFallbackTooltipContent row={row} />
+				</TooltipContent>
+			</Tooltip>
+		);
+	}
+
+	return (
+		<Badge variant="secondary" className="shrink-0 max-w-[45%]">
+			les {formatLessonRange(row)}
+		</Badge>
+	);
+}
+
+interface AbsenceGroupRowProps {
+	absences: AbsenceRow[];
 	student?: Student;
 	onSelectStudent: (studentId: number) => void;
 }
 
-export default function AbsenceGroupRow({ row, student, onSelectStudent }: AbsenceGroupRowProps) {
+export default function AbsenceGroupRow({ absences, student, onSelectStudent }: AbsenceGroupRowProps) {
+	const first = absences[0];
+	if (!first) return null;
+
 	const clickable = Boolean(student);
-	const agendaItem = student ? resolveAgendaItem(student, row) : null;
-	const beginTime = parseDate(row.begin);
-	const endTime = parseDate(row.einde);
-	const { courseCodes, teachersCodes, subject } = agendaItem
-		? getAgendaItemInfo(agendaItem)
-		: { courseCodes: undefined, teachersCodes: undefined, subject: undefined };
 
 	return (
 		<button
@@ -92,49 +163,22 @@ export default function AbsenceGroupRow({ row, student, onSelectStudent }: Absen
 			<div className="flex items-center gap-3 min-w-0">
 				<LazyAvatar
 					src={student?.links.foto?.href || undefined}
-					alt={row.studentName}
-					initials={getInitials(row.studentName)}
+					alt={first.studentName}
+					initials={getInitials(first.studentName)}
 					className="h-10 w-10"
 				/>
 				<div className="flex flex-col min-w-0">
 					<span className="font-medium text-foreground truncate">
-						{row.studentName}{' '}
-						{row.classCode ? <span className="text-muted-foreground">({row.classCode})</span> : null}
+						{first.studentName}{' '}
+						{first.classCode ? <span className="text-muted-foreground">({first.classCode})</span> : null}
 					</span>
 				</div>
 			</div>
-			{agendaItem ? (
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<div className="flex items-center gap-1.5 shrink-0 max-w-[45%] overflow-hidden">
-							{row.lesuurBegin ? (
-								<LessonHourBadge
-									lessonInfo={{ status: 'lesson', lesson: row.lesuurBegin }}
-									className="h-5 w-5 text-xs shrink-0"
-								/>
-							) : null}
-							{beginTime && endTime ? (
-								<span className="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-									{formatTime(beginTime)}-{formatTime(endTime)}
-								</span>
-							) : null}
-							<span className="text-xs font-semibold text-foreground truncate">
-								{courseCodes ?? subject ?? ''}
-							</span>
-							{teachersCodes ? (
-								<span className="text-xs text-muted-foreground truncate">{teachersCodes}</span>
-							) : null}
-						</div>
-					</TooltipTrigger>
-					<TooltipContent>
-						<AgendaTooltipContent item={agendaItem} />
-					</TooltipContent>
-				</Tooltip>
-			) : (
-				<Badge variant="secondary" className="shrink-0 max-w-[45%]">
-					les {formatLessonRange(row)}
-				</Badge>
-			)}
+			<div className="flex items-center gap-1 shrink-0">
+				{absences.map((row, idx) => (
+					<AbsenceHourIndicator key={`${row.lesuurBegin}-${row.lesuurEinde}-${row.begin}-${idx}`} row={row} student={student} />
+				))}
+			</div>
 		</button>
 	);
 }
