@@ -1,4 +1,7 @@
-const startDate = '2025-08-01';
+import { getNow } from '@/lib/dateUtils';
+
+const startYear = getNow().getMonth() < 8 ? getNow().getFullYear() - 1 : getNow().getFullYear();
+const startDate = startYear + '-08-01';
 
 export const endpoints = {
 	account: () => '/api/account',
