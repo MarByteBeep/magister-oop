@@ -1,6 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { LuLaptop, LuMoon, LuSettings, LuSun } from 'react-icons/lu';
+import { ChangelogDialog } from '@/components/ChangelogDialog';
 import { useTheme } from '@/context/ThemeContext';
 import { appPackage } from '@/lib/appPackage';
 import { isThemePreference } from '@/lib/themePreference';
@@ -14,6 +16,7 @@ const themeToggleItemClass =
 
 function Settings() {
 	const { theme, setTheme } = useTheme();
+	const [changelogOpen, setChangelogOpen] = useState(false);
 
 	const handleThemeChange = (nextTheme: string) => {
 		if (!isThemePreference(nextTheme)) return;
@@ -58,7 +61,16 @@ function Settings() {
 				<section className="space-y-2">
 					<p className="text-sm font-medium text-foreground">App informatie</p>
 					<div className="space-y-1 text-sm text-muted-foreground">
-						<p>Versie: {appPackage.version}</p>
+						<p>
+							<Button
+								variant="link"
+								className="h-auto p-0 text-sm font-normal text-muted-foreground underline hover:opacity-80"
+								onClick={() => setChangelogOpen(true)}
+								aria-label={`Versie ${appPackage.version}, versies bekijken`}
+							>
+								Versie: {appPackage.version}
+							</Button>
+						</p>
 						<p>Auteur: {appPackage.author}</p>
 						<p>
 							{appPackage.copyright} (
@@ -85,6 +97,7 @@ function Settings() {
 					</div>
 				</section>
 			</DialogContent>
+			<ChangelogDialog open={changelogOpen} onClose={() => setChangelogOpen(false)} />
 		</Dialog>
 	);
 }
