@@ -12,15 +12,7 @@ export function useWeeklyAgenda(
 	const [weekOffset, setWeekOffset] = useState(0);
 
 	const week = useWeeklyAgendaWeek(weekOffset, student);
-	useWeeklyAgendaLoader(
-		studentId,
-		week.weekKey,
-		week.selectedWeekDate,
-		week.weekDays,
-		student,
-		loadAgendaForStudent,
-		setIsLoading,
-	);
+	useWeeklyAgendaLoader(studentId, week.weekKey, week.selectedWeekDate, student, loadAgendaForStudent, setIsLoading);
 
 	return {
 		isLoading,

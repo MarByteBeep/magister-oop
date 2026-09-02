@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAgendaLoader } from '@/hooks/useAgendaLoader';
 import { useAutoLoadAgenda } from '@/hooks/useAutoLoadAgenda';
-import { findAgendaItem, findNextAgendaItem } from '@/lib/agendaUtils';
+import { needsAgendaDayFetch, repairStaleAgendaCache } from '@/lib/agendaLoadUtils';
+import { findAgendaItemPreferringLessons, findNextAgendaItem } from '@/lib/agendaUtils';
 import { getTodayKey } from '@/lib/dateUtils';
+import { deepEqual } from '@/lib/utils';
 import type { Student } from '@/magister/types';
 import { useCurrentTime } from './useCurrentTime';
 import { useLessonInfo } from './useLessonInfo';
 import { useSelectedStudiesStorage } from './useSelectedStudiesStorage';
 import { useStudentFetch } from './useStudentFetch';
-import { useStudentStorageSync } from './useStudentStorageSync';
+import { mergeStudent, useStudentStorageSync } from './useStudentStorageSync';
 
 export function useStudents() {
 	const [students, setStudents] = useState<Student[]>([]);
@@ -24,16 +26,40 @@ export function useStudents() {
 	const loadAgendaForStudent = useAgendaLoader(setStudents);
 
 	useEffect(() => {
+		setStudents((prev) => {
+			if (prev.length === 0) return prev;
+			const repaired = prev.map(repairStaleAgendaCache);
+			return deepEqual(prev, repaired) ? prev : repaired;
+		});
+	}, []);
+
+	useEffect(() => {
 		let cancelled = false;
 		async function init() {
 			setLoading(true);
 			const stored = await loadStoredStudents();
+			const storedById = new Map(stored.map((student) => [student.id, student]));
 			if (cancelled) return;
-			setStudents(stored);
 
+			setStudents([]);
 			await fetchStudentsPaginated().catch((err) => setError(err instanceof Error ? err.message : String(err)));
 			if (cancelled) return;
 			await fetchLockers().catch((err) => setError(err instanceof Error ? err.message : String(err)));
+			if (cancelled) return;
+
+			setStudents((prev) =>
+				prev.map((student) => {
+					const cached = storedById.get(student.id);
+					if (!cached) return student;
+					return repairStaleAgendaCache(
+						mergeStudent(student, {
+							agenda: cached.agenda,
+							returnMeasuresLoadedFor: cached.returnMeasuresLoadedFor,
+							lockerCode: cached.lockerCode,
+						}),
+					);
+				}),
+			);
 			setLoading(false);
 		}
 		void init();
@@ -56,7 +82,9 @@ export function useStudents() {
 			const agendaForToday = student.agenda?.[todayKey];
 			return {
 				...student,
-				currentAgendaItem: agendaForToday ? findAgendaItem(currentTime, agendaForToday) : undefined,
+				currentAgendaItem: agendaForToday
+					? findAgendaItemPreferringLessons(currentTime, agendaForToday)
+					: undefined,
 				nextAgendaItem: agendaForToday ? findNextAgendaItem(currentTime, agendaForToday) : undefined,
 			};
 		});
@@ -67,7 +95,7 @@ export function useStudents() {
 		const filtered = students.filter((student) =>
 			selectedStudies.size ? student.studies.some((s) => selectedStudies.has(s)) : true,
 		);
-		return filtered.filter((s) => s.agenda?.[todayKey] === undefined).length;
+		return filtered.filter((s) => needsAgendaDayFetch(s, todayKey)).length;
 	}, [students, selectedStudies]);
 
 	return {

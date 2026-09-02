@@ -6,6 +6,7 @@ export type Links = Record<string, unknown> | undefined;
 export type Student = {
 	lockerCode?: string;
 	agenda?: Record<string, AgendaItem[]>;
+	returnMeasuresLoadedFor?: Record<string, boolean>;
 	currentAgendaItem?: AgendaItem | null;
 	nextAgendaItem?: AgendaItem | null;
 } & StudentBase;

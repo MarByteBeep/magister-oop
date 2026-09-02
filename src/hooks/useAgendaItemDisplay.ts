@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { findAgendaItem, findAgendaItemOverlappingLessonRange } from '@/lib/agendaUtils';
+import { isAgendaDayLoaded } from '@/lib/agendaLoadUtils';
+import {
+	findAgendaItemOverlappingLessonRangePreferringLessons,
+	findAgendaItemPreferringLessons,
+} from '@/lib/agendaUtils';
 import { getDateKey, getNow } from '@/lib/dateUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
@@ -16,8 +20,8 @@ export function useAgendaItemDisplay(
 
 	const findRelevantAgendaItem = useCallback(
 		(items: AgendaItem[], date: Date) => {
-			if (type === 'current') return findAgendaItem(date, items);
-			if (lessonRange) return findAgendaItemOverlappingLessonRange(items, lessonRange);
+			if (type === 'current') return findAgendaItemPreferringLessons(date, items);
+			if (lessonRange) return findAgendaItemOverlappingLessonRangePreferringLessons(items, lessonRange);
 			return null;
 		},
 		[type, lessonRange],
@@ -27,10 +31,9 @@ export function useAgendaItemDisplay(
 		if (!student) return;
 
 		const todayKey = getDateKey(getNow());
-		const agendaForToday = student.agenda?.[todayKey];
 
-		if (agendaForToday !== undefined) {
-			setAgendaItem(findRelevantAgendaItem(agendaForToday, getNow()));
+		if (isAgendaDayLoaded(student, todayKey)) {
+			setAgendaItem(findRelevantAgendaItem(student.agenda?.[todayKey] ?? [], getNow()));
 			setHasFetchedForToday(true);
 		} else {
 			setAgendaItem(null);

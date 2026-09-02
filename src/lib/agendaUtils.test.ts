@@ -1,5 +1,5 @@
 import { expect, setSystemTime, test } from 'bun:test';
-import { getCurrentLesson, getNextLesson } from './agendaUtils';
+import { getAgendaOccurrenceKey, getCurrentLesson, getNextLesson, isSameAgendaOccurrence } from './agendaUtils';
 
 // ------------------------------------------------------------
 // HELPER – mock the time
@@ -166,4 +166,14 @@ test('After 16:00 → after-school', () => {
 	const cur = getCurrentLesson();
 	expect(cur).toEqual({ status: 'after-school' });
 	expect(getNextLesson(cur)).toEqual({ status: 'after-school' });
+});
+
+test('isSameAgendaOccurrence distinguishes shared ids by begin', () => {
+	const monday = { id: 42, begin: '2024-08-19T07:00:00.000Z' };
+	const wednesday = { id: 42, begin: '2024-08-21T07:00:00.000Z' };
+
+	expect(isSameAgendaOccurrence(monday, monday)).toBe(true);
+	expect(isSameAgendaOccurrence(monday, wednesday)).toBe(false);
+	expect(isSameAgendaOccurrence(monday, null)).toBe(false);
+	expect(getAgendaOccurrenceKey(monday)).toBe('42:2024-08-19T07:00:00.000Z');
 });

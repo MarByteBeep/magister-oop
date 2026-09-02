@@ -1,5 +1,6 @@
 import { formatTime, getNow } from '@/lib/dateUtils';
 import { formatLocations } from '@/lib/locationUtils';
+import { isReturnMeasureAgendaItem } from '@/lib/returnMeasureUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 
 export const timeTable = [
@@ -33,13 +34,14 @@ export function getAgendaItemInfo(item: AgendaItem) {
 			: undefined;
 
 	const filteredTeachers = item.deelnames.filter((e) => e.type === 'medewerker');
+	const teacherCodes = getTeacherCodes(item);
 
 	const teachers =
 		filteredTeachers.length > 0
 			? filteredTeachers.map((e) => `${e.roepnaam} ${e.tussenvoegsel ?? ''} ${e.achternaam}`).join(', ')
 			: undefined;
 
-	const teachersCodes = filteredTeachers.length > 0 ? filteredTeachers.map((e) => `${e.code}`).join(', ') : undefined;
+	const teachersCodes = teacherCodes.length > 0 ? teacherCodes.join(', ') : undefined;
 
 	const courseDescriptions =
 		item.vakken.length > 0
@@ -58,7 +60,24 @@ export function getAgendaItemInfo(item: AgendaItem) {
 		courseDescriptions,
 		teachers,
 		teachersCodes,
+		teacherCodes,
 	};
+}
+
+/** Staff codes from an agenda item (medewerker participants only). */
+export function getTeacherCodes(item: AgendaItem): string[] {
+	return item.deelnames
+		.filter((e) => e.type === 'medewerker')
+		.map((e) => e.code)
+		.filter((code): code is string => Boolean(code));
+}
+
+/** Compact label for tight UI: single code, or first code + "e.a." when multiple. */
+export function formatCompactTeacherLabel(item: AgendaItem): string | undefined {
+	const codes = getTeacherCodes(item);
+	if (codes.length === 0) return undefined;
+	if (codes.length === 1) return codes[0];
+	return `${codes[0]} e.a.`;
 }
 
 export function getLesson(date: Date): LessonInfo {
@@ -129,6 +148,26 @@ export function findAgendaItem(date: Date, agendaItems: AgendaItem[]) {
 	return null;
 }
 
+/** Recurring Magister appointments can reuse the same id across days; begin distinguishes occurrences. */
+export function isSameAgendaOccurrence(
+	a: Pick<AgendaItem, 'id' | 'begin'> | null | undefined,
+	b: Pick<AgendaItem, 'id' | 'begin'> | null | undefined,
+): boolean {
+	return a != null && b != null && a.id === b.id && a.begin === b.begin;
+}
+
+export function getAgendaOccurrenceKey(item: Pick<AgendaItem, 'id' | 'begin'>): string {
+	return `${item.id}:${item.begin}`;
+}
+
+/** Prefer regular lessons over return measures when both overlap the same time slot. */
+export function findAgendaItemPreferringLessons(date: Date, agendaItems: AgendaItem[]) {
+	const lessonsOnly = agendaItems.filter((item) => !isReturnMeasureAgendaItem(item));
+	const lesson = findAgendaItem(date, lessonsOnly);
+	if (lesson) return lesson;
+	return findAgendaItem(date, agendaItems);
+}
+
 export function findNextAgendaItem(date: Date, agendaItems: AgendaItem[]) {
 	// Filter out items that have already started or ended, and only consider items that START in the future.
 	const futureItems = agendaItems.filter((item) => new Date(item.begin) > date);
@@ -169,4 +208,15 @@ export function findAgendaItemOverlappingLessonRange(
 		if (agendaItemOverlapsLesson(item, lessonStart, lessonEnd)) return item;
 	}
 	return null;
+}
+
+/** Prefer regular lessons over return measures when both overlap the same lesson range. */
+export function findAgendaItemOverlappingLessonRangePreferringLessons(
+	agendaItems: AgendaItem[],
+	lessonRange: string,
+): AgendaItem | null {
+	const lessonsOnly = agendaItems.filter((item) => !isReturnMeasureAgendaItem(item));
+	const lesson = findAgendaItemOverlappingLessonRange(lessonsOnly, lessonRange);
+	if (lesson) return lesson;
+	return findAgendaItemOverlappingLessonRange(agendaItems, lessonRange);
 }

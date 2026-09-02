@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
 import { getNow } from '@/lib/dateUtils';
 import { createLimiter } from '@/lib/limiter';
 import type { UnauthorizedAbsencesResponse } from '@/magister/response/unauthorized-absence.types';
@@ -24,7 +25,7 @@ export function useAbsenceAgendaLoader(
 			const student = studentMap.get(item.id);
 			if (!student) continue;
 			if (!allowedStudentIds.has(student.id)) continue;
-			if (student.agenda?.[todayKey]) continue;
+			if (!needsAgendaDayFetch(student, todayKey)) continue;
 			if (agendaLoadedForStudentIds.has(student.id)) continue;
 			ids.add(student.id);
 		}

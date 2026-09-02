@@ -68,7 +68,7 @@ export default function WeeklyAgendaView({ studentId, onOpenStudent }: WeeklyAge
 							items={calendarItems}
 							date={getStartOfWeek(selectedWeekDate)}
 							view="work_week"
-							activeItemId={isCurrentWeek ? (activeAgendaItem?.id ?? null) : null}
+							activeItem={isCurrentWeek ? activeAgendaItem : null}
 							onSelectItem={(item) => setSelectedItem(item)}
 						/>
 					</div>

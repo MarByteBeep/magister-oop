@@ -9,7 +9,9 @@ import {
 	getOverlappingEventIds,
 	isSameCalendarDay,
 } from '@/lib/agendaCalendarUtils';
+import { agendaDayLayoutAlgorithm } from '@/lib/agendaDayLayout';
 import { hhmmToDate } from '@/lib/bigCalendarUtils';
+import { isReturnMeasureAgendaItem } from '@/lib/returnMeasureUtils';
 import { cn } from '@/lib/utils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 
@@ -17,7 +19,7 @@ export function useAgendaCalendar(
 	items: AgendaItem[],
 	date: Date,
 	view: View,
-	activeItemId: number | null | undefined,
+	activeItem: AgendaItem | null | undefined,
 	onSelectItem: (item: AgendaItem) => void,
 ) {
 	const events = useMemo(() => agendaItemsToCalendarEvents(items), [items]);
@@ -31,17 +33,37 @@ export function useAgendaCalendar(
 		[],
 	);
 	const tooltipAccessor = useCallback(() => '', []);
+	const eventPropGetter = useCallback((event: CalendarEvent) => {
+		const isReturnMeasure = isReturnMeasureAgendaItem(event.resource);
+		return {
+			className: isReturnMeasure ? 'agenda-return-measure-event' : 'agenda-lesson-event',
+			style: {
+				zIndex: isReturnMeasure ? 1 : 2,
+			},
+		};
+	}, []);
 
 	const components = useMemo(
 		() => ({
 			header: AgendaCalendarHeader,
 			event: (props: EventProps<CalendarEvent>) =>
-				createElement(AgendaCalendarEvent, { ...props, activeItemId, overlappingEventIds }),
+				createElement(AgendaCalendarEvent, { ...props, activeItem, overlappingEventIds }),
 		}),
-		[activeItemId, overlappingEventIds],
+		[activeItem, overlappingEventIds],
 	);
 
 	const views: View[] = view === 'work_week' ? ['work_week'] : ['day'];
 
-	return { events, min, max, handleSelectEvent, dayPropGetter, tooltipAccessor, components, views };
+	return {
+		events,
+		min,
+		max,
+		handleSelectEvent,
+		dayPropGetter,
+		eventPropGetter,
+		tooltipAccessor,
+		components,
+		views,
+		dayLayoutAlgorithm: agendaDayLayoutAlgorithm,
+	};
 }

@@ -9,11 +9,14 @@ import { generateDummyLeerling } from './leerling';
 import { generateDummyLocker } from './locker';
 import { generateDummyMedewerker } from './medewerker';
 import { ALL_PHOTOS_DIR, DATA_DIR } from './shared';
+import { generateReturnMeasureData } from './terugkommaatregelen';
 
 const MEDEWERKERS_FILE_PATH = join(DATA_DIR, 'medewerkers.json');
 const LEERLINGEN_FILE_PATH = join(DATA_DIR, 'leerlingen.json');
 const LOCKERS_FILE_PATH = join(DATA_DIR, 'lockers.json');
 const AGENDA_FILE_PATH = join(DATA_DIR, 'agenda.json');
+const TERUGKOMMAATREGELEN_FILE_PATH = join(DATA_DIR, 'terugkommaatregelen.json');
+const DATA_VERSION_FILE_PATH = join(DATA_DIR, 'data-version.json');
 
 const totalLeerlingen = 400;
 const totalMedewerkers = 100;
@@ -45,6 +48,14 @@ async function init() {
 	if (existsSync(AGENDA_FILE_PATH)) {
 		rmSync(AGENDA_FILE_PATH);
 		console.log(`Removed ${AGENDA_FILE_PATH}`);
+	}
+	if (existsSync(TERUGKOMMAATREGELEN_FILE_PATH)) {
+		rmSync(TERUGKOMMAATREGELEN_FILE_PATH);
+		console.log(`Removed ${TERUGKOMMAATREGELEN_FILE_PATH}`);
+	}
+	if (existsSync(DATA_VERSION_FILE_PATH)) {
+		rmSync(DATA_VERSION_FILE_PATH);
+		console.log(`Removed ${DATA_VERSION_FILE_PATH}`);
 	}
 	if (existsSync(ALL_PHOTOS_DIR)) {
 		rmSync(ALL_PHOTOS_DIR, { recursive: true, force: true });
@@ -81,9 +92,16 @@ async function init() {
 
 	// --- Agenda Generation ---
 	console.log('Generating dummy agenda data...');
-	const agendaData = generateAgendaData(leerlingen, medewerkers);
+	const { agenda: agendaData } = generateAgendaData(leerlingen, medewerkers);
 	writeFileSync(AGENDA_FILE_PATH, JSON.stringify(agendaData, null, 2), 'utf-8');
 	console.log(`Generated agenda for ${leerlingen.length} students and saved to ${AGENDA_FILE_PATH}`);
+
+	console.log('Generating dummy terugkommaatregelen data...');
+	const terugkommaatregelenData = generateReturnMeasureData(leerlingen);
+	writeFileSync(TERUGKOMMAATREGELEN_FILE_PATH, JSON.stringify(terugkommaatregelenData, null, 2), 'utf-8');
+	console.log(
+		`Generated terugkommaatregelen for ${Object.keys(terugkommaatregelenData).length} students and saved to ${TERUGKOMMAATREGELEN_FILE_PATH}`,
+	);
 
 	// --- Locker Generation ---
 	console.log('Generating dummy locker data...');
@@ -125,6 +143,9 @@ async function init() {
 	console.log(`Generated ${lockers.length} lockers and saved to ${LOCKERS_FILE_PATH}`);
 	console.log(`Assigned ${assignedStudentIds.size} students to lockers.`);
 	console.log(`Generated ${totalLockers - assignedStudentIds.size} lockers without rental periods.`);
+
+	writeFileSync(DATA_VERSION_FILE_PATH, JSON.stringify({ version: Date.now().toString() }, null, 2), 'utf-8');
+	console.log(`Wrote data version to ${DATA_VERSION_FILE_PATH}`);
 }
 
 init().catch(console.error);

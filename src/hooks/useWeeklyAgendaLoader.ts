@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { isAgendaRangeLoaded, needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
 import { getDateKey, getStartOfWeek } from '@/lib/dateUtils';
 import type { Student } from '@/magister/types';
 
@@ -6,7 +7,6 @@ export function useWeeklyAgendaLoader(
 	studentId: number,
 	weekKey: string,
 	selectedWeekDate: Date,
-	weekDays: Date[],
 	student: Student | undefined,
 	loadAgendaForStudent: (id: number, start: Date, end: Date) => Promise<unknown>,
 	setIsLoading: (loading: boolean) => void,
@@ -31,23 +31,29 @@ export function useWeeklyAgendaLoader(
 			return;
 		}
 
-		const dataExists = weekDays.every((day) => currentStudent.agenda?.[getDateKey(day)] !== undefined);
-		if (dataExists) {
+		const monday = getStartOfWeek(selectedWeekDate);
+		const friday = new Date(monday);
+		friday.setDate(monday.getDate() + 4);
+
+		const rangeNeedsFetch = Array.from({ length: 5 }, (_, index) => {
+			const day = new Date(monday);
+			day.setDate(monday.getDate() + index);
+			return needsAgendaDayFetch(currentStudent, getDateKey(day));
+		}).some(Boolean);
+
+		const rangeComplete = !rangeNeedsFetch;
+		if (rangeComplete) {
 			hasLoadedRef.current.add(loadKey);
 			setIsLoading(false);
 			return;
 		}
 
-		const monday = getStartOfWeek(selectedWeekDate);
-		const friday = new Date(monday);
-		friday.setDate(monday.getDate() + 4);
-
 		hasLoadedRef.current.add(loadKey);
-		setIsLoading(true);
+		setIsLoading(!isAgendaRangeLoaded(currentStudent, monday, friday));
 
 		loadAgendaRef
 			.current(currentStudent.id, monday, friday)
 			.catch((err) => console.error('Failed to load week agenda:', err))
 			.finally(() => setIsLoading(false));
-	}, [studentId, weekKey, selectedWeekDate, weekDays, setIsLoading]);
+	}, [studentId, weekKey, selectedWeekDate, setIsLoading]);
 }

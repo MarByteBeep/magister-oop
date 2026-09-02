@@ -9,13 +9,23 @@ export interface AgendaProps {
 	items: AgendaItem[];
 	date: Date;
 	view: View;
-	activeItemId?: number | null;
+	activeItem?: AgendaItem | null;
 	onSelectItem: (item: AgendaItem) => void;
 }
 
-export default function Agenda({ items, date, view, activeItemId, onSelectItem }: AgendaProps) {
-	const { events, min, max, handleSelectEvent, dayPropGetter, tooltipAccessor, components, views } =
-		useAgendaCalendar(items, date, view, activeItemId, onSelectItem);
+export default function Agenda({ items, date, view, activeItem, onSelectItem }: AgendaProps) {
+	const {
+		events,
+		min,
+		max,
+		handleSelectEvent,
+		dayPropGetter,
+		eventPropGetter,
+		tooltipAccessor,
+		components,
+		views,
+		dayLayoutAlgorithm,
+	} = useAgendaCalendar(items, date, view, activeItem, onSelectItem);
 
 	return (
 		<div className="h-full overflow-hidden">
@@ -30,7 +40,7 @@ export default function Agenda({ items, date, view, activeItemId, onSelectItem }
 				toolbar={false}
 				selectable={false}
 				popup={false}
-				dayLayoutAlgorithm="no-overlap"
+				dayLayoutAlgorithm={dayLayoutAlgorithm}
 				step={60}
 				timeslots={1}
 				min={min}
@@ -38,6 +48,7 @@ export default function Agenda({ items, date, view, activeItemId, onSelectItem }
 				onSelectEvent={handleSelectEvent}
 				tooltipAccessor={tooltipAccessor}
 				dayPropGetter={dayPropGetter}
+				eventPropGetter={eventPropGetter}
 				components={components}
 				formats={agendaCalendarFormats}
 				className="text-sm"

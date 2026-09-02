@@ -73,6 +73,8 @@ export type AgendaItem = {
 	vakken: AgendaItemCourse[];
 	locaties: AgendaItemLocation[];
 	links: Links;
+	returnMeasureMaatregelOmschrijving?: string | null;
+	returnMeasureOmschrijving?: string | null;
 };
 
 export type AgendaResponse = {

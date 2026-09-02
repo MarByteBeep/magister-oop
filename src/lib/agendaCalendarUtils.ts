@@ -1,8 +1,9 @@
-import { getAgendaItemInfo } from '@/lib/agendaUtils';
+import { getAgendaItemInfo, getAgendaOccurrenceKey } from '@/lib/agendaUtils';
+import { getReturnMeasureDisplay, isReturnMeasureAgendaItem } from '@/lib/returnMeasureUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 
 export type CalendarEvent = {
-	id: number;
+	id: string;
 	title: string;
 	start: Date;
 	end: Date;
@@ -13,26 +14,33 @@ export function isSameCalendarDay(a: Date, b: Date): boolean {
 	return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-export function agendaItemsToCalendarEvents(items: AgendaItem[]): CalendarEvent[] {
-	return items.map((item) => {
-		const { courseDescriptions, subject } = getAgendaItemInfo(item);
-		return {
-			id: item.id,
-			title: courseDescriptions ?? subject ?? 'Les',
-			start: new Date(item.begin),
-			end: new Date(item.einde),
-			resource: item,
-		};
-	});
+export function agendaItemToCalendarEvent(item: AgendaItem): CalendarEvent {
+	const { courseDescriptions, subject } = getAgendaItemInfo(item);
+	const title = isReturnMeasureAgendaItem(item)
+		? getReturnMeasureDisplay(item).primaryLabel
+		: (courseDescriptions ?? subject ?? 'Les');
+	return {
+		id: getAgendaOccurrenceKey(item),
+		title,
+		start: new Date(item.begin),
+		end: new Date(item.einde),
+		resource: item,
+	};
 }
 
-export function getOverlappingEventIds(events: CalendarEvent[]): Set<number> {
-	const overlappingIds = new Set<number>();
+export function agendaItemsToCalendarEvents(items: AgendaItem[]): CalendarEvent[] {
+	return items.map(agendaItemToCalendarEvent);
+}
 
-	for (let i = 0; i < events.length; i++) {
-		for (let j = i + 1; j < events.length; j++) {
-			const a = events[i];
-			const b = events[j];
+/** Overlap packing for compact lesson UI; return measures are ignored (they render full-width behind). */
+export function getOverlappingEventIds(events: CalendarEvent[]): Set<string> {
+	const overlappingIds = new Set<string>();
+	const lessonEvents = events.filter((event) => !isReturnMeasureAgendaItem(event.resource));
+
+	for (let i = 0; i < lessonEvents.length; i++) {
+		for (let j = i + 1; j < lessonEvents.length; j++) {
+			const a = lessonEvents[i];
+			const b = lessonEvents[j];
 			if (!a || !b) continue;
 
 			const sameDay = isSameCalendarDay(a.start, b.start);

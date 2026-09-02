@@ -16,6 +16,19 @@ export function getDateKey(date: Date) {
 	return `${yyyy}-${mm}-${dd}`;
 }
 
+/** Parse a YYYY-MM-DD key as local midnight. */
+export function parseDateKey(dateKey: string): Date {
+	return new Date(`${dateKey}T00:00:00`);
+}
+
+/** Combine a local date key and HH:mm time into an ISO UTC string. */
+export function toISOFromDateKeyAndTime(dateKey: string, time: string): string {
+	const [hours, minutes] = time.split(':').map(Number);
+	const date = parseDateKey(dateKey);
+	date.setHours(hours, minutes, 0, 0);
+	return date.toISOString();
+}
+
 export function formatTime(date: Date) {
 	const hh = String(date.getHours()).padStart(2, '0');
 	const mm = String(date.getMinutes()).padStart(2, '0');

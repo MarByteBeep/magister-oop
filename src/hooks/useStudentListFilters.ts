@@ -6,7 +6,7 @@ import type { Student } from '@/magister/types';
 export type SortColumn = 'naam' | 'klas' | 'lockerCode' | 'now' | 'next';
 export type SortDirection = 'asc' | 'desc';
 
-function studentMatchesSearch(student: Student, searchTerm: string): boolean {
+export function studentMatchesSearch(student: Student, searchTerm: string): boolean {
 	const searchLowerNormalized = normalizeString(searchTerm);
 	const isLockerSearch = searchLowerNormalized.startsWith('k:');
 
@@ -16,38 +16,35 @@ function studentMatchesSearch(student: Student, searchTerm: string): boolean {
 		return studentLocker.includes(lockerSearchTerm);
 	}
 
+	const searchWords = searchLowerNormalized.split(/\s+/).filter(Boolean);
+	if (searchWords.length === 0) return true;
+
 	const fullName = normalizeString(`${student.roepnaam} ${student.tussenvoegsel ?? ''} ${student.achternaam}`);
 	const classes = normalizeString(student.klassen.join(' '));
 	const locker = normalizeString(student.lockerCode || '');
 
-	let matchesLessonInfo = false;
+	let lessonSearchableText = '';
 	if (student.currentAgendaItem) {
 		const currentItem = student.currentAgendaItem;
-		const courses = normalizeString(currentItem.vakken.map((v) => v.code).join(' '));
-		const locations = normalizeString(
-			currentItem.locaties
-				.map((l) => l.code ?? l.omschrijving)
-				.filter(Boolean)
-				.join(' '),
-		);
-		const teachers = normalizeString(
-			currentItem.deelnames
-				.filter((p) => p.type === 'medewerker')
-				.map((p) => (p as AttendanceStaffMember).code)
-				.join(' '),
-		);
+		const courses = currentItem.vakken.map((v) => v.code).join(' ');
+		const locations = currentItem.locaties
+			.map((l) => l.code ?? l.omschrijving)
+			.filter(Boolean)
+			.join(' ');
+		const teachers = currentItem.deelnames
+			.filter((p) => p.type === 'medewerker')
+			.map((p) => (p as AttendanceStaffMember).code)
+			.join(' ');
 
-		matchesLessonInfo =
-			courses.includes(searchLowerNormalized) ||
-			locations.includes(searchLowerNormalized) ||
-			teachers.includes(searchLowerNormalized);
+		lessonSearchableText = normalizeString(`${courses} ${locations} ${teachers}`);
 	}
 
-	return (
-		fullName.includes(searchLowerNormalized) ||
-		classes.includes(searchLowerNormalized) ||
-		locker.includes(searchLowerNormalized) ||
-		matchesLessonInfo
+	return searchWords.every(
+		(word) =>
+			fullName.includes(word) ||
+			classes.includes(word) ||
+			locker.includes(word) ||
+			lessonSearchableText.includes(word),
 	);
 }
 

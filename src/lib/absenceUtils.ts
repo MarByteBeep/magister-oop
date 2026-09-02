@@ -2,6 +2,7 @@ import type { UnauthorizedAbsencesResponse } from '@/magister/response/unauthori
 import type { Student } from '@/magister/types';
 
 export type AbsenceRow = {
+	id: number;
 	reasonKey: string;
 	reasonLabel: string;
 	studentId: number;
@@ -66,6 +67,7 @@ function collectAbsenceRowsForItem(
 		for (const v of afspraak.verantwoordingen ?? []) {
 			const reasonKey = normalizeKey(v.reden?.type ?? 'unknown');
 			rows.push({
+				id: v.id,
 				reasonKey,
 				reasonLabel: reasonLabelForKey(reasonKey, filterPairs, v.reden?.type),
 				studentId: item.id,

@@ -155,6 +155,7 @@ function assignClassAgendas(
 	activeTeachers: StaffMember[],
 	allStudentsAgenda: Record<number, AgendaItem[]>,
 	studentsWithGeneratedAgenda: Set<number>,
+	focusClassStudentIds: Set<number>,
 ) {
 	for (const classCode of focusClasses) {
 		faker.seed(classCode.charCodeAt(0));
@@ -177,6 +178,7 @@ function assignClassAgendas(
 			studentAgenda.sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
 			allStudentsAgenda[student.id] = studentAgenda;
 			studentsWithGeneratedAgenda.add(student.id);
+			focusClassStudentIds.add(student.id);
 		}
 	}
 }
@@ -217,8 +219,9 @@ function assignIndividualAgendas(
 export function generateAgendaData(
 	allStudents: StudentBase[],
 	allStaffMembers: StaffMember[],
-): Record<number, AgendaItem[]> {
+): { agenda: Record<number, AgendaItem[]>; focusClassStudentIds: Set<number> } {
 	const allStudentsAgenda: Record<number, AgendaItem[]> = {};
+	const focusClassStudentIds = new Set<number>();
 	const numActiveTeachers = Math.floor(allStaffMembers.length * 0.3);
 	const activeTeachers = faker.helpers.shuffle([...allStaffMembers]).slice(0, numActiveTeachers);
 
@@ -230,8 +233,15 @@ export function generateAgendaData(
 	const focusClasses = faker.helpers.shuffle(uniqueClasses).slice(0, Math.min(uniqueClasses.length, 3));
 	const studentsWithGeneratedAgenda = new Set<number>();
 
-	assignClassAgendas(allStudents, focusClasses, activeTeachers, allStudentsAgenda, studentsWithGeneratedAgenda);
+	assignClassAgendas(
+		allStudents,
+		focusClasses,
+		activeTeachers,
+		allStudentsAgenda,
+		studentsWithGeneratedAgenda,
+		focusClassStudentIds,
+	);
 	assignIndividualAgendas(allStudents, activeTeachers, allStudentsAgenda, studentsWithGeneratedAgenda);
 
-	return allStudentsAgenda;
+	return { agenda: allStudentsAgenda, focusClassStudentIds };
 }

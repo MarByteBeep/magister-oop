@@ -13,11 +13,16 @@ import type { Student } from '@/magister/types';
 
 const MIN_SPINNER_MS = 320;
 
-function isAgendaLoadedForRange(agenda: Student['agenda'], rangeStart: Date, rangeEnd: Date): boolean {
+function isAgendaLoadedForRange(
+	agenda: Student['agenda'],
+	loadedFor: Student['returnMeasuresLoadedFor'],
+	rangeStart: Date,
+	rangeEnd: Date,
+): boolean {
 	const currentDate = new Date(rangeStart);
 	while (currentDate <= rangeEnd) {
 		const key = getDateKey(currentDate);
-		if (agenda?.[key] === undefined) return false;
+		if (agenda?.[key] === undefined || loadedFor?.[key] !== true) return false;
 		currentDate.setDate(currentDate.getDate() + 1);
 	}
 	return true;
@@ -44,7 +49,9 @@ export default function AgendaSyncButton({
 	const { students, loadAgendaForStudent } = useStudentsContext();
 
 	const student = students.find((s) => s.id === studentId);
-	const rangeLoaded = student ? isAgendaLoadedForRange(student.agenda, rangeStart, rangeEnd) : false;
+	const rangeLoaded = student
+		? isAgendaLoadedForRange(student.agenda, student.returnMeasuresLoadedFor, rangeStart, rangeEnd)
+		: false;
 	const rangeKey = `${getDateKey(rangeStart)}_${getDateKey(rangeEnd)}`;
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: reset spinner when student or range changes

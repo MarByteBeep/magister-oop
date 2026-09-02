@@ -49,7 +49,7 @@ export default function OccupancyChart({
 				zoom: { enabled: false },
 				background: 'transparent',
 				foreColor: chartIsDark ? '#e5e7eb' : '#374151',
-				animations: { enabled: true, speed: 600 },
+				animations: { enabled: false },
 				events: {
 					dataPointSelection: (_event, _chartContext, config) => {
 						const lessonRange = chartData[config.dataPointIndex]?.lessonRange;

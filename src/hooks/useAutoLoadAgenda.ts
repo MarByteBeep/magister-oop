@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
 import { getDateKey, getNow } from '@/lib/dateUtils';
 import type { Student } from '@/magister/types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
@@ -29,7 +30,7 @@ export function useAutoLoadAgenda(
 				);
 				const now = getNow();
 				const todayKey = getDateKey(now);
-				const student = filtered.find((s) => !s.agenda?.[todayKey]);
+				const student = filtered.find((s) => needsAgendaDayFetch(s, todayKey));
 
 				if (student) {
 					loadAgendaRef.current(student.id, now, now).catch((err) => {

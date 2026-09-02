@@ -8,7 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
 import { useTardyModalAgenda } from '@/hooks/useTardyModalAgenda';
-import { findAgendaItem } from '@/lib/agendaUtils';
+import { findAgendaItem, getAgendaOccurrenceKey, isSameAgendaOccurrence } from '@/lib/agendaUtils';
 import { submitTardyAccountability } from '@/lib/tardyUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
@@ -86,10 +86,10 @@ export default function TardyModal({ student, isOpen, onClose }: TardyModalProps
 							<div className="grid grid-cols-2 gap-2">
 								{sortedItems.map((item) => (
 									<TardyAgendaItem
-										key={item.id}
+										key={getAgendaOccurrenceKey(item)}
 										item={item}
 										currentTime={currentTime}
-										isCurrent={activeAgendaItem?.id === item.id}
+										isCurrent={isSameAgendaOccurrence(activeAgendaItem, item)}
 										onSelect={handleItemClick}
 									/>
 								))}

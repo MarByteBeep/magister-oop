@@ -169,12 +169,8 @@ export default function AbsenceGroupRow({ absences, student, onSelectStudent }: 
 				</div>
 			</div>
 			<div className="flex items-center gap-1 shrink-0">
-				{absences.map((row, idx) => (
-					<AbsenceHourIndicator
-						key={`${row.lesuurBegin}-${row.lesuurEinde}-${row.begin}-${idx}`}
-						row={row}
-						student={student}
-					/>
+				{absences.map((row) => (
+					<AbsenceHourIndicator key={row.id} row={row} student={student} />
 				))}
 			</div>
 		</button>

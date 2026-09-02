@@ -15,6 +15,8 @@ export const endpoints = {
 
 	agenda: (studentId: number, start: string, end: string) =>
 		`/api/leerlingen/${studentId}/afspraken?begin=${start}&einde=${end}&status=actief`,
+	returnMeasures: (studentId: number, start: string, end: string) =>
+		`/api/leerlingen/${studentId}/verantwoordingen/terugkommaatregelen?begin=${start}&einde=${end}`,
 	studentPhoto: (id: number) => `/api/leerlingen/${id}/foto`,
 	studentPersonalDetails: (id: number) => `/api/leerlingen/${id}/personalia`,
 	studentAddress: (id: number) => `/api/leerlingen/${id}/adresgegevens`,

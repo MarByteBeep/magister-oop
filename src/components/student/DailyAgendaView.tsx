@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
+import { isAgendaDayLoaded, needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
 import { findAgendaItem } from '@/lib/agendaUtils';
 import { getDateKey, getNow } from '@/lib/dateUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
@@ -36,14 +37,14 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 			return;
 		}
 
-		if (student.agenda?.[todayKey] !== undefined) {
+		if (!needsAgendaDayFetch(student, todayKey)) {
 			setBootstrapAgenda(undefined);
 			setIsLoading(false);
 			return;
 		}
 
 		let cancelled = false;
-		setIsLoading(true);
+		setIsLoading(!isAgendaDayLoaded(student, todayKey));
 		const now = getNow();
 		loadAgendaForStudent(student.id, now, now)
 			.then(({ items }) => {
@@ -57,7 +58,7 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 		return () => {
 			cancelled = true;
 		};
-	}, [student, student?.agenda, todayKey, loadAgendaForStudent]);
+	}, [student, student?.agenda, student?.returnMeasuresLoadedFor, todayKey, loadAgendaForStudent]);
 
 	const agendaItems: AgendaItem[] | undefined = agendaFromContext !== undefined ? agendaFromContext : bootstrapAgenda;
 
@@ -90,7 +91,7 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 					items={agendaItems}
 					date={currentTime}
 					view="day"
-					activeItemId={activeAgendaItem?.id ?? null}
+					activeItem={activeAgendaItem}
 					onSelectItem={(item) => setSelectedItem(item)}
 				/>
 			</div>
