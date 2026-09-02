@@ -2,6 +2,13 @@
 
 Alle gebruikersgerichte wijzigingen in de Magister OOP Chrome-extensie.
 
+## 1.0.6 — 2026-09-02
+
+- Agenda: **terugkommaatregelen**; extra omschrijving met waarschuwingsicoon
+- Agenda: **vierkant rooster** voor hele schooldag
+- Agenda: **absentiemeldingen**; type, code, gemeld door
+- Leerlingen: zoeken op **meerdere woorden**
+
 ## 1.0.5 — 2026-09-01
 
 - Leerlingenlijst: **peildatum** volgt automatisch het huidige schooljaar
