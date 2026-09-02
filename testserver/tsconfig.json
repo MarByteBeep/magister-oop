@@ -4,13 +4,13 @@
 		"esModuleInterop": true,
 		"module": "ESNext",
 		"target": "ESNext",
-		"moduleResolution": "Node",
-		"baseUrl": ".",
+		"moduleResolution": "bundler",
 		"paths": {
 			"@/*": ["../src/*"],
 			"@data/*": ["./data/*"]
 		},
 		"strict": true,
+		"types": ["node", "bun", "chrome"],
 		"forceConsistentCasingInFileNames": true
 	},
 	"include": ["./**/*.ts", "../src/**/*"]

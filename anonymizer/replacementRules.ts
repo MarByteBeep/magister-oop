@@ -1,4 +1,4 @@
-import { faker } from '@faker-js/faker';
+import { fakerEN as faker } from '@faker-js/faker';
 
 const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -20,7 +20,9 @@ function randomNumberWithDigits(n: number): number {
 }
 
 function mapString(rep: ReplacementMap, value: string, replacement: string) {
-	rep.stringMap.set(value, replacement);
+	if (!rep.stringMap.has(value)) {
+		rep.stringMap.set(value, replacement);
+	}
 }
 
 function mapNumber(rep: ReplacementMap, value: number) {
@@ -36,7 +38,24 @@ function keyIncludes(key: string, ...parts: string[]) {
 
 const FIELD_RULES: FieldRule[] = [
 	{
-		matches: (key, value) => keyIncludes(key, 'comment', 'omschrijving') && typeof value === 'string',
+		matches: (key, value) =>
+			keyIncludes(
+				key,
+				'comment',
+				'omschrijving',
+				'desc',
+				'description',
+				'titel',
+				'title',
+				'onderwerp',
+				'subject',
+				'reason',
+				'reden',
+				'tekst',
+				'text',
+			) &&
+			typeof value === 'string' &&
+			value.length > 0,
 		apply: (value, rep) => mapString(rep, value as string, faker.lorem.sentence()),
 	},
 	{
@@ -58,8 +77,7 @@ const FIELD_RULES: FieldRule[] = [
 				(lower === 'infix' || lower.includes('tussenvoegsel')) && typeof value === 'string' && value.length > 0
 			);
 		},
-		apply: (value, rep) =>
-			mapString(rep, value as string, faker.helpers.arrayElement(['van', 'van de', 'de', 'ten', 'van der'])),
+		apply: (value, rep) => mapString(rep, value as string, faker.helpers.arrayElement(['de', 'von', 'st', 'le'])),
 	},
 	{
 		matches: (key, value) => keyIncludes(key, 'id') && typeof value === 'string' && uuidRegex.test(value),

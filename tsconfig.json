@@ -9,10 +9,12 @@
 		},
 		{
 			"path": "./tsconfig.testserver.json"
+		},
+		{
+			"path": "./tsconfig.anonymizer.json"
 		}
 	],
 	"compilerOptions": {
-		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"]
 		}

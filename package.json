@@ -19,7 +19,8 @@
 		"check": "bunx @biomejs/biome check --write",
 		"check:fallow": "bunx fallow dead-code --format json --quiet --ci",
 		"check:ci": "bunx @biomejs/biome ci && bunx tsc -b --noEmit && bun run check:fallow && echo 'no errors'",
-		"testserver:init": "bun run ./testserver/src/init/init.ts"
+		"testserver:init": "bun run ./testserver/src/init/init.ts",
+		"anon": "bun run ./anonymizer/index.ts"
 	},
 	"dependencies": {
 		"@radix-ui/react-checkbox": "^1.3.3",
@@ -48,6 +49,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.11",
+		"@faker-js/faker": "^8.4.1",
 		"@tailwindcss/vite": "^4.1.18",
 		"@types/bun": "^1.4.0",
 		"@types/chrome": "^0.1.36",
@@ -58,7 +60,7 @@
 		"@vitejs/plugin-react": "^5.1.2",
 		"dotenv": "^17.2.3",
 		"hono": "^4.6.0",
-		"typescript": "^5.9.3",
+		"typescript": "^7.0.2",
 		"vite": "^7.3.1",
 		"vite-plugin-static-copy": "^3.2.0"
 	}

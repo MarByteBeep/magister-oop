@@ -56,14 +56,14 @@ function applyReplacements(json: JSONValue, rep: ReplacementMap): JSONValue {
 	return json;
 }
 
-if (require.main === module) {
-	const file = process.argv[2];
-	if (!file) {
-		console.error('Gebruik: node script.js input.json');
+if (import.meta.main) {
+	const source = process.argv[2];
+	if (!source) {
+		console.error('Usage: bun anon <source.json>');
 		process.exit(1);
 	}
 
-	const raw = fs.readFileSync(file, 'utf8');
+	const raw = fs.readFileSync(source, 'utf8');
 	const json = JSON.parse(raw);
 
 	const anon = anonymize(json);

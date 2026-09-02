@@ -10,7 +10,7 @@ export function useCurrentTime(): Date {
 		const now = getNow();
 		const secondsUntilNextMinute = 60 - now.getSeconds();
 
-		let intervalId: NodeJS.Timeout | null = null;
+		let intervalId: ReturnType<typeof setInterval> | null = null;
 
 		// Align to next full minute
 		const initialTimeout = setTimeout(() => {

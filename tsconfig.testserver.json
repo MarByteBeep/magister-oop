@@ -10,7 +10,7 @@
 		"moduleResolution": "bundler",
 		"resolveJsonModule": true,
 		"strict": true,
-		"baseUrl": ".",
+		"types": ["node", "bun", "chrome"],
 		"paths": {
 			"@/*": ["./src/*"],
 			"@data/*": ["./testserver/data/*"]
