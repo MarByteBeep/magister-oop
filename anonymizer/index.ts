@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import path from 'node:path';
 import { collectFieldReplacement, type ReplacementMap, replaceStringValue } from './replacementRules';
 
 type JSONValue = string | number | boolean | null | { [key: string]: JSONValue } | JSONValue[];
@@ -63,9 +64,19 @@ if (import.meta.main) {
 		process.exit(1);
 	}
 
-	const raw = fs.readFileSync(source, 'utf8');
+	const sourcePath = path.resolve(source);
+	const raw = fs.readFileSync(sourcePath, 'utf8');
 	const json = JSON.parse(raw);
+	const output = `${JSON.stringify(anonymize(json), null, 4)}\n`;
 
-	const anon = anonymize(json);
-	console.log(JSON.stringify(anon, null, 4));
+	const tempPath = `${sourcePath}.${process.pid}.tmp`;
+	try {
+		fs.writeFileSync(tempPath, output, 'utf8');
+		fs.renameSync(tempPath, sourcePath);
+	} catch (error) {
+		fs.rmSync(tempPath, { force: true });
+		throw error;
+	}
+
+	console.error(`Anonymized and overwrote ${sourcePath}`);
 }
