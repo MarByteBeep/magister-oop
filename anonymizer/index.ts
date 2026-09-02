@@ -16,10 +16,11 @@ export function anonymize(json: JSONValue): JSONValue {
 }
 
 function collectReplacements(json: JSONValue, rep: ReplacementMap, parentKey: string = '') {
-	if (parentKey.toLowerCase().includes('href')) return;
-
 	if (Array.isArray(json)) {
 		for (const el of json) {
+			// Items inherit their parent key so id lists like
+			// "organisatorPersoonIds": [391] are collected as well.
+			collectFieldReplacement(parentKey, el, rep);
 			collectReplacements(el, rep, parentKey);
 		}
 		return;
