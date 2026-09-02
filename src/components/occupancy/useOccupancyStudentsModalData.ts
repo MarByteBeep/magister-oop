@@ -1,8 +1,9 @@
 import { useCallback, useMemo } from 'react';
+import { isLessonEntry } from '@/lib/agendaEntryUtils';
 import { agendaItemOverlapsLesson, getAgendaItemInfo, getItemLocationCodes } from '@/lib/agendaUtils';
 import { getStudentsForLessonRange } from '@/lib/occupancyUtils';
 import { sortAndGroupStudentsByClass } from '@/lib/utils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 
 export type OccupancyClassGroup = {
@@ -12,8 +13,9 @@ export type OccupancyClassGroup = {
 	students: Student[];
 };
 
-function formatTeacherLabel(item: AgendaItem): string | undefined {
-	const teachers = item.deelnames.filter((participant) => participant.type === 'medewerker');
+function formatTeacherLabel(entry: AgendaEntry): string | undefined {
+	if (!isLessonEntry(entry)) return undefined;
+	const teachers = entry.item.deelnames.filter((participant) => participant.type === 'medewerker');
 	if (teachers.length === 0) return undefined;
 
 	return teachers
@@ -27,7 +29,7 @@ function formatTeacherLabel(item: AgendaItem): string | undefined {
 function buildClassGroups(
 	students: Student[],
 	dateKey: string,
-	matchingAgendaItems: (agendaForDay: NonNullable<Student['agenda']>[string]) => AgendaItem[],
+	matchingAgendaItems: (agendaForDay: NonNullable<Student['agenda']>[string]) => AgendaEntry[],
 	includeLessonInfo: boolean,
 ): OccupancyClassGroup[] {
 	const grouped = sortAndGroupStudentsByClass(students);
@@ -44,7 +46,7 @@ function buildClassGroups(
 			return { className, students: studentsInClass };
 		}
 
-		const { courseDescriptions, subject } = getAgendaItemInfo(item);
+		const { courseDescriptions, subject } = isLessonEntry(item) ? getAgendaItemInfo(item.item) : {};
 		const rawSubject = courseDescriptions ?? subject;
 		const rawTeacher = formatTeacherLabel(item);
 
@@ -72,9 +74,10 @@ export function useOccupancyStudentsModalData(
 	const matchingAgendaItems = useCallback(
 		(agendaForDay: NonNullable<Student['agenda']>[string]) =>
 			agendaForDay.filter(
-				(item) =>
-					agendaItemOverlapsLesson(item, lessonStart, lessonEnd) &&
-					getItemLocationCodes(item).some((code) => normalizedLocations.has(code)),
+				(entry) =>
+					isLessonEntry(entry) &&
+					agendaItemOverlapsLesson(entry.item, lessonStart, lessonEnd) &&
+					getItemLocationCodes(entry.item).some((code) => normalizedLocations.has(code)),
 			),
 		[lessonStart, lessonEnd, normalizedLocations],
 	);

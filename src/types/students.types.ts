@@ -1,9 +1,9 @@
 import type { LessonInfo } from '@/lib/agendaUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 
 export type LoadAgendaForStudentResult = {
-	items: AgendaItem[];
+	entries: AgendaEntry[];
 	/** `true` when merged agenda state differs from what we had before this fetch. */
 	changed: boolean;
 };

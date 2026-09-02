@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
+import { findActiveEntryPreferringLessons } from '@/lib/agendaEntryUtils';
 import { isAgendaDayLoaded, needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
-import { findAgendaItem } from '@/lib/agendaUtils';
 import { getDateKey, getNow } from '@/lib/dateUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 import Agenda from './Agenda';
 import AgendaItemModal from './AgendaItemModal';
@@ -26,9 +26,9 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 	const todayKey = useMemo(() => getDateKey(currentTime), [currentTime]);
 	const agendaFromContext = student?.agenda?.[todayKey];
 
-	const [bootstrapAgenda, setBootstrapAgenda] = useState<AgendaItem[] | undefined>(undefined);
+	const [bootstrapAgenda, setBootstrapAgenda] = useState<AgendaEntry[] | undefined>(undefined);
 	const [isLoading, setIsLoading] = useState(false);
-	const [selectedItem, setSelectedItem] = useState<AgendaItem | null>(null);
+	const [selectedEntry, setSelectedEntry] = useState<AgendaEntry | null>(null);
 
 	useEffect(() => {
 		if (!student) {
@@ -47,8 +47,8 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 		setIsLoading(!isAgendaDayLoaded(student, todayKey));
 		const now = getNow();
 		loadAgendaForStudent(student.id, now, now)
-			.then(({ items }) => {
-				if (!cancelled) setBootstrapAgenda(items);
+			.then(({ entries }) => {
+				if (!cancelled) setBootstrapAgenda(entries);
 			})
 			.catch((err) => console.error('Failed to load agenda:', err))
 			.finally(() => {
@@ -58,11 +58,19 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 		return () => {
 			cancelled = true;
 		};
-	}, [student, student?.agenda, student?.returnMeasuresLoadedFor, todayKey, loadAgendaForStudent]);
+	}, [
+		student,
+		student?.agenda,
+		student?.returnMeasuresLoadedFor,
+		student?.absenceNoticesLoadedFor,
+		todayKey,
+		loadAgendaForStudent,
+	]);
 
-	const agendaItems: AgendaItem[] | undefined = agendaFromContext !== undefined ? agendaFromContext : bootstrapAgenda;
+	const agendaEntries: AgendaEntry[] | undefined =
+		agendaFromContext !== undefined ? agendaFromContext : bootstrapAgenda;
 
-	const activeAgendaItem = findAgendaItem(currentTime, agendaItems || []);
+	const activeEntry = findActiveEntryPreferringLessons(currentTime, agendaEntries || []);
 
 	if (isLoading) {
 		return (
@@ -80,7 +88,7 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 		);
 	}
 
-	if (!agendaItems || agendaItems.length === 0) {
+	if (!agendaEntries || agendaEntries.length === 0) {
 		return <p className="text-muted-foreground text-center py-4">Geen lessen gepland voor vandaag.</p>;
 	}
 
@@ -88,19 +96,19 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 		<>
 			<div className="h-full pt-2 pr-2 pb-2 pl-2">
 				<Agenda
-					items={agendaItems}
+					entries={agendaEntries}
 					date={currentTime}
 					view="day"
-					activeItem={activeAgendaItem}
-					onSelectItem={(item) => setSelectedItem(item)}
+					activeEntry={activeEntry}
+					onSelectEntry={(entry) => setSelectedEntry(entry)}
 				/>
 			</div>
 
-			{selectedItem && (
+			{selectedEntry && (
 				<AgendaItemModal
-					item={selectedItem}
-					isOpen={selectedItem !== null}
-					onClose={() => setSelectedItem(null)}
+					entry={selectedEntry}
+					isOpen={selectedEntry !== null}
+					onClose={() => setSelectedEntry(null)}
 					onOpenStudent={onOpenStudent}
 				/>
 			)}

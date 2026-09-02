@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAgendaLoader } from '@/hooks/useAgendaLoader';
 import { useAutoLoadAgenda } from '@/hooks/useAutoLoadAgenda';
+import { findLessonEntryPreferringLessons, findNextLessonEntry } from '@/lib/agendaEntryUtils';
 import { needsAgendaDayFetch, repairStaleAgendaCache } from '@/lib/agendaLoadUtils';
-import { findAgendaItemPreferringLessons, findNextAgendaItem } from '@/lib/agendaUtils';
 import { getTodayKey } from '@/lib/dateUtils';
 import { deepEqual } from '@/lib/utils';
 import type { Student } from '@/magister/types';
@@ -23,7 +23,7 @@ export function useStudents() {
 	const { loadStoredStudents } = useStudentStorageSync(students, setStudents);
 	const { fetchLockers, fetchStudentsPaginated, refresh: refetchStudents } = useStudentFetch(setStudents);
 
-	const loadAgendaForStudent = useAgendaLoader(setStudents);
+	const loadAgendaForStudent = useAgendaLoader(setStudents, students);
 
 	useEffect(() => {
 		setStudents((prev) => {
@@ -55,6 +55,7 @@ export function useStudents() {
 						mergeStudent(student, {
 							agenda: cached.agenda,
 							returnMeasuresLoadedFor: cached.returnMeasuresLoadedFor,
+							absenceNoticesLoadedFor: cached.absenceNoticesLoadedFor,
 							lockerCode: cached.lockerCode,
 						}),
 					);
@@ -83,9 +84,11 @@ export function useStudents() {
 			return {
 				...student,
 				currentAgendaItem: agendaForToday
-					? findAgendaItemPreferringLessons(currentTime, agendaForToday)
+					? (findLessonEntryPreferringLessons(currentTime, agendaForToday)?.item ?? null)
 					: undefined,
-				nextAgendaItem: agendaForToday ? findNextAgendaItem(currentTime, agendaForToday) : undefined,
+				nextAgendaItem: agendaForToday
+					? (findNextLessonEntry(currentTime, agendaForToday)?.item ?? null)
+					: undefined,
 			};
 		});
 	}, [students, currentTime]);

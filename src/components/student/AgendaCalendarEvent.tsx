@@ -1,19 +1,19 @@
 import type { EventProps } from 'react-big-calendar';
 import type { CalendarEvent } from '@/lib/agendaCalendarUtils';
-import { isSameAgendaOccurrence } from '@/lib/agendaUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import { isSameAgendaEntryOccurrence } from '@/lib/agendaEntryUtils';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import AgendaEvent from './AgendaEvent';
 
 export interface AgendaCalendarEventProps extends EventProps<CalendarEvent> {
-	activeItem?: AgendaItem | null;
+	activeEntry?: AgendaEntry | null;
 	overlappingEventIds: Set<string>;
 }
 
-export default function AgendaCalendarEvent({ event, activeItem, overlappingEventIds }: AgendaCalendarEventProps) {
+export default function AgendaCalendarEvent({ event, activeEntry, overlappingEventIds }: AgendaCalendarEventProps) {
 	return (
 		<AgendaEvent
-			item={event.resource}
-			isActive={isSameAgendaOccurrence(event.resource, activeItem)}
+			entry={event.resource}
+			isActive={isSameAgendaEntryOccurrence(event.resource, activeEntry)}
 			isCompact={overlappingEventIds.has(event.id)}
 		/>
 	);

@@ -1,4 +1,5 @@
 import { getNow } from '@/lib/dateUtils';
+import { compactUuid } from '@/lib/uuidUtils';
 
 const startYear = getNow().getMonth() < 8 ? getNow().getFullYear() - 1 : getNow().getFullYear();
 const startDate = startYear + '-08-01';
@@ -10,6 +11,10 @@ export const endpoints = {
 	searchStaff: (top: number, skip: number) => `/api/medewerkers/zoeken?top=${top}&skip=${skip}&q=**&status=actief`,
 	lockers: () =>
 		import.meta.env.PROD ? 'https://lockers.magister.net/api/v1/lockers/details' : '/api/v1/lockers/details',
+	absenceNotices: (studentUuid: string) => {
+		const path = `/api/v2/student/${compactUuid(studentUuid)}/absence-notices?orderColumn=startDateTime&orderBy=desc`;
+		return import.meta.env.PROD ? `https://attendance.magister.net${path}` : path;
+	},
 
 	unauthorizedAbsences: (date: string) => `/api/m6/verantwoordingen/ongeoorloofderegistraties?datum=${date}`,
 

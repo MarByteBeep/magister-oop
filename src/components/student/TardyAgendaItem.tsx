@@ -4,20 +4,20 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
 import { cn } from '@/lib/utils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry, LessonAgendaEntry } from '@/magister/response/agenda-entry.types';
 import AgendaTooltipContent from './AgendaTooltipContent';
 
 interface TardyAgendaItemProps {
-	item: AgendaItem;
+	entry: LessonAgendaEntry;
 	currentTime: Date;
 	isCurrent: boolean;
-	onSelect: (item: AgendaItem) => void;
+	onSelect: (entry: AgendaEntry) => void;
 }
 
-export default function TardyAgendaItem({ item, currentTime, isCurrent, onSelect }: TardyAgendaItemProps) {
-	const beginTime = new Date(item.begin);
-	const endTime = new Date(item.einde);
-	const { locations, courseDescriptions, subject, teachersCodes } = getAgendaItemInfo(item);
+export default function TardyAgendaItem({ entry, currentTime, isCurrent, onSelect }: TardyAgendaItemProps) {
+	const beginTime = new Date(entry.start);
+	const endTime = new Date(entry.end);
+	const { locations, courseDescriptions, subject, teachersCodes } = getAgendaItemInfo(entry.item);
 	const isPast = beginTime <= currentTime;
 
 	const secondLineParts = [`${formatTime(beginTime)}-${formatTime(endTime)}`, locations, teachersCodes].filter(
@@ -30,7 +30,7 @@ export default function TardyAgendaItem({ item, currentTime, isCurrent, onSelect
 				<button
 					type="button"
 					disabled={!isPast}
-					onClick={() => onSelect(item)}
+					onClick={() => onSelect(entry)}
 					className={cn(
 						'relative flex items-start gap-2 p-2.5 border rounded-md transition-all duration-150 text-left',
 						isCurrent
@@ -50,9 +50,9 @@ export default function TardyAgendaItem({ item, currentTime, isCurrent, onSelect
 					)}
 					<div className="flex flex-col gap-0.5 items-start flex-1 min-w-0">
 						<div className="flex items-center gap-0.5 w-full">
-							{item.lesuur?.begin && (
+							{entry.item.lesuur?.begin && (
 								<LessonHourBadge
-									lessonInfo={{ status: 'lesson', lesson: item.lesuur.begin }}
+									lessonInfo={{ status: 'lesson', lesson: entry.item.lesuur.begin }}
 									className="h-4 w-4 text-[0.6rem] shrink-0"
 								/>
 							)}
@@ -67,7 +67,7 @@ export default function TardyAgendaItem({ item, currentTime, isCurrent, onSelect
 				</button>
 			</TooltipTrigger>
 			<TooltipContent>
-				<AgendaTooltipContent item={item} />
+				<AgendaTooltipContent entry={entry} />
 			</TooltipContent>
 		</Tooltip>
 	);

@@ -1,41 +1,61 @@
 'use client';
 
-import { LuClock, LuGraduationCap, LuMapPin } from 'react-icons/lu';
+import { LuClock, LuGraduationCap, LuMapPin, LuUser } from 'react-icons/lu';
 import LessonHourBadge from '@/components/LessonHourBadge';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useAgendaItemStudents } from '@/hooks/useAgendaItemStudents';
+import { isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 import AgendaItemStudentsList from './AgendaItemStudentsList';
 
 interface AgendaItemModalProps {
-	item: AgendaItem;
+	entry: AgendaEntry;
 	isOpen: boolean;
 	onClose: () => void;
 	onOpenStudent?: (student: Student) => void;
 }
 
-export default function AgendaItemModal({ item, isOpen, onClose, onOpenStudent }: AgendaItemModalProps) {
+export default function AgendaItemModal({ entry, isOpen, onClose, onOpenStudent }: AgendaItemModalProps) {
 	const { students } = useStudentsContext();
-	const { courseDescriptions, courseCodes, teachers, locations, subject } = getAgendaItemInfo(item);
-	const { lessonStart, lessonEnd, hasLocation, studentsInLocation } = useAgendaItemStudents(item, students);
+	const lessonEntry = isLessonEntry(entry) ? entry : null;
+	const { courseDescriptions, courseCodes, teachers, locations, subject } = lessonEntry
+		? getAgendaItemInfo(lessonEntry.item)
+		: {
+				courseDescriptions: undefined,
+				courseCodes: undefined,
+				teachers: undefined,
+				locations: undefined,
+				subject: undefined,
+			};
+	const { lessonStart, lessonEnd, hasLocation, studentsInLocation } = useAgendaItemStudents(entry, students);
+
+	const title = isAbsenceNoticeEntry(entry)
+		? entry.notice.attendanceTypeDesc
+		: isReturnMeasureEntry(entry)
+			? getReturnMeasureDisplay(entry.measure).primaryLabel
+			: (courseDescriptions ?? subject ?? 'Agenda item');
 
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
 			<DialogContent className="max-w-[800px]">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
-						{item.lesuur?.begin && (
+						{lessonEntry?.item.lesuur?.begin && (
 							<LessonHourBadge
-								lessonInfo={{ status: 'lesson', lesson: item.lesuur.begin }}
+								lessonInfo={{ status: 'lesson', lesson: lessonEntry.item.lesuur.begin }}
 								className="h-7 w-7 text-sm"
 							/>
 						)}
-						<span>{courseDescriptions ?? subject ?? 'Agenda item'}</span>
-						{courseCodes && courseCodes !== courseDescriptions && (
+						<span>{title}</span>
+						{isAbsenceNoticeEntry(entry) && (
+							<Badge variant="secondary">{entry.notice.attendanceTypeCode}</Badge>
+						)}
+						{lessonEntry && courseCodes && courseCodes !== courseDescriptions && (
 							<Badge variant="secondary">{courseCodes}</Badge>
 						)}
 					</DialogTitle>
@@ -60,13 +80,29 @@ export default function AgendaItemModal({ item, isOpen, onClose, onOpenStudent }
 							<span className="font-medium text-foreground">{teachers}</span>
 						</div>
 					)}
+					{isAbsenceNoticeEntry(entry) && (
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<LuUser className="h-4 w-4" />
+							<span className="font-medium text-foreground">
+								{[
+									entry.notice.creator.initials,
+									entry.notice.creator.infix,
+									entry.notice.creator.lastName,
+								]
+									.filter((part) => part.trim())
+									.join(' ')}
+							</span>
+						</div>
+					)}
 				</div>
 
-				{item.opmerking && (
-					<div className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">{item.opmerking}</div>
+				{lessonEntry?.item.opmerking && (
+					<div className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">
+						{lessonEntry.item.opmerking}
+					</div>
 				)}
 
-				{hasLocation && (
+				{hasLocation && lessonEntry && (
 					<AgendaItemStudentsList studentsByClass={studentsInLocation} onOpenStudent={onOpenStudent} />
 				)}
 			</DialogContent>

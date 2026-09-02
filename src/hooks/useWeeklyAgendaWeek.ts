@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { getDateKey, getNow, getStartOfWeek, getWeekDays } from '@/lib/dateUtils';
 import { formatWeekRange } from '@/lib/weekRangeUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 
 export function useWeeklyAgendaWeek(weekOffset: number, student: Student | undefined) {
@@ -25,7 +25,7 @@ export function useWeeklyAgendaWeek(weekOffset: number, student: Student | undef
 	const isCurrentWeek = weekOffset === 0;
 
 	const weekAgenda = useMemo(() => {
-		const agenda: Record<string, AgendaItem[]> = {};
+		const agenda: Record<string, AgendaEntry[]> = {};
 		for (const day of weekDays) {
 			agenda[getDateKey(day)] = student?.agenda?.[getDateKey(day)] || [];
 		}

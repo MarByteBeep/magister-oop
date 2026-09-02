@@ -1,6 +1,11 @@
 import { jsonCacheGet, jsonCacheSet, loadJsonCache } from '@/lib/cache';
 
 type CredentialsOption = 'include' | 'omit' | 'same-origin';
+/**
+ * School APIs on `{school}.magister.net` authenticate with session cookies, while the
+ * platform APIs on other `magister.net` subdomains expect the OIDC access token.
+ */
+type AuthOption = 'cookies' | 'bearer';
 type CacheOption = 'cache' | 'cache-write-only' | 'no-cache';
 type JSONValue = string | number | boolean | null | { [key: string]: JSONValue } | JSONValue[];
 
@@ -12,8 +17,9 @@ export async function getJson<T = JSONValue>(
 	url: string,
 	credentials: CredentialsOption = 'include',
 	cache: CacheOption = 'cache',
+	auth: AuthOption = 'cookies',
 ): Promise<T> {
-	const result = await getJsonImpl<T>(url, credentials, cache);
+	const result = await getJsonImpl<T>(url, credentials, cache, auth);
 	if (!result.ok) throw new Error(result.error);
 	return result.data;
 }
@@ -111,7 +117,12 @@ const MAGISTER_SESSION_EXPIRED_MESSAGE =
 	'De Magister-sessie is ongeldig of verlopen. ' +
 	'Log opnieuw in op Magister in een browsertab en open daarna deze extensie opnieuw.';
 
-function httpErrorMessage(status: number): string {
+/** Shown when the Magister tab holds no OIDC access token for the platform APIs. */
+const MAGISTER_TOKEN_MISSING_MESSAGE =
+	'Geen Magister-token gevonden in de geopende Magister-tab. ' +
+	'Ververs de Magister-tab en open daarna deze extensie opnieuw.';
+
+function schoolApiHttpErrorMessage(status: number): string {
 	if (status === 404) return MAGISTER_SESSION_EXPIRED_MESSAGE;
 	return `HTTP error ${status}`;
 }
@@ -122,6 +133,7 @@ async function getJsonImpl<T>(
 	url: string,
 	credentials: CredentialsOption,
 	cache: CacheOption,
+	auth: AuthOption,
 ): Promise<FetchResult<T>> {
 	if (cache === 'cache') {
 		const cacheEntry = jsonCacheGet<T>(url);
@@ -139,7 +151,7 @@ async function getJsonImpl<T>(
 			console.log(`[DEV] fetch json`, url);
 			const res = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' } });
 
-			if (!res.ok) return { ok: false, error: httpErrorMessage(res.status) };
+			if (!res.ok) return { ok: false, error: schoolApiHttpErrorMessage(res.status) };
 
 			const data = (await res.json()) as T;
 			if (cache !== 'no-cache') {
@@ -152,17 +164,47 @@ async function getJsonImpl<T>(
 			async (
 				fetchUrl: string,
 				credentials: CredentialsOption,
+				authMode: AuthOption,
 				sessionExpiredMessage: string,
+				tokenMissingMessage: string,
 			): Promise<FetchResult<T>> => {
 				try {
+					const headers: Record<string, string> = {};
+
+					if (authMode === 'bearer') {
+						// oidc-client stores the signed-in user under `oidc.user:{authority}:{client_id}`.
+						let accessToken = '';
+						for (const storage of [window.sessionStorage, window.localStorage]) {
+							for (let index = 0; index < storage.length && !accessToken; index++) {
+								const key = storage.key(index);
+								if (!key?.startsWith('oidc.user:')) continue;
+								const stored = storage.getItem(key);
+								if (!stored) continue;
+								try {
+									accessToken = (JSON.parse(stored) as { access_token?: string }).access_token ?? '';
+								} catch {
+									accessToken = '';
+								}
+							}
+							if (accessToken) break;
+						}
+
+						if (!accessToken) return { ok: false, error: tokenMissingMessage };
+
+						headers.Accept = 'application/json';
+						headers.Authorization = `Bearer ${accessToken}`;
+					}
+
 					const res = await fetch(fetchUrl, {
 						method: 'GET',
 						credentials,
+						headers,
 					});
 
 					if (!res.ok) {
-						const error = res.status === 404 ? sessionExpiredMessage : `HTTP error ${res.status}`;
-						return { ok: false, error };
+						const expired =
+							authMode === 'bearer' ? res.status === 401 || res.status === 403 : res.status === 404;
+						return { ok: false, error: expired ? sessionExpiredMessage : `HTTP error ${res.status}` };
 					}
 
 					const data = (await res.json()) as T;
@@ -171,7 +213,7 @@ async function getJsonImpl<T>(
 					return { ok: false, error: (err as Error).message };
 				}
 			},
-			[url, credentials, MAGISTER_SESSION_EXPIRED_MESSAGE],
+			[url, credentials, auth, MAGISTER_SESSION_EXPIRED_MESSAGE, MAGISTER_TOKEN_MISSING_MESSAGE],
 		);
 
 		if (result.ok && cache !== 'no-cache') {
@@ -189,7 +231,7 @@ async function getBlobImpl(url: string): Promise<FetchBlobResult> {
 			console.log(`[DEV] fetch blob`, url);
 			const res = await fetch(url, { method: 'GET' });
 
-			if (!res.ok) return { ok: false, error: httpErrorMessage(res.status) };
+			if (!res.ok) return { ok: false, error: schoolApiHttpErrorMessage(res.status) };
 
 			const blob = await res.blob();
 			const buffer = await blob.arrayBuffer();

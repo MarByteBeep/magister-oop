@@ -1,6 +1,5 @@
 import { formatTime } from '@/lib/dateUtils';
-import { isReturnMeasureAgendaItem } from '@/lib/returnMeasureUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { ReturnMeasureAgendaEntry } from '@/magister/response/agenda-entry.types';
 
 export type FullDayScheduleConfig = {
 	/** Local start time (HH:mm). Default school day start. */
@@ -35,10 +34,9 @@ export function resetFullDayScheduleConfig(): void {
  * Full-day return measure ("vierkant rooster"): student must be present the whole school day
  * (default 08:00–16:00). Times are configurable via {@link configureFullDaySchedule}.
  */
-export function isFullDaySchedule(item: AgendaItem): boolean {
-	if (!isReturnMeasureAgendaItem(item)) return false;
+export function isFullDayReturnMeasureEntry(entry: ReturnMeasureAgendaEntry): boolean {
 	const { beginTime, endTime } = fullDayScheduleConfig;
-	return formatTime(new Date(item.begin)) === beginTime && formatTime(new Date(item.einde)) === endTime;
+	return formatTime(new Date(entry.start)) === beginTime && formatTime(new Date(entry.end)) === endTime;
 }
 
 export function getFullDayScheduleLabel(): string {

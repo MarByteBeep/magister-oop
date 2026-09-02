@@ -1,21 +1,54 @@
 'use client';
 
 import { LuTriangleAlert } from 'react-icons/lu';
+import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
-import { getReturnMeasureDisplay, isReturnMeasureAgendaItem } from '@/lib/returnMeasureUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
+import type { AbsenceNoticePerson } from '@/magister/response/absence-notice.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 
 interface AgendaTooltipContentProps {
-	item: AgendaItem;
+	entry: AgendaEntry;
 }
 
-function AgendaTooltipContent({ item }: AgendaTooltipContentProps) {
-	const beginTime = new Date(item.begin);
-	const endTime = new Date(item.einde);
+function formatCreatorRole(role: string): string {
+	const normalized = role.toLowerCase();
+	if (normalized === 'parent') return 'ouder';
+	if (normalized === 'staff' || normalized === 'employee') return 'medewerker';
+	if (normalized === 'student') return 'leerling';
+	return role;
+}
 
-	if (isReturnMeasureAgendaItem(item)) {
-		const display = getReturnMeasureDisplay(item);
+function formatCreatorName(creator: AbsenceNoticePerson): string {
+	const infix = creator.infix.trim();
+	const lastName = creator.lastName.trim();
+	return [creator.initials, infix, lastName].filter(Boolean).join(' ');
+}
+
+function AgendaTooltipContent({ entry }: AgendaTooltipContentProps) {
+	const beginTime = new Date(entry.start);
+	const endTime = new Date(entry.end);
+
+	if (isAbsenceNoticeEntry(entry)) {
+		const { notice } = entry;
+		const creatorLabel = `${formatCreatorName(notice.creator)} (${formatCreatorRole(notice.creator.role)})`;
+
+		return (
+			<div className="space-y-1">
+				<div className="font-bold">{notice.attendanceTypeDesc}</div>
+				<div>Code: {notice.attendanceTypeCode}</div>
+				<div>
+					Tijd: {formatTime(beginTime)} - {formatTime(endTime)}
+				</div>
+				<div>Gemeld door: {creatorLabel}</div>
+				{notice.recurrence != null && <div>Herhaling: ja</div>}
+			</div>
+		);
+	}
+
+	if (isReturnMeasureEntry(entry)) {
+		const display = getReturnMeasureDisplay(entry.measure);
 
 		return (
 			<div className="space-y-1">
@@ -38,7 +71,7 @@ function AgendaTooltipContent({ item }: AgendaTooltipContentProps) {
 		);
 	}
 
-	const { courseDescriptions, teachers, locations, subject } = getAgendaItemInfo(item);
+	const { courseDescriptions, teachers, locations, subject } = getAgendaItemInfo(entry.item);
 
 	return (
 		<div className="space-y-1">
@@ -48,7 +81,7 @@ function AgendaTooltipContent({ item }: AgendaTooltipContentProps) {
 			</div>
 			{teachers && <div>Docenten: {teachers}</div>}
 			{locations && <div>Locatie: {locations}</div>}
-			{item.opmerking && <div>Opmerking: {item.opmerking}</div>}
+			{entry.item.opmerking && <div>Opmerking: {entry.item.opmerking}</div>}
 		</div>
 	);
 }

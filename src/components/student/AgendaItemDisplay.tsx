@@ -16,7 +16,7 @@ interface AgendaItemDisplayProps {
 export default function AgendaItemDisplay({ studentId, type, lessonRange }: AgendaItemDisplayProps) {
 	const { students, loadAgendaForStudent } = useStudentsContext();
 	const student = students.find((s) => s.id === studentId);
-	const { agendaItem, isLoadingAgenda, hasFetchedForToday, handleSyncClick } = useAgendaItemDisplay(
+	const { agendaEntry, isLoadingAgenda, hasFetchedForToday, handleSyncClick } = useAgendaItemDisplay(
 		student,
 		type,
 		lessonRange,
@@ -25,7 +25,7 @@ export default function AgendaItemDisplay({ studentId, type, lessonRange }: Agen
 
 	if (!student) return null;
 	if (isLoadingAgenda) return <LoadingSpinner iconClassName="h-5 w-5" />;
-	if (agendaItem) return <AgendaItemDisplayContent item={agendaItem} />;
+	if (agendaEntry) return <AgendaItemDisplayContent entry={agendaEntry} />;
 
 	if (!hasFetchedForToday) {
 		return (

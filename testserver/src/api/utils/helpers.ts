@@ -8,6 +8,7 @@ import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Locker } from '@/magister/response/locker.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
 import type { StudentBase } from '@/magister/response/student.types';
+import type { StoredAbsenceNoticeTemplate } from './absenceNotices';
 import type { StoredReturnMeasureTemplate } from './returnMeasures';
 
 export function getAllStudents(): StudentBase[] {
@@ -34,12 +35,21 @@ export function getDataVersion(): string {
 	return parsed.version ?? '0';
 }
 
-const TERUGKOMMAATREGELEN_FILE_PATH = join(import.meta.dirname, '../../../data/terugkommaatregelen.json');
+const RETURN_MEASURES_FILE_PATH = join(import.meta.dirname, '../../../data/terugkommaatregelen.json');
+const ABSENCE_NOTICES_FILE_PATH = join(import.meta.dirname, '../../../data/absence-notices.json');
 
 export function getReturnMeasureTemplates(): Record<number, StoredReturnMeasureTemplate[]> {
-	if (!existsSync(TERUGKOMMAATREGELEN_FILE_PATH)) return {};
-	return JSON.parse(readFileSync(TERUGKOMMAATREGELEN_FILE_PATH, 'utf-8')) as Record<
+	if (!existsSync(RETURN_MEASURES_FILE_PATH)) return {};
+	return JSON.parse(readFileSync(RETURN_MEASURES_FILE_PATH, 'utf-8')) as Record<
 		number,
 		StoredReturnMeasureTemplate[]
+	>;
+}
+
+export function getAbsenceNoticeTemplates(): Record<string, StoredAbsenceNoticeTemplate[]> {
+	if (!existsSync(ABSENCE_NOTICES_FILE_PATH)) return {};
+	return JSON.parse(readFileSync(ABSENCE_NOTICES_FILE_PATH, 'utf-8')) as Record<
+		string,
+		StoredAbsenceNoticeTemplate[]
 	>;
 }

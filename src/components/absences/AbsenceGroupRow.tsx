@@ -1,9 +1,9 @@
 'use client';
 
 import type { AbsenceRow } from '@/lib/absenceUtils';
-import { findAgendaItem } from '@/lib/agendaUtils';
-import { formatTime, getDateKey } from '@/lib/dateUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import { findLessonEntry, isLessonEntry } from '@/lib/agendaEntryUtils';
+import { formatTime, getDateKey, parseOptionalDate } from '@/lib/dateUtils';
+import type { LessonAgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 import LazyAvatar from '../LazyAvatar';
 import LessonHourBadge from '../LessonHourBadge';
@@ -18,38 +18,34 @@ function formatLessonRange(row: AbsenceRow) {
 	return '-';
 }
 
-function parseDate(value?: string) {
-	if (!value) return null;
-	const d = new Date(value);
-	return Number.isNaN(d.getTime()) ? null : d;
-}
-
-function resolveAgendaItem(student: Student, row: AbsenceRow): AgendaItem | null {
+function resolveAgendaEntry(student: Student, row: AbsenceRow): LessonAgendaEntry | null {
 	if (!row.begin) return null;
 
-	const beginDate = new Date(row.begin);
-	if (Number.isNaN(beginDate.getTime())) return null;
+	const beginDate = parseOptionalDate(row.begin);
+	if (!beginDate) return null;
 
 	const dateKey = getDateKey(beginDate);
 	const agendaForDay = student.agenda?.[dateKey];
 	if (!agendaForDay?.length) return null;
 
+	const lessonEntries = agendaForDay.filter(isLessonEntry);
+
 	if (row.lesuurBegin) {
 		const lesuurBegin = row.lesuurBegin;
 		const lesuurEinde = row.lesuurEinde ?? lesuurBegin;
 		const byHour =
-			agendaForDay.find((it) => it.lesuur?.begin === lesuurBegin) ??
-			agendaForDay.find(
-				(it) =>
-					it.lesuur?.begin &&
-					it.lesuur?.einde &&
-					it.lesuur.begin <= lesuurBegin &&
-					it.lesuur.einde >= lesuurEinde,
+			lessonEntries.find((entry) => entry.item.lesuur?.begin === lesuurBegin) ??
+			lessonEntries.find(
+				(entry) =>
+					entry.item.lesuur?.begin &&
+					entry.item.lesuur?.einde &&
+					entry.item.lesuur.begin <= lesuurBegin &&
+					entry.item.lesuur.einde >= lesuurEinde,
 			);
 		if (byHour) return byHour;
 	}
 
-	return findAgendaItem(beginDate, agendaForDay);
+	return findLessonEntry(beginDate, lessonEntries);
 }
 
 function getInitials(studentName: string) {
@@ -63,8 +59,8 @@ function getInitials(studentName: string) {
 }
 
 function AbsenceFallbackTooltipContent({ row }: { row: AbsenceRow }) {
-	const beginTime = parseDate(row.begin);
-	const endTime = parseDate(row.einde);
+	const beginTime = parseOptionalDate(row.begin);
+	const endTime = parseOptionalDate(row.einde);
 
 	return (
 		<div className="space-y-1">
@@ -79,9 +75,9 @@ function AbsenceFallbackTooltipContent({ row }: { row: AbsenceRow }) {
 }
 
 function AbsenceHourIndicator({ row, student }: { row: AbsenceRow; student?: Student }) {
-	const agendaItem = student ? resolveAgendaItem(student, row) : null;
+	const agendaEntry = student ? resolveAgendaEntry(student, row) : null;
 
-	if (agendaItem) {
+	if (agendaEntry) {
 		return (
 			<Tooltip>
 				<TooltipTrigger asChild>
@@ -99,7 +95,7 @@ function AbsenceHourIndicator({ row, student }: { row: AbsenceRow; student?: Stu
 					</span>
 				</TooltipTrigger>
 				<TooltipContent>
-					<AgendaTooltipContent item={agendaItem} />
+					<AgendaTooltipContent entry={agendaEntry} />
 				</TooltipContent>
 			</Tooltip>
 		);

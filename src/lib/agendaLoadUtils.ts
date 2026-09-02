@@ -1,30 +1,55 @@
 import { getDateKey } from '@/lib/dateUtils';
 import type { Student } from '@/magister/types';
 
+function isLegacyAgendaEntry(entry: unknown): boolean {
+	if (typeof entry !== 'object' || entry === null) return false;
+	if (!('kind' in entry)) return true;
+	return 'begin' in entry && !('start' in entry);
+}
+
 export function isAgendaDayLoaded(student: Student, dateKey: string): boolean {
 	return student.agenda?.[dateKey] !== undefined;
 }
 
-/** Whether agenda and/or return measures still need to be fetched for this day. */
+/** Whether agenda, return measures, or absence notices still need to be fetched for this day. */
 export function needsAgendaDayFetch(student: Student, dateKey: string): boolean {
 	if (!isAgendaDayLoaded(student, dateKey)) return true;
 	if (student.returnMeasuresLoadedFor?.[dateKey] !== true) return true;
+	if (student.absenceNoticesLoadedFor?.[dateKey] !== true) return true;
 	return false;
 }
 
-/** Drop empty per-day agenda entries so a broken cache does not block refetching. */
+/** Drop empty per-day agenda entries and invalidate pre-AgendaEntry cache shapes. */
 export function repairStaleAgendaCache(student: Student): Student {
 	if (!student.agenda) return student;
 
+	const hasLegacyEntries = Object.values(student.agenda).some((items) => items.some(isLegacyAgendaEntry));
+	if (hasLegacyEntries) {
+		return {
+			...student,
+			agenda: undefined,
+			returnMeasuresLoadedFor: undefined,
+			absenceNoticesLoadedFor: undefined,
+		};
+	}
+
 	const agenda = { ...student.agenda };
-	const loadedFor = student.returnMeasuresLoadedFor ? { ...student.returnMeasuresLoadedFor } : undefined;
+	const returnMeasuresLoadedFor = student.returnMeasuresLoadedFor
+		? { ...student.returnMeasuresLoadedFor }
+		: undefined;
+	const absenceNoticesLoadedFor = student.absenceNoticesLoadedFor
+		? { ...student.absenceNoticesLoadedFor }
+		: undefined;
 	let changed = false;
 
 	for (const [dateKey, items] of Object.entries(agenda)) {
 		if (items.length > 0) continue;
 		delete agenda[dateKey];
-		if (loadedFor?.[dateKey]) {
-			delete loadedFor[dateKey];
+		if (returnMeasuresLoadedFor?.[dateKey]) {
+			delete returnMeasuresLoadedFor[dateKey];
+		}
+		if (absenceNoticesLoadedFor?.[dateKey]) {
+			delete absenceNoticesLoadedFor[dateKey];
 		}
 		changed = true;
 	}
@@ -34,7 +59,14 @@ export function repairStaleAgendaCache(student: Student): Student {
 	return {
 		...student,
 		agenda: Object.keys(agenda).length > 0 ? agenda : undefined,
-		returnMeasuresLoadedFor: loadedFor && Object.keys(loadedFor).length > 0 ? loadedFor : undefined,
+		returnMeasuresLoadedFor:
+			returnMeasuresLoadedFor && Object.keys(returnMeasuresLoadedFor).length > 0
+				? returnMeasuresLoadedFor
+				: undefined,
+		absenceNoticesLoadedFor:
+			absenceNoticesLoadedFor && Object.keys(absenceNoticesLoadedFor).length > 0
+				? absenceNoticesLoadedFor
+				: undefined,
 	};
 }
 
@@ -47,7 +79,7 @@ export function isAgendaRangeLoaded(student: Student, start: Date, end: Date): b
 	return true;
 }
 
-export function markReturnMeasuresLoadedForRange(
+export function markDateRangeLoaded(
 	loadedFor: Record<string, boolean> | undefined,
 	start: Date,
 	end: Date,

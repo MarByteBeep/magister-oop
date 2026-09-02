@@ -8,9 +8,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
 import { useTardyModalAgenda } from '@/hooks/useTardyModalAgenda';
-import { findAgendaItem, getAgendaOccurrenceKey, isSameAgendaOccurrence } from '@/lib/agendaUtils';
+import { findLessonEntry, getAgendaEntryKey, isLessonEntry, isSameAgendaEntryOccurrence } from '@/lib/agendaEntryUtils';
 import { submitTardyAccountability } from '@/lib/tardyUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 import TardyAgendaItem from './TardyAgendaItem';
 import TardyConfirmationModal from './TardyConfirmationModal';
@@ -24,35 +24,39 @@ interface TardyModalProps {
 export default function TardyModal({ student, isOpen, onClose }: TardyModalProps) {
 	const { students, loadAgendaForStudent } = useStudentsContext();
 	const currentTime = useCurrentTime();
-	const [selectedItem, setSelectedItem] = useState<AgendaItem | null>(null);
+	const [selectedEntry, setSelectedEntry] = useState<AgendaEntry | null>(null);
 	const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
 
 	const studentId = student?.id;
-	const { agendaItems, isLoading } = useTardyModalAgenda(isOpen, studentId, students, loadAgendaForStudent);
+	const { agendaEntries, isLoading } = useTardyModalAgenda(isOpen, studentId, students, loadAgendaForStudent);
 
+	const lessonEntries = agendaEntries.filter(isLessonEntry);
 	const fullName = student ? `${student.roepnaam} ${student.tussenvoegsel ?? ''} ${student.achternaam}`.trim() : '';
-	const activeAgendaItem = findAgendaItem(currentTime, agendaItems);
+	const activeEntry = findLessonEntry(currentTime, agendaEntries);
 
-	const handleItemClick = (item: AgendaItem) => {
-		setSelectedItem(item);
+	const handleItemClick = (entry: AgendaEntry) => {
+		if (!isLessonEntry(entry)) return;
+		setSelectedEntry(entry);
 		setIsConfirmationOpen(true);
 	};
 
 	const handleConfirm = async () => {
-		if (!selectedItem || !studentId) return;
-		const ok = await submitTardyAccountability(studentId, selectedItem);
+		if (!selectedEntry || !isLessonEntry(selectedEntry) || !studentId) return;
+		const ok = await submitTardyAccountability(studentId, selectedEntry.item);
 		if (ok) {
 			setIsConfirmationOpen(false);
-			setSelectedItem(null);
+			setSelectedEntry(null);
 		}
 	};
 
 	const handleCancel = () => {
 		setIsConfirmationOpen(false);
-		setSelectedItem(null);
+		setSelectedEntry(null);
 	};
 
-	const sortedItems = [...agendaItems].sort((a, b) => (a.lesuur?.begin ?? 99) - (b.lesuur?.begin ?? 99));
+	const sortedEntries = [...lessonEntries].sort(
+		(a, b) => (a.item.lesuur?.begin ?? 99) - (b.item.lesuur?.begin ?? 99),
+	);
 
 	return (
 		<>
@@ -79,17 +83,17 @@ export default function TardyModal({ student, isOpen, onClose }: TardyModalProps
 						<div className="flex justify-center items-center py-8">
 							<LoadingSpinner iconClassName="h-6 w-6" />
 						</div>
-					) : agendaItems.length === 0 ? (
+					) : lessonEntries.length === 0 ? (
 						<p className="text-muted-foreground text-center py-8">Geen afspraken voor vandaag</p>
 					) : (
 						<ScrollArea className="flex-1 pr-4 min-h-0">
 							<div className="grid grid-cols-2 gap-2">
-								{sortedItems.map((item) => (
+								{sortedEntries.map((entry) => (
 									<TardyAgendaItem
-										key={getAgendaOccurrenceKey(item)}
-										item={item}
+										key={getAgendaEntryKey(entry)}
+										entry={entry}
 										currentTime={currentTime}
-										isCurrent={isSameAgendaOccurrence(activeAgendaItem, item)}
+										isCurrent={isSameAgendaEntryOccurrence(activeEntry, entry)}
 										onSelect={handleItemClick}
 									/>
 								))}
@@ -99,9 +103,9 @@ export default function TardyModal({ student, isOpen, onClose }: TardyModalProps
 				</DialogContent>
 			</Dialog>
 
-			{selectedItem && (
+			{selectedEntry && isLessonEntry(selectedEntry) && (
 				<TardyConfirmationModal
-					item={selectedItem}
+					item={selectedEntry.item}
 					studentName={fullName}
 					isOpen={isConfirmationOpen}
 					onConfirm={handleConfirm}

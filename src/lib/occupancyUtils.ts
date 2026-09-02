@@ -1,7 +1,9 @@
+import { isLessonEntry } from '@/lib/agendaEntryUtils';
 import { agendaItemOverlapsLesson, getItemLocationCodes, getItemTimeRange, timeTable } from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
 import { formatLocation } from '@/lib/locationUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 
 export type OccupancyChartPoint = {
@@ -82,8 +84,9 @@ export function getOccupancyForDay(students: Student[], dateKey: string): Record
 		const agendaForDay = student.agenda?.[dateKey];
 		if (!agendaForDay) continue;
 
-		for (const item of agendaForDay) {
-			addAgendaItemToOccupancy(occupancy, item);
+		for (const entry of agendaForDay) {
+			if (!isLessonEntry(entry)) continue;
+			addAgendaItemToOccupancy(occupancy, entry.item);
 		}
 	}
 
@@ -95,7 +98,7 @@ export function getOccupancyForDay(students: Student[], dateKey: string): Record
 }
 
 function analyzeStudentLessonPresence(
-	agendaForDay: AgendaItem[],
+	agendaForDay: AgendaEntry[],
 	lessonStart: string,
 	lessonEnd: string,
 	locations: string[],
@@ -104,7 +107,9 @@ function analyzeStudentLessonPresence(
 	let hasLessonBefore = false;
 	let hasLessonAfter = false;
 
-	for (const item of agendaForDay) {
+	for (const entry of agendaForDay) {
+		if (!isLessonEntry(entry)) continue;
+		const item = entry.item;
 		const { startTime: itemStartTime, endTime: itemEndTime } = getItemTimeRange(item);
 		const itemLocations = getItemLocationCodes(item);
 		const isInSelectedLocation = itemLocations.some((loc) => locations.includes(loc));

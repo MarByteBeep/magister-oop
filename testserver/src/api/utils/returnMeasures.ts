@@ -1,4 +1,4 @@
-import { getDateKey, parseDateKey, toISOFromDateKeyAndTime } from '@/lib/dateUtils';
+import { addDays, getDateKey, parseDateKey, toISOFromDateKeyAndTime } from '@/lib/dateUtils';
 import type { Measure, ReturnMeasure } from '@/magister/response/return-measure.types';
 
 export type StoredReturnMeasureTemplate = {
@@ -19,8 +19,7 @@ export function expandReturnMeasureTemplates(
 	const endDate = parseDateKey(endDateKey);
 
 	return templates.flatMap((template) => {
-		const date = new Date(beginDate);
-		date.setDate(date.getDate() + template.dayOffset);
+		const date = addDays(beginDate, template.dayOffset);
 		const dateKey = getDateKey(date);
 
 		if (date < beginDate || date > endDate) return [];

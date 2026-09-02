@@ -4,9 +4,9 @@ import { useMemo, useState } from 'react';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
 import { useWeeklyAgenda } from '@/hooks/useWeeklyAgenda';
-import { findAgendaItem } from '@/lib/agendaUtils';
+import { findActiveEntryPreferringLessons } from '@/lib/agendaEntryUtils';
 import { getStartOfWeek } from '@/lib/dateUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 import Agenda from './Agenda';
 import AgendaItemModal from './AgendaItemModal';
@@ -22,7 +22,7 @@ export default function WeeklyAgendaView({ studentId, onOpenStudent }: WeeklyAge
 	const currentTime = useCurrentTime();
 	const { students, loadAgendaForStudent } = useStudentsContext();
 	const student = students.find((s) => s.id === studentId);
-	const [selectedItem, setSelectedItem] = useState<AgendaItem | null>(null);
+	const [selectedEntry, setSelectedEntry] = useState<AgendaEntry | null>(null);
 
 	const {
 		isLoading,
@@ -39,9 +39,9 @@ export default function WeeklyAgendaView({ studentId, onOpenStudent }: WeeklyAge
 		goToCurrentWeek,
 	} = useWeeklyAgenda(studentId, student, loadAgendaForStudent);
 
-	const activeAgendaItem = useMemo(() => {
+	const activeEntry = useMemo(() => {
 		const todayItems = weekAgenda[todayKey] || [];
-		return findAgendaItem(currentTime, todayItems);
+		return findActiveEntryPreferringLessons(currentTime, todayItems);
 	}, [weekAgenda, todayKey, currentTime]);
 
 	if (isLoading) return <WeeklyAgendaSkeleton />;
@@ -65,21 +65,21 @@ export default function WeeklyAgendaView({ studentId, onOpenStudent }: WeeklyAge
 				) : (
 					<div className="flex-1 min-h-0 pt-2 pr-2 pb-2 pl-0">
 						<Agenda
-							items={calendarItems}
+							entries={calendarItems}
 							date={getStartOfWeek(selectedWeekDate)}
 							view="work_week"
-							activeItem={isCurrentWeek ? activeAgendaItem : null}
-							onSelectItem={(item) => setSelectedItem(item)}
+							activeEntry={isCurrentWeek ? activeEntry : null}
+							onSelectEntry={(entry) => setSelectedEntry(entry)}
 						/>
 					</div>
 				)}
 			</div>
 
-			{selectedItem && (
+			{selectedEntry && (
 				<AgendaItemModal
-					item={selectedItem}
-					isOpen={selectedItem !== null}
-					onClose={() => setSelectedItem(null)}
+					entry={selectedEntry}
+					isOpen={selectedEntry !== null}
+					onClose={() => setSelectedEntry(null)}
 					onOpenStudent={onOpenStudent}
 				/>
 			)}

@@ -1,27 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
-import { isAgendaDayLoaded } from '@/lib/agendaLoadUtils';
 import {
-	findAgendaItemOverlappingLessonRangePreferringLessons,
-	findAgendaItemPreferringLessons,
-} from '@/lib/agendaUtils';
+	findLessonEntryOverlappingLessonRangePreferringLessons,
+	findLessonEntryPreferringLessons,
+} from '@/lib/agendaEntryUtils';
+import { isAgendaDayLoaded } from '@/lib/agendaLoadUtils';
 import { getDateKey, getNow } from '@/lib/dateUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
+import type { LoadAgendaForStudentFn } from '@/types/students.types';
 
 export function useAgendaItemDisplay(
 	student: Student | undefined,
 	type: 'current' | 'next',
 	lessonRange: string | undefined,
-	loadAgendaForStudent: (id: number, start: Date, end: Date) => Promise<{ items: AgendaItem[] }>,
+	loadAgendaForStudent: LoadAgendaForStudentFn,
 ) {
-	const [agendaItem, setAgendaItem] = useState<AgendaItem | null>(null);
+	const [agendaEntry, setAgendaEntry] = useState<AgendaEntry | null>(null);
 	const [isLoadingAgenda, setIsLoadingAgenda] = useState(false);
 	const [hasFetchedForToday, setHasFetchedForToday] = useState(false);
 
-	const findRelevantAgendaItem = useCallback(
-		(items: AgendaItem[], date: Date) => {
-			if (type === 'current') return findAgendaItemPreferringLessons(date, items);
-			if (lessonRange) return findAgendaItemOverlappingLessonRangePreferringLessons(items, lessonRange);
+	const findRelevantAgendaEntry = useCallback(
+		(entries: AgendaEntry[], date: Date) => {
+			if (type === 'current') return findLessonEntryPreferringLessons(date, entries);
+			if (lessonRange) return findLessonEntryOverlappingLessonRangePreferringLessons(entries, lessonRange);
 			return null;
 		},
 		[type, lessonRange],
@@ -33,13 +34,13 @@ export function useAgendaItemDisplay(
 		const todayKey = getDateKey(getNow());
 
 		if (isAgendaDayLoaded(student, todayKey)) {
-			setAgendaItem(findRelevantAgendaItem(student.agenda?.[todayKey] ?? [], getNow()));
+			setAgendaEntry(findRelevantAgendaEntry(student.agenda?.[todayKey] ?? [], getNow()));
 			setHasFetchedForToday(true);
 		} else {
-			setAgendaItem(null);
+			setAgendaEntry(null);
 			setHasFetchedForToday(false);
 		}
-	}, [student?.agenda, student, findRelevantAgendaItem]);
+	}, [student?.agenda, student, findRelevantAgendaEntry]);
 
 	const handleSyncClick = async (e: React.MouseEvent) => {
 		e.stopPropagation();
@@ -48,8 +49,8 @@ export function useAgendaItemDisplay(
 		setIsLoadingAgenda(true);
 		try {
 			const now = getNow();
-			const { items } = await loadAgendaForStudent(student.id, now, now);
-			setAgendaItem(findRelevantAgendaItem(items, now));
+			const { entries } = await loadAgendaForStudent(student.id, now, now);
+			setAgendaEntry(findRelevantAgendaEntry(entries, now));
 			setHasFetchedForToday(true);
 		} catch (error) {
 			console.error('Failed to load agenda:', error);
@@ -58,5 +59,5 @@ export function useAgendaItemDisplay(
 		}
 	};
 
-	return { agendaItem, isLoadingAgenda, hasFetchedForToday, handleSyncClick };
+	return { agendaEntry, isLoadingAgenda, hasFetchedForToday, handleSyncClick };
 }

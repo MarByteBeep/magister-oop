@@ -1,19 +1,26 @@
 'use client';
 
 import { cva } from 'class-variance-authority';
-import { memo } from 'react';
+import { type CSSProperties, memo, useRef } from 'react';
 import { LuClock3, LuMapPin } from 'react-icons/lu';
 import LessonHourBadge from '@/components/LessonHourBadge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useFittingLineCount } from '@/hooks/useFittingLineCount';
+import {
+	isAbsenceNoticeEntry,
+	isLessonEntry,
+	isReturnMeasureEntry,
+	isSameAgendaEntryOccurrence,
+} from '@/lib/agendaEntryUtils';
 import { formatCompactTeacherLabel, getAgendaItemInfo } from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
-import { getFullDayScheduleLabel, isFullDaySchedule } from '@/lib/fullDayScheduleUtils';
+import { getFullDayScheduleLabel, isFullDayReturnMeasureEntry } from '@/lib/fullDayScheduleUtils';
 import { formatLocation } from '@/lib/locationUtils';
-import { getReturnMeasureDisplay, isReturnMeasureAgendaItem } from '@/lib/returnMeasureUtils';
+import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
 import { cn } from '@/lib/utils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import AgendaTooltipContent from './AgendaTooltipContent';
-import ReturnMeasureAgendaLabels, { ReturnMeasureAlertBadge } from './ReturnMeasureAgendaLabels';
+import { ReturnMeasureAlertBadge } from './ReturnMeasureAgendaLabels';
 
 const agendaEventStyles = cva(
 	'relative h-full overflow-hidden cursor-pointer rounded-lg border text-[12px] text-foreground duration-150 focus-visible:outline-none',
@@ -21,8 +28,11 @@ const agendaEventStyles = cva(
 		variants: {
 			kind: {
 				lesson: 'mx-1',
-				returnMeasure:
+				returnMeasureFullDay:
 					'mx-0 bg-orange-500/45 border-orange-500/70 hover:bg-orange-500/55 hover:border-orange-500/85',
+				returnMeasureGutter:
+					'mx-1 bg-orange-500/45 border-orange-500/70 hover:bg-orange-500/55 hover:border-orange-500/85',
+				absenceNotice: 'mx-1 bg-blue-500/45 border-blue-500/70 hover:bg-blue-500/55 hover:border-blue-500/85',
 			},
 			active: {
 				true: 'bg-emerald-500/48 border-emerald-500/70',
@@ -35,10 +45,22 @@ const agendaEventStyles = cva(
 		},
 		compoundVariants: [
 			{
-				kind: 'returnMeasure',
+				kind: 'returnMeasureFullDay',
 				active: false,
 				className:
 					'bg-orange-500/45 border-orange-500/70 hover:bg-orange-500/55 hover:border-orange-500/85 dark:bg-orange-500/35 dark:border-orange-500/60',
+			},
+			{
+				kind: 'returnMeasureGutter',
+				active: false,
+				className:
+					'bg-orange-500/45 border-orange-500/70 hover:bg-orange-500/55 hover:border-orange-500/85 dark:bg-orange-500/35 dark:border-orange-500/60',
+			},
+			{
+				kind: 'absenceNotice',
+				active: false,
+				className:
+					'bg-blue-500/45 border-blue-500/70 hover:bg-blue-500/55 hover:border-blue-500/85 dark:bg-blue-500/35 dark:border-blue-500/60',
 			},
 		],
 		defaultVariants: {
@@ -56,10 +78,11 @@ const bottomMetaInfoClasses = `${metaInfoClasses} bottom-0.5`;
 const metaIconClasses = 'h-2.5 w-2.5 shrink-0';
 const locationTextClasses = 'max-w-14 truncate';
 const compactContentClasses = 'flex h-full min-w-0 items-center gap-1';
+const gutterContentClasses = 'flex h-full min-w-0 flex-col justify-start overflow-hidden pt-0.5 pb-0.5';
 const defaultContentClasses = 'flex h-full min-w-0 items-center gap-1 pr-16';
 
-function getAgendaItemDurationMinutes(item: AgendaItem): number {
-	return (new Date(item.einde).getTime() - new Date(item.begin).getTime()) / 60_000;
+function getEntryDurationMinutes(entry: AgendaEntry): number {
+	return (new Date(entry.end).getTime() - new Date(entry.start).getTime()) / 60_000;
 }
 
 function titleClasses(canWrapTitle: boolean) {
@@ -69,23 +92,58 @@ function titleClasses(canWrapTitle: boolean) {
 	);
 }
 
+function gutterTitleStyle(maxLines: number): CSSProperties {
+	return {
+		display: '-webkit-box',
+		WebkitBoxOrient: 'vertical',
+		WebkitLineClamp: maxLines,
+		overflow: 'hidden',
+	};
+}
+
+function gutterTitleClasses() {
+	return 'min-w-0 w-full break-words leading-tight font-semibold text-foreground';
+}
+
 interface AgendaEventProps {
-	item: AgendaItem;
+	entry: AgendaEntry;
 	isActive?: boolean;
 	isCompact?: boolean;
 }
 
-function AgendaEvent({ item, isActive = false, isCompact = false }: AgendaEventProps) {
-	const isReturnMeasure = isReturnMeasureAgendaItem(item);
-	const returnMeasureDisplay = isReturnMeasure ? getReturnMeasureDisplay(item) : null;
-	const isFullDay = isFullDaySchedule(item);
-	const beginTime = new Date(item.begin);
-	const endTime = new Date(item.einde);
-	const { courseCodes, subject } = getAgendaItemInfo(item);
-	const title = isReturnMeasure ? returnMeasureDisplay?.primaryLabel : (courseCodes ?? subject);
-	const firstLocation = formatLocation(item.locaties[0]);
-	const teacherLabel = formatCompactTeacherLabel(item);
-	const canWrapTitle = getAgendaItemDurationMinutes(item) > 60;
+function AgendaEvent({ entry, isActive = false, isCompact = false }: AgendaEventProps) {
+	const isReturnMeasure = isReturnMeasureEntry(entry);
+	const isAbsenceNotice = isAbsenceNoticeEntry(entry);
+	const isLesson = isLessonEntry(entry);
+	const isFullDayReturnMeasure = isReturnMeasure && isFullDayReturnMeasureEntry(entry);
+	const isGutterOverlay = isAbsenceNotice || (isReturnMeasure && !isFullDayReturnMeasure);
+	const returnMeasureDisplay = isReturnMeasure ? getReturnMeasureDisplay(entry.measure) : null;
+	const beginTime = new Date(entry.start);
+	const endTime = new Date(entry.end);
+	const lessonItem = isLesson ? entry.item : null;
+	const { courseCodes, subject } = lessonItem
+		? getAgendaItemInfo(lessonItem)
+		: { courseCodes: undefined, subject: undefined };
+	const absenceLabel = isAbsenceNotice ? entry.notice.attendanceTypeDesc : undefined;
+	const title = isReturnMeasure
+		? returnMeasureDisplay?.primaryLabel
+		: isAbsenceNotice
+			? absenceLabel
+			: (courseCodes ?? subject);
+	const firstLocation = lessonItem ? formatLocation(lessonItem.locaties[0]) : undefined;
+	const teacherLabel = lessonItem ? formatCompactTeacherLabel(lessonItem) : undefined;
+	const durationMinutes = getEntryDurationMinutes(entry);
+	const canWrapTitle = durationMinutes > 60;
+	const gutterContentRef = useRef<HTMLDivElement>(null);
+	const gutterLineCount = useFittingLineCount(gutterContentRef);
+	const kind = isFullDayReturnMeasure
+		? 'returnMeasureFullDay'
+		: isReturnMeasure
+			? 'returnMeasureGutter'
+			: isAbsenceNotice
+				? 'absenceNotice'
+				: 'lesson';
+	const compact = isCompact || isGutterOverlay;
 
 	return (
 		<Tooltip>
@@ -93,13 +151,13 @@ function AgendaEvent({ item, isActive = false, isCompact = false }: AgendaEventP
 				<div
 					className={cn(
 						agendaEventStyles({
-							kind: isReturnMeasure ? 'returnMeasure' : 'lesson',
-							active: isReturnMeasure ? false : isActive,
-							compact: isCompact,
+							kind,
+							active: isGutterOverlay || isFullDayReturnMeasure ? false : isActive,
+							compact,
 						}),
 					)}
 				>
-					{isFullDay ? (
+					{isFullDayReturnMeasure ? (
 						<>
 							<div className={fullDayScheduleHeaderClasses}>
 								<ReturnMeasureAlertBadge />
@@ -111,23 +169,39 @@ function AgendaEvent({ item, isActive = false, isCompact = false }: AgendaEventP
 						</>
 					) : (
 						<>
-							{returnMeasureDisplay?.hasBoth && (
+							{returnMeasureDisplay?.hasBoth && isGutterOverlay && (
 								<div className={topLeftMetaInfoClasses}>
 									<ReturnMeasureAlertBadge />
 								</div>
 							)}
-							{isCompact ? (
-								<div className={compactContentClasses}>
-									{!isReturnMeasure && item.lesuur?.begin && (
+							{compact ? (
+								<div
+									ref={isGutterOverlay ? gutterContentRef : undefined}
+									className={cn(
+										isGutterOverlay ? gutterContentClasses : compactContentClasses,
+										returnMeasureDisplay?.hasBoth && isGutterOverlay && 'pl-3',
+									)}
+								>
+									{isLesson && entry.item.lesuur?.begin && (
 										<LessonHourBadge
-											lessonInfo={{ status: 'lesson', lesson: item.lesuur.begin }}
+											lessonInfo={{ status: 'lesson', lesson: entry.item.lesuur.begin }}
 											className="h-3.5 w-3.5 shrink-0 text-[0.55rem]"
 										/>
 									)}
-									{isReturnMeasure ? (
-										<ReturnMeasureAgendaLabels item={item} canWrapTitle={canWrapTitle} compact />
+									{isGutterOverlay ? (
+										<span
+											className={gutterTitleClasses()}
+											style={gutterTitleStyle(gutterLineCount)}
+										>
+											{title}
+										</span>
 									) : (
-										<span className={titleClasses(canWrapTitle)}>{title}</span>
+										<>
+											<span className={titleClasses(canWrapTitle)}>{title}</span>
+											{teacherLabel && (
+												<span className="truncate text-muted-foreground">{teacherLabel}</span>
+											)}
+										</>
 									)}
 								</div>
 							) : (
@@ -139,37 +213,23 @@ function AgendaEvent({ item, isActive = false, isCompact = false }: AgendaEventP
 										</span>
 									</div>
 
-									{!isReturnMeasure && firstLocation && (
+									{isLesson && firstLocation && (
 										<div className={bottomMetaInfoClasses}>
 											<LuMapPin className={metaIconClasses} />
 											<span className={locationTextClasses}>{firstLocation}</span>
 										</div>
 									)}
 
-									<div
-										className={cn(
-											defaultContentClasses,
-											isReturnMeasure && 'pr-1',
-											returnMeasureDisplay?.hasBoth && 'pl-4',
-										)}
-									>
-										{!isReturnMeasure && item.lesuur?.begin && (
+									<div className={defaultContentClasses}>
+										{isLesson && entry.item.lesuur?.begin && (
 											<LessonHourBadge
-												lessonInfo={{ status: 'lesson', lesson: item.lesuur.begin }}
+												lessonInfo={{ status: 'lesson', lesson: entry.item.lesuur.begin }}
 												className="h-4 w-4 text-[0.65rem] shrink-0"
 											/>
 										)}
-										{isReturnMeasure ? (
-											<ReturnMeasureAgendaLabels item={item} canWrapTitle={canWrapTitle} />
-										) : (
-											<>
-												<span className={titleClasses(canWrapTitle)}>{title}</span>
-												{teacherLabel && (
-													<span className="truncate text-muted-foreground">
-														{teacherLabel}
-													</span>
-												)}
-											</>
+										<span className={titleClasses(canWrapTitle)}>{title}</span>
+										{teacherLabel && (
+											<span className="truncate text-muted-foreground">{teacherLabel}</span>
 										)}
 									</div>
 								</>
@@ -179,7 +239,7 @@ function AgendaEvent({ item, isActive = false, isCompact = false }: AgendaEventP
 				</div>
 			</TooltipTrigger>
 			<TooltipContent>
-				<AgendaTooltipContent item={item} />
+				<AgendaTooltipContent entry={entry} />
 			</TooltipContent>
 		</Tooltip>
 	);
@@ -190,9 +250,5 @@ export default memo(
 	(prev, next) =>
 		prev.isCompact === next.isCompact &&
 		prev.isActive === next.isActive &&
-		prev.item.id === next.item.id &&
-		prev.item.begin === next.item.begin &&
-		prev.item.einde === next.item.einde &&
-		prev.item.returnMeasureMaatregelOmschrijving === next.item.returnMeasureMaatregelOmschrijving &&
-		prev.item.returnMeasureOmschrijving === next.item.returnMeasureOmschrijving,
+		isSameAgendaEntryOccurrence(prev.entry, next.entry),
 );

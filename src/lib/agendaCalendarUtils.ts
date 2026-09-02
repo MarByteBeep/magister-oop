@@ -1,41 +1,45 @@
-import { getAgendaItemInfo, getAgendaOccurrenceKey } from '@/lib/agendaUtils';
-import { getReturnMeasureDisplay, isReturnMeasureAgendaItem } from '@/lib/returnMeasureUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import { getAgendaEntryKey, isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
+import { getAgendaItemInfo } from '@/lib/agendaUtils';
+import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 
 export type CalendarEvent = {
 	id: string;
 	title: string;
 	start: Date;
 	end: Date;
-	resource: AgendaItem;
+	resource: AgendaEntry;
 };
 
 export function isSameCalendarDay(a: Date, b: Date): boolean {
 	return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
-export function agendaItemToCalendarEvent(item: AgendaItem): CalendarEvent {
-	const { courseDescriptions, subject } = getAgendaItemInfo(item);
-	const title = isReturnMeasureAgendaItem(item)
-		? getReturnMeasureDisplay(item).primaryLabel
-		: (courseDescriptions ?? subject ?? 'Les');
+export function agendaEntryToCalendarEvent(entry: AgendaEntry): CalendarEvent {
+	const title = (() => {
+		if (isReturnMeasureEntry(entry)) return getReturnMeasureDisplay(entry.measure).primaryLabel;
+		if (isAbsenceNoticeEntry(entry)) return entry.notice.attendanceTypeDesc;
+		const { courseDescriptions, subject } = getAgendaItemInfo(entry.item);
+		return courseDescriptions ?? subject ?? 'Les';
+	})();
+
 	return {
-		id: getAgendaOccurrenceKey(item),
+		id: getAgendaEntryKey(entry),
 		title,
-		start: new Date(item.begin),
-		end: new Date(item.einde),
-		resource: item,
+		start: new Date(entry.start),
+		end: new Date(entry.end),
+		resource: entry,
 	};
 }
 
-export function agendaItemsToCalendarEvents(items: AgendaItem[]): CalendarEvent[] {
-	return items.map(agendaItemToCalendarEvent);
+export function agendaEntriesToCalendarEvents(entries: AgendaEntry[]): CalendarEvent[] {
+	return entries.map(agendaEntryToCalendarEvent);
 }
 
-/** Overlap packing for compact lesson UI; return measures are ignored (they render full-width behind). */
+/** Overlap packing for compact lesson UI; overlay entries are ignored. */
 export function getOverlappingEventIds(events: CalendarEvent[]): Set<string> {
 	const overlappingIds = new Set<string>();
-	const lessonEvents = events.filter((event) => !isReturnMeasureAgendaItem(event.resource));
+	const lessonEvents = events.filter((event) => isLessonEntry(event.resource));
 
 	for (let i = 0; i < lessonEvents.length; i++) {
 		for (let j = i + 1; j < lessonEvents.length; j++) {

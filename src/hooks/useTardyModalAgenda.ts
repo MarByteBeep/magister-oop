@@ -1,20 +1,21 @@
 import { useEffect, useState } from 'react';
 import { getDateKey, getNow } from '@/lib/dateUtils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
+import type { LoadAgendaForStudentFn } from '@/types/students.types';
 
 export function useTardyModalAgenda(
 	isOpen: boolean,
 	studentId: number | undefined,
 	students: Student[],
-	loadAgendaForStudent: (id: number, start: Date, end: Date) => Promise<{ items: AgendaItem[] }>,
+	loadAgendaForStudent: LoadAgendaForStudentFn,
 ) {
-	const [agendaItems, setAgendaItems] = useState<AgendaItem[]>([]);
+	const [agendaEntries, setAgendaEntries] = useState<AgendaEntry[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
 		if (!isOpen || !studentId) {
-			setAgendaItems([]);
+			setAgendaEntries([]);
 			setIsLoading(false);
 			return;
 		}
@@ -27,19 +28,19 @@ export function useTardyModalAgenda(
 
 		if (agendaForToday) {
 			if (!cancelled) {
-				setAgendaItems(agendaForToday);
+				setAgendaEntries(agendaForToday);
 				setIsLoading(false);
 			}
 		} else {
 			setIsLoading(true);
 			loadAgendaForStudent(studentId, today, today)
-				.then(({ items }) => {
-					if (!cancelled) setAgendaItems(items);
+				.then(({ entries }) => {
+					if (!cancelled) setAgendaEntries(entries);
 				})
 				.catch((err) => {
 					if (!cancelled) {
 						console.error('Failed to load agenda:', err);
-						setAgendaItems([]);
+						setAgendaEntries([]);
 					}
 				})
 				.finally(() => {
@@ -52,5 +53,5 @@ export function useTardyModalAgenda(
 		};
 	}, [isOpen, studentId, students, loadAgendaForStudent]);
 
-	return { agendaItems, isLoading };
+	return { agendaEntries, isLoading };
 }

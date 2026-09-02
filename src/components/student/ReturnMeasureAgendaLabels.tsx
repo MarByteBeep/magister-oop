@@ -3,20 +3,20 @@
 import { LuTriangleAlert } from 'react-icons/lu';
 import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
 import { cn } from '@/lib/utils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { ReturnMeasure } from '@/magister/response/return-measure.types';
 
 interface ReturnMeasureAgendaLabelsProps {
-	item: AgendaItem;
+	measure: ReturnMeasure;
 	canWrapTitle?: boolean;
 	compact?: boolean;
 }
 
 export default function ReturnMeasureAgendaLabels({
-	item,
+	measure,
 	canWrapTitle = false,
 	compact = false,
 }: ReturnMeasureAgendaLabelsProps) {
-	const display = getReturnMeasureDisplay(item);
+	const display = getReturnMeasureDisplay(measure);
 	const titleClasses = cn(
 		'min-w-0 font-semibold text-foreground',
 		canWrapTitle ? 'line-clamp-2 whitespace-normal break-words leading-tight' : 'truncate',

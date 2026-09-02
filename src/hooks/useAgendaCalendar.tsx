@@ -4,42 +4,58 @@ import AgendaCalendarEvent from '@/components/student/AgendaCalendarEvent';
 import AgendaCalendarHeader from '@/components/student/AgendaCalendarHeader';
 import { firstLessonTime, lastLessonTime } from '@/components/student/agendaCalendarConfig';
 import {
-	agendaItemsToCalendarEvents,
+	agendaEntriesToCalendarEvents,
 	type CalendarEvent,
 	getOverlappingEventIds,
 	isSameCalendarDay,
 } from '@/lib/agendaCalendarUtils';
 import { agendaDayLayoutAlgorithm } from '@/lib/agendaDayLayout';
+import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import { hhmmToDate } from '@/lib/bigCalendarUtils';
-import { isReturnMeasureAgendaItem } from '@/lib/returnMeasureUtils';
+import { isFullDayReturnMeasureEntry } from '@/lib/fullDayScheduleUtils';
 import { cn } from '@/lib/utils';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 
 export function useAgendaCalendar(
-	items: AgendaItem[],
+	entries: AgendaEntry[],
 	date: Date,
 	view: View,
-	activeItem: AgendaItem | null | undefined,
-	onSelectItem: (item: AgendaItem) => void,
+	activeEntry: AgendaEntry | null | undefined,
+	onSelectEntry: (entry: AgendaEntry) => void,
 ) {
-	const events = useMemo(() => agendaItemsToCalendarEvents(items), [items]);
+	const events = useMemo(() => agendaEntriesToCalendarEvents(entries), [entries]);
 	const overlappingEventIds = useMemo(() => getOverlappingEventIds(events), [events]);
 	const min = useMemo(() => hhmmToDate(date, firstLessonTime), [date]);
 	const max = useMemo(() => hhmmToDate(date, lastLessonTime), [date]);
 
-	const handleSelectEvent = useCallback((ev: CalendarEvent) => onSelectItem(ev.resource), [onSelectItem]);
+	const handleSelectEvent = useCallback((ev: CalendarEvent) => onSelectEntry(ev.resource), [onSelectEntry]);
 	const dayPropGetter = useCallback(
 		(d: Date) => ({ className: cn(isSameCalendarDay(d, new Date()) && 'agenda-today-column') }),
 		[],
 	);
 	const tooltipAccessor = useCallback(() => '', []);
 	const eventPropGetter = useCallback((event: CalendarEvent) => {
-		const isReturnMeasure = isReturnMeasureAgendaItem(event.resource);
+		if (isReturnMeasureEntry(event.resource)) {
+			if (isFullDayReturnMeasureEntry(event.resource)) {
+				return {
+					className: 'agenda-return-measure-event',
+					style: { zIndex: 1 },
+				};
+			}
+			return {
+				className: 'agenda-return-measure-gutter-event',
+				style: { zIndex: 2 },
+			};
+		}
+		if (isAbsenceNoticeEntry(event.resource)) {
+			return {
+				className: 'agenda-absence-notice-event',
+				style: { zIndex: 2 },
+			};
+		}
 		return {
-			className: isReturnMeasure ? 'agenda-return-measure-event' : 'agenda-lesson-event',
-			style: {
-				zIndex: isReturnMeasure ? 1 : 2,
-			},
+			className: 'agenda-lesson-event',
+			style: { zIndex: 2 },
 		};
 	}, []);
 
@@ -47,9 +63,9 @@ export function useAgendaCalendar(
 		() => ({
 			header: AgendaCalendarHeader,
 			event: (props: EventProps<CalendarEvent>) =>
-				createElement(AgendaCalendarEvent, { ...props, activeItem, overlappingEventIds }),
+				createElement(AgendaCalendarEvent, { ...props, activeEntry, overlappingEventIds }),
 		}),
-		[activeItem, overlappingEventIds],
+		[activeEntry, overlappingEventIds],
 	);
 
 	const views: View[] = view === 'work_week' ? ['work_week'] : ['day'];

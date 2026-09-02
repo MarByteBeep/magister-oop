@@ -21,6 +21,20 @@ export function parseDateKey(dateKey: string): Date {
 	return new Date(`${dateKey}T00:00:00`);
 }
 
+/** Parse an ISO/date string; returns null when missing or invalid. */
+export function parseOptionalDate(value?: string | null): Date | null {
+	if (!value) return null;
+	const date = new Date(value);
+	return Number.isNaN(date.getTime()) ? null : date;
+}
+
+/** Copy of `date` shifted by `dayOffset` local calendar days. */
+export function addDays(date: Date, dayOffset: number): Date {
+	const next = new Date(date);
+	next.setDate(date.getDate() + dayOffset);
+	return next;
+}
+
 /** Combine a local date key and HH:mm time into an ISO UTC string. */
 export function toISOFromDateKeyAndTime(dateKey: string, time: string): string {
 	const [hours, minutes] = time.split(':').map(Number);

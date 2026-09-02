@@ -2,18 +2,18 @@
 
 import { Calendar, type View } from 'react-big-calendar';
 import { useAgendaCalendar } from '@/hooks/useAgendaCalendar';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import { agendaCalendarFormats, agendaCalendarMessages, agendaLocalizer } from './agendaCalendarConfig';
 
 export interface AgendaProps {
-	items: AgendaItem[];
+	entries: AgendaEntry[];
 	date: Date;
 	view: View;
-	activeItem?: AgendaItem | null;
-	onSelectItem: (item: AgendaItem) => void;
+	activeEntry?: AgendaEntry | null;
+	onSelectEntry: (entry: AgendaEntry) => void;
 }
 
-export default function Agenda({ items, date, view, activeItem, onSelectItem }: AgendaProps) {
+export default function Agenda({ entries, date, view, activeEntry, onSelectEntry }: AgendaProps) {
 	const {
 		events,
 		min,
@@ -25,7 +25,7 @@ export default function Agenda({ items, date, view, activeItem, onSelectItem }: 
 		components,
 		views,
 		dayLayoutAlgorithm,
-	} = useAgendaCalendar(items, date, view, activeItem, onSelectItem);
+	} = useAgendaCalendar(entries, date, view, activeEntry, onSelectEntry);
 
 	return (
 		<div className="h-full overflow-hidden">

@@ -4,6 +4,7 @@ import { faker } from '@faker-js/faker';
 import type { Locker, LockersResponse } from '@/magister/response/locker.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
 import type { StudentBase } from '@/magister/response/student.types';
+import { generateAbsenceNoticeData } from './absence-notices';
 import { generateAgendaData } from './agenda';
 import { generateDummyLeerling } from './leerling';
 import { generateDummyLocker } from './locker';
@@ -15,7 +16,8 @@ const MEDEWERKERS_FILE_PATH = join(DATA_DIR, 'medewerkers.json');
 const LEERLINGEN_FILE_PATH = join(DATA_DIR, 'leerlingen.json');
 const LOCKERS_FILE_PATH = join(DATA_DIR, 'lockers.json');
 const AGENDA_FILE_PATH = join(DATA_DIR, 'agenda.json');
-const TERUGKOMMAATREGELEN_FILE_PATH = join(DATA_DIR, 'terugkommaatregelen.json');
+const RETURN_MEASURES_FILE_PATH = join(DATA_DIR, 'terugkommaatregelen.json');
+const ABSENCE_NOTICES_FILE_PATH = join(DATA_DIR, 'absence-notices.json');
 const DATA_VERSION_FILE_PATH = join(DATA_DIR, 'data-version.json');
 
 const totalLeerlingen = 400;
@@ -49,9 +51,13 @@ async function init() {
 		rmSync(AGENDA_FILE_PATH);
 		console.log(`Removed ${AGENDA_FILE_PATH}`);
 	}
-	if (existsSync(TERUGKOMMAATREGELEN_FILE_PATH)) {
-		rmSync(TERUGKOMMAATREGELEN_FILE_PATH);
-		console.log(`Removed ${TERUGKOMMAATREGELEN_FILE_PATH}`);
+	if (existsSync(RETURN_MEASURES_FILE_PATH)) {
+		rmSync(RETURN_MEASURES_FILE_PATH);
+		console.log(`Removed ${RETURN_MEASURES_FILE_PATH}`);
+	}
+	if (existsSync(ABSENCE_NOTICES_FILE_PATH)) {
+		rmSync(ABSENCE_NOTICES_FILE_PATH);
+		console.log(`Removed ${ABSENCE_NOTICES_FILE_PATH}`);
 	}
 	if (existsSync(DATA_VERSION_FILE_PATH)) {
 		rmSync(DATA_VERSION_FILE_PATH);
@@ -96,11 +102,18 @@ async function init() {
 	writeFileSync(AGENDA_FILE_PATH, JSON.stringify(agendaData, null, 2), 'utf-8');
 	console.log(`Generated agenda for ${leerlingen.length} students and saved to ${AGENDA_FILE_PATH}`);
 
-	console.log('Generating dummy terugkommaatregelen data...');
-	const terugkommaatregelenData = generateReturnMeasureData(leerlingen);
-	writeFileSync(TERUGKOMMAATREGELEN_FILE_PATH, JSON.stringify(terugkommaatregelenData, null, 2), 'utf-8');
+	console.log('Generating dummy return measures data...');
+	const returnMeasuresData = generateReturnMeasureData(leerlingen);
+	writeFileSync(RETURN_MEASURES_FILE_PATH, JSON.stringify(returnMeasuresData, null, 2), 'utf-8');
 	console.log(
-		`Generated terugkommaatregelen for ${Object.keys(terugkommaatregelenData).length} students and saved to ${TERUGKOMMAATREGELEN_FILE_PATH}`,
+		`Generated return measures for ${Object.keys(returnMeasuresData).length} students and saved to ${RETURN_MEASURES_FILE_PATH}`,
+	);
+
+	console.log('Generating dummy absence-notices data...');
+	const absenceNoticesData = generateAbsenceNoticeData(leerlingen);
+	writeFileSync(ABSENCE_NOTICES_FILE_PATH, JSON.stringify(absenceNoticesData, null, 2), 'utf-8');
+	console.log(
+		`Generated absence notices for ${Object.keys(absenceNoticesData).length} students and saved to ${ABSENCE_NOTICES_FILE_PATH}`,
 	);
 
 	// --- Locker Generation ---

@@ -147,6 +147,14 @@
 	z-index: 1;
 }
 
+.rbc-day-slot .rbc-event.agenda-return-measure-gutter-event {
+	z-index: 2;
+}
+
+.rbc-day-slot .rbc-event.agenda-absence-notice-event {
+	z-index: 2;
+}
+
 .rbc-day-slot .rbc-event.agenda-lesson-event {
 	z-index: 2;
 }

@@ -1,6 +1,5 @@
 import { formatTime, getNow } from '@/lib/dateUtils';
 import { formatLocations } from '@/lib/locationUtils';
-import { isReturnMeasureAgendaItem } from '@/lib/returnMeasureUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 
 export const timeTable = [
@@ -137,17 +136,6 @@ export function getNextLesson(current: LessonInfo): LessonInfo {
 	return { status: 'lesson', lesson: next, range: `${slot.begin}-${slot.einde}` };
 }
 
-export function findAgendaItem(date: Date, agendaItems: AgendaItem[]) {
-	for (const item of agendaItems) {
-		const beginTime = new Date(item.begin);
-		const endTime = new Date(item.einde);
-		if (date >= beginTime && date < endTime) {
-			return item;
-		}
-	}
-	return null;
-}
-
 /** Recurring Magister appointments can reuse the same id across days; begin distinguishes occurrences. */
 export function isSameAgendaOccurrence(
 	a: Pick<AgendaItem, 'id' | 'begin'> | null | undefined,
@@ -158,22 +146,6 @@ export function isSameAgendaOccurrence(
 
 export function getAgendaOccurrenceKey(item: Pick<AgendaItem, 'id' | 'begin'>): string {
 	return `${item.id}:${item.begin}`;
-}
-
-/** Prefer regular lessons over return measures when both overlap the same time slot. */
-export function findAgendaItemPreferringLessons(date: Date, agendaItems: AgendaItem[]) {
-	const lessonsOnly = agendaItems.filter((item) => !isReturnMeasureAgendaItem(item));
-	const lesson = findAgendaItem(date, lessonsOnly);
-	if (lesson) return lesson;
-	return findAgendaItem(date, agendaItems);
-}
-
-export function findNextAgendaItem(date: Date, agendaItems: AgendaItem[]) {
-	// Filter out items that have already started or ended, and only consider items that START in the future.
-	const futureItems = agendaItems.filter((item) => new Date(item.begin) > date);
-	// Sort by start time to find the earliest upcoming item
-	futureItems.sort((a, b) => new Date(a.begin).getTime() - new Date(b.begin).getTime());
-	return futureItems.length > 0 ? futureItems[0] : null;
 }
 
 export function getItemTimeRange(item: AgendaItem): { startTime: string; endTime: string } {
@@ -194,29 +166,4 @@ export function getItemLocationCodes(item: AgendaItem): string[] {
 	return item.locaties
 		.map((loc) => (loc.code ?? loc.omschrijving)?.trim().toLowerCase())
 		.filter((loc): loc is string => Boolean(loc));
-}
-
-/** Same overlap rule as occupancy; lessonRange format "HH:MM-HH:MM" (e.g. from getLesson / timeTable). */
-export function findAgendaItemOverlappingLessonRange(
-	agendaItems: AgendaItem[],
-	lessonRange: string,
-): AgendaItem | null {
-	const [lessonStart, lessonEnd] = lessonRange.split('-').map((s) => s.trim());
-	if (!lessonStart || !lessonEnd) return null;
-
-	for (const item of agendaItems) {
-		if (agendaItemOverlapsLesson(item, lessonStart, lessonEnd)) return item;
-	}
-	return null;
-}
-
-/** Prefer regular lessons over return measures when both overlap the same lesson range. */
-export function findAgendaItemOverlappingLessonRangePreferringLessons(
-	agendaItems: AgendaItem[],
-	lessonRange: string,
-): AgendaItem | null {
-	const lessonsOnly = agendaItems.filter((item) => !isReturnMeasureAgendaItem(item));
-	const lesson = findAgendaItemOverlappingLessonRange(lessonsOnly, lessonRange);
-	if (lesson) return lesson;
-	return findAgendaItemOverlappingLessonRange(agendaItems, lessonRange);
 }
