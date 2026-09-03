@@ -2,6 +2,12 @@
 
 Alle gebruikersgerichte wijzigingen in de Magister OOP Chrome-extensie.
 
+## 1.0.7 — 2026-09-03
+
+- Leerlingen: **absentie** gaat voor de les; toont "Ziek gemeld" in plaats van het vak
+- Leerlingen: **vierkant rooster** als label bij een hele schooldag
+- Leerlingen en agenda: dezelfde **kleuren** — blauw bij absentie, oranje bij terugkom
+
 ## 1.0.6 — 2026-09-02
 
 - Agenda: **terugkommaatregelen**; extra omschrijving met waarschuwingsicoon
