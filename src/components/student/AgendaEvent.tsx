@@ -12,6 +12,7 @@ import {
 	isReturnMeasureEntry,
 	isSameAgendaEntryOccurrence,
 } from '@/lib/agendaEntryUtils';
+import { absenceSurfaceClasses, returnMeasureSurfaceClasses } from '@/lib/agendaKindStyles';
 import { formatCompactTeacherLabel, getAgendaItemInfo } from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
 import { getFullDayScheduleLabel, isFullDayReturnMeasureEntry } from '@/lib/fullDayScheduleUtils';
@@ -28,11 +29,9 @@ const agendaEventStyles = cva(
 		variants: {
 			kind: {
 				lesson: 'mx-1',
-				returnMeasureFullDay:
-					'mx-0 bg-orange-500/45 border-orange-500/70 hover:bg-orange-500/55 hover:border-orange-500/85',
-				returnMeasureGutter:
-					'mx-1 bg-orange-500/45 border-orange-500/70 hover:bg-orange-500/55 hover:border-orange-500/85',
-				absenceNotice: 'mx-1 bg-blue-500/45 border-blue-500/70 hover:bg-blue-500/55 hover:border-blue-500/85',
+				returnMeasureFullDay: `mx-0 ${returnMeasureSurfaceClasses}`,
+				returnMeasureGutter: `mx-1 ${returnMeasureSurfaceClasses}`,
+				absenceNotice: `mx-1 ${absenceSurfaceClasses}`,
 			},
 			active: {
 				true: 'bg-emerald-500/48 border-emerald-500/70',
@@ -47,20 +46,17 @@ const agendaEventStyles = cva(
 			{
 				kind: 'returnMeasureFullDay',
 				active: false,
-				className:
-					'bg-orange-500/45 border-orange-500/70 hover:bg-orange-500/55 hover:border-orange-500/85 dark:bg-orange-500/35 dark:border-orange-500/60',
+				className: returnMeasureSurfaceClasses,
 			},
 			{
 				kind: 'returnMeasureGutter',
 				active: false,
-				className:
-					'bg-orange-500/45 border-orange-500/70 hover:bg-orange-500/55 hover:border-orange-500/85 dark:bg-orange-500/35 dark:border-orange-500/60',
+				className: returnMeasureSurfaceClasses,
 			},
 			{
 				kind: 'absenceNotice',
 				active: false,
-				className:
-					'bg-blue-500/45 border-blue-500/70 hover:bg-blue-500/55 hover:border-blue-500/85 dark:bg-blue-500/35 dark:border-blue-500/60',
+				className: absenceSurfaceClasses,
 			},
 		],
 		defaultVariants: {

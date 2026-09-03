@@ -2,9 +2,11 @@
 
 import { LuTriangleAlert } from 'react-icons/lu';
 import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
+import { returnMeasureIconClasses } from '@/lib/agendaKindStyles';
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
 import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
+import { cn } from '@/lib/utils';
 import type { AbsenceNoticePerson } from '@/magister/response/absence-notice.types';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 
@@ -57,7 +59,10 @@ function AgendaTooltipContent({ entry }: AgendaTooltipContentProps) {
 					<div className={display.hasMaatregel ? undefined : 'font-bold'}>
 						{display.hasBoth && (
 							<LuTriangleAlert
-								className="mr-1 inline h-3.5 w-3.5 shrink-0 align-[-0.125em] text-amber-500"
+								className={cn(
+									'mr-1 inline h-3.5 w-3.5 shrink-0 align-[-0.125em]',
+									returnMeasureIconClasses,
+								)}
 								aria-hidden
 							/>
 						)}

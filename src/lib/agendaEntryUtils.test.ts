@@ -6,10 +6,14 @@ import { scaleLayoutToGutter, shiftLayoutForGutter } from './agendaDayLayout';
 import {
 	absenceNoticeEntries,
 	buildAgendaEntries,
+	findActiveEntryPreferringLessons,
+	findStudentOverviewEntry,
+	findStudentOverviewEntryOverlappingLessonRange,
 	isAbsenceNoticeEntry,
 	isLessonEntry,
 	isReturnMeasureEntry,
 	lessonEntry,
+	returnMeasureEntry,
 } from './agendaEntryUtils';
 import { getDateKey, parseDateKey, toISOFromDateKeyAndTime } from './dateUtils';
 
@@ -170,6 +174,93 @@ test('lessonEntry wraps agenda items without mutation', () => {
 	const entry = lessonEntry(item);
 	expect(entry.kind).toBe('lesson');
 	expect(entry.item).toBe(item);
+});
+
+test('findStudentOverviewEntry shows a timed return measure when there is no lesson', () => {
+	const measure = returnMeasureEntry(
+		returnMeasure(toISOFromDateKeyAndTime('2026-09-02', '10:50'), toISOFromDateKeyAndTime('2026-09-02', '11:50')),
+	);
+	const at = new Date(toISOFromDateKeyAndTime('2026-09-02', '11:10'));
+	expect(findStudentOverviewEntry(at, [measure])).toBe(measure);
+});
+
+test('findStudentOverviewEntry prefers a lesson over an overlapping return measure', () => {
+	const lessonItem = lessonEntry(
+		lesson(toISOFromDateKeyAndTime('2026-09-02', '10:50'), toISOFromDateKeyAndTime('2026-09-02', '11:30')),
+	);
+	const measure = returnMeasureEntry(
+		returnMeasure(toISOFromDateKeyAndTime('2026-09-02', '10:50'), toISOFromDateKeyAndTime('2026-09-02', '11:50')),
+	);
+	const at = new Date(toISOFromDateKeyAndTime('2026-09-02', '11:10'));
+	expect(findStudentOverviewEntry(at, [measure, lessonItem])).toBe(lessonItem);
+});
+
+test('findStudentOverviewEntry prefers an absence over an overlapping lesson', () => {
+	const lessonItem = lessonEntry(
+		lesson(toISOFromDateKeyAndTime('2026-09-02', '10:50'), toISOFromDateKeyAndTime('2026-09-02', '11:30')),
+	);
+	const sick = absenceNoticeEntries(
+		notice({
+			attendanceTypeCode: 'ZK',
+			attendanceTypeDesc: 'Ziek gemeld',
+			startDateTime: toISOFromDateKeyAndTime('2026-09-02', '08:30'),
+			endDateTime: null,
+		}),
+		parseDateKey('2026-09-02'),
+		parseDateKey('2026-09-02'),
+	)[0];
+	const at = new Date(toISOFromDateKeyAndTime('2026-09-02', '11:10'));
+	expect(findStudentOverviewEntry(at, [lessonItem, sick])).toBe(sick);
+});
+
+test('findStudentOverviewEntry ignores an absence that has not started yet', () => {
+	const lessonItem = lessonEntry(
+		lesson(toISOFromDateKeyAndTime('2026-09-02', '10:50'), toISOFromDateKeyAndTime('2026-09-02', '11:30')),
+	);
+	const sick = absenceNoticeEntries(
+		notice({
+			attendanceTypeCode: 'ZK',
+			attendanceTypeDesc: 'Ziek gemeld',
+			startDateTime: toISOFromDateKeyAndTime('2026-09-02', '11:20'),
+			endDateTime: null,
+		}),
+		parseDateKey('2026-09-02'),
+		parseDateKey('2026-09-02'),
+	)[0];
+	const at = new Date(toISOFromDateKeyAndTime('2026-09-02', '11:10'));
+	expect(findStudentOverviewEntry(at, [lessonItem, sick])).toBe(lessonItem);
+});
+
+test('findActiveEntryPreferringLessons skips timed return measures used as gutter overlays', () => {
+	const measure = returnMeasureEntry(
+		returnMeasure(toISOFromDateKeyAndTime('2026-09-02', '10:50'), toISOFromDateKeyAndTime('2026-09-02', '11:50')),
+	);
+	const at = new Date(toISOFromDateKeyAndTime('2026-09-02', '11:10'));
+	expect(findActiveEntryPreferringLessons(at, [measure])).toBeNull();
+});
+
+test('findStudentOverviewEntryOverlappingLessonRange falls back to a return measure', () => {
+	const measure = returnMeasureEntry(
+		returnMeasure(toISOFromDateKeyAndTime('2026-09-02', '10:50'), toISOFromDateKeyAndTime('2026-09-02', '11:50')),
+	);
+	expect(findStudentOverviewEntryOverlappingLessonRange([measure], '10:50 - 11:30')).toBe(measure);
+});
+
+test('findStudentOverviewEntryOverlappingLessonRange prefers an absence over a lesson', () => {
+	const lessonItem = lessonEntry(
+		lesson(toISOFromDateKeyAndTime('2026-09-02', '10:50'), toISOFromDateKeyAndTime('2026-09-02', '11:30')),
+	);
+	const dentist = absenceNoticeEntries(
+		notice({
+			attendanceTypeCode: 'O',
+			attendanceTypeDesc: 'Orthodontist',
+			startDateTime: toISOFromDateKeyAndTime('2026-09-02', '10:50'),
+			endDateTime: toISOFromDateKeyAndTime('2026-09-02', '12:10'),
+		}),
+		parseDateKey('2026-09-02'),
+		parseDateKey('2026-09-02'),
+	)[0];
+	expect(findStudentOverviewEntryOverlappingLessonRange([lessonItem, dentist], '10:50 - 11:30')).toBe(dentist);
 });
 
 test('scaleLayoutToGutter and shiftLayoutForGutter wrap calc lengths', () => {

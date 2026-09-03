@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import {
-	findLessonEntryOverlappingLessonRangePreferringLessons,
-	findLessonEntryPreferringLessons,
-} from '@/lib/agendaEntryUtils';
+import { findStudentOverviewEntry, findStudentOverviewEntryOverlappingLessonRange } from '@/lib/agendaEntryUtils';
 import { isAgendaDayLoaded } from '@/lib/agendaLoadUtils';
 import { getDateKey, getNow } from '@/lib/dateUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
@@ -21,8 +18,8 @@ export function useAgendaItemDisplay(
 
 	const findRelevantAgendaEntry = useCallback(
 		(entries: AgendaEntry[], date: Date) => {
-			if (type === 'current') return findLessonEntryPreferringLessons(date, entries);
-			if (lessonRange) return findLessonEntryOverlappingLessonRangePreferringLessons(entries, lessonRange);
+			if (type === 'current') return findStudentOverviewEntry(date, entries);
+			if (lessonRange) return findStudentOverviewEntryOverlappingLessonRange(entries, lessonRange);
 			return null;
 		},
 		[type, lessonRange],

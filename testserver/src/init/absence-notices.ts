@@ -57,16 +57,24 @@ function createTemplate(studentId: number, noticeIndex: number): StoredAbsenceNo
 	};
 }
 
+const ZK_NOTICE_INDEX = 0;
+const OTHER_NOTICE_COUNT = TEST_ABSENCE_NOTICES.length - 1;
+
 export function generateAbsenceNoticeData(allStudents: StudentBase[]): Record<string, StoredAbsenceNoticeTemplate[]> {
 	const result: Record<string, StoredAbsenceNoticeTemplate[]> = {};
-	let noticeCounter = 0;
+	let otherNoticeCounter = 0;
 
 	for (const [index, student] of allStudents.entries()) {
+		if (index % 10 === 0) {
+			result[student.externeId] = [createTemplate(student.id, ZK_NOTICE_INDEX)];
+			continue;
+		}
+
 		if (index % 5 !== 0) continue;
 
-		const noticeIndex = noticeCounter % TEST_ABSENCE_NOTICES.length;
+		const noticeIndex = (otherNoticeCounter % OTHER_NOTICE_COUNT) + 1;
 		result[student.externeId] = [createTemplate(student.id, noticeIndex)];
-		noticeCounter++;
+		otherNoticeCounter++;
 	}
 
 	return result;

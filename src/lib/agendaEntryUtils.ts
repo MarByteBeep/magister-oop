@@ -111,12 +111,30 @@ export function buildAgendaEntries(
 	return entries.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 }
 
+function entryCoversTime(entry: AgendaEntry, date: Date): boolean {
+	return date >= new Date(entry.start) && date < new Date(entry.end);
+}
+
+function findCoveringAbsence(date: Date, entries: AgendaEntry[]): AbsenceNoticeAgendaEntry | null {
+	for (const entry of entries) {
+		if (!isAbsenceNoticeEntry(entry)) continue;
+		if (entryCoversTime(entry, date)) return entry;
+	}
+	return null;
+}
+
+function findCoveringReturnMeasure(date: Date, entries: AgendaEntry[]): ReturnMeasureAgendaEntry | null {
+	for (const entry of entries) {
+		if (!isReturnMeasureEntry(entry)) continue;
+		if (entryCoversTime(entry, date)) return entry;
+	}
+	return null;
+}
+
 export function findLessonEntry(date: Date, entries: AgendaEntry[]): LessonAgendaEntry | null {
 	for (const entry of entries) {
 		if (!isLessonEntry(entry)) continue;
-		const startTime = new Date(entry.start);
-		const endTime = new Date(entry.end);
-		if (date >= startTime && date < endTime) return entry;
+		if (entryCoversTime(entry, date)) return entry;
 	}
 	return null;
 }
@@ -125,17 +143,21 @@ export function findLessonEntryPreferringLessons(date: Date, entries: AgendaEntr
 	return findLessonEntry(date, entries.filter(isLessonEntry));
 }
 
+/** Student overview slot: absence first, then lesson, otherwise a return measure covering this time. */
+export function findStudentOverviewEntry(date: Date, entries: AgendaEntry[]): AgendaEntry | null {
+	return (
+		findCoveringAbsence(date, entries) ?? findLessonEntry(date, entries) ?? findCoveringReturnMeasure(date, entries)
+	);
+}
+
 /** Active calendar slot: lesson first, otherwise full-day return measure (never absence or gutter overlay). */
 export function findActiveEntryPreferringLessons(date: Date, entries: AgendaEntry[]): AgendaEntry | null {
 	const lesson = findLessonEntry(date, entries);
 	if (lesson) return lesson;
 
 	for (const entry of entries) {
-		if (isAbsenceNoticeEntry(entry)) continue;
-		if (isReturnMeasureEntry(entry) && !isFullDayReturnMeasureEntry(entry)) continue;
-		const startTime = new Date(entry.start);
-		const endTime = new Date(entry.end);
-		if (date >= startTime && date < endTime) return entry;
+		if (!isReturnMeasureEntry(entry) || !isFullDayReturnMeasureEntry(entry)) continue;
+		if (entryCoversTime(entry, date)) return entry;
 	}
 	return null;
 }
@@ -173,14 +195,24 @@ export function findLessonEntryOverlappingLessonRange(
 	return null;
 }
 
-export function findLessonEntryOverlappingLessonRangePreferringLessons(
+export function findStudentOverviewEntryOverlappingLessonRange(
 	entries: AgendaEntry[],
 	lessonRange: string,
-): LessonAgendaEntry | null {
-	const lesson = findLessonEntryOverlappingLessonRange(entries.filter(isLessonEntry), lessonRange);
+): AgendaEntry | null {
+	const [lessonStart, lessonEnd] = lessonRange.split('-').map((s) => s.trim());
+	if (!lessonStart || !lessonEnd) return null;
+
+	for (const entry of entries) {
+		if (!isAbsenceNoticeEntry(entry)) continue;
+		if (entryOverlapsLessonRange(entry, lessonStart, lessonEnd)) return entry;
+	}
+
+	const lesson = findLessonEntryOverlappingLessonRange(entries, lessonRange);
 	if (lesson) return lesson;
-	return findLessonEntryOverlappingLessonRange(
-		entries.filter((entry) => !isAbsenceNoticeEntry(entry)),
-		lessonRange,
-	);
+
+	for (const entry of entries) {
+		if (!isReturnMeasureEntry(entry)) continue;
+		if (entryOverlapsLessonRange(entry, lessonStart, lessonEnd)) return entry;
+	}
+	return null;
 }
