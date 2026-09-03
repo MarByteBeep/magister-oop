@@ -2,15 +2,14 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAgendaLoader } from '@/hooks/useAgendaLoader';
 import { useAutoLoadAgenda } from '@/hooks/useAutoLoadAgenda';
 import { findLessonEntryPreferringLessons, findNextLessonEntry } from '@/lib/agendaEntryUtils';
-import { needsAgendaDayFetch, repairStaleAgendaCache } from '@/lib/agendaLoadUtils';
+import { needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
 import { getTodayKey } from '@/lib/dateUtils';
-import { deepEqual } from '@/lib/utils';
 import type { Student } from '@/magister/types';
 import { useCurrentTime } from './useCurrentTime';
 import { useLessonInfo } from './useLessonInfo';
 import { useSelectedStudiesStorage } from './useSelectedStudiesStorage';
 import { useStudentFetch } from './useStudentFetch';
-import { mergeStudent, useStudentStorageSync } from './useStudentStorageSync';
+import { useStudentStorageSync } from './useStudentStorageSync';
 
 export function useStudents() {
 	const [students, setStudents] = useState<Student[]>([]);
@@ -26,41 +25,17 @@ export function useStudents() {
 	const loadAgendaForStudent = useAgendaLoader(setStudents, students);
 
 	useEffect(() => {
-		setStudents((prev) => {
-			if (prev.length === 0) return prev;
-			const repaired = prev.map(repairStaleAgendaCache);
-			return deepEqual(prev, repaired) ? prev : repaired;
-		});
-	}, []);
-
-	useEffect(() => {
 		let cancelled = false;
 		async function init() {
 			setLoading(true);
 			const stored = await loadStoredStudents();
-			const storedById = new Map(stored.map((student) => [student.id, student]));
 			if (cancelled) return;
 
-			setStudents([]);
+			setStudents(stored);
 			await fetchStudentsPaginated().catch((err) => setError(err instanceof Error ? err.message : String(err)));
 			if (cancelled) return;
 			await fetchLockers().catch((err) => setError(err instanceof Error ? err.message : String(err)));
 			if (cancelled) return;
-
-			setStudents((prev) =>
-				prev.map((student) => {
-					const cached = storedById.get(student.id);
-					if (!cached) return student;
-					return repairStaleAgendaCache(
-						mergeStudent(student, {
-							agenda: cached.agenda,
-							returnMeasuresLoadedFor: cached.returnMeasuresLoadedFor,
-							absenceNoticesLoadedFor: cached.absenceNoticesLoadedFor,
-							lockerCode: cached.lockerCode,
-						}),
-					);
-				}),
-			);
 			setLoading(false);
 		}
 		void init();

@@ -1,6 +1,5 @@
 import mergeOriginal, { type Options } from 'deepmerge';
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef } from 'react';
-import { repairStaleAgendaCache } from '@/lib/agendaLoadUtils';
 import { storage, syncFromChrome } from '@/lib/storage';
 import { deepEqual } from '@/lib/utils';
 import type { Student } from '@/magister/types';
@@ -40,7 +39,7 @@ export function useStudentStorageSync(students: Student[], setStudents: Dispatch
 		}
 
 		const arr = await storage.session.get<Student[]>(studentsStorageKey);
-		return (arr ?? []).map(repairStaleAgendaCache);
+		return arr ?? [];
 	}, []);
 
 	useEffect(() => {
@@ -60,7 +59,7 @@ export function useStudentStorageSync(students: Student[], setStudents: Dispatch
 		const onSessionStudents = syncFromChrome<Student[]>('session', studentsStorageKey, (arr) => {
 			if (isWritingStudentsToStorage.current) return;
 			setStudents((prev) => {
-				const updated = (arr ?? []).map(repairStaleAgendaCache);
+				const updated = arr ?? [];
 				return deepEqual(prev, updated) ? prev : updated;
 			});
 		});
