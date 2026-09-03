@@ -1,0 +1,22 @@
+---
+description: Never add unsolicited legacy or backwards-compatibility support
+alwaysApply: true
+---
+
+# No unsolicited legacy support
+
+Never add legacy, backwards-compatibility, migration, fallback, or transitional support unless I explicitly ask for it.
+
+When changing, refactoring, or redesigning code, assume that only the current code, data model, API shape, and contracts matter.
+
+Do not preserve old behavior, old field names, old data formats, old APIs, old cache shapes, or deprecated code paths merely because they might still exist somewhere.
+
+Do not add compatibility layers, fallback paths, adapters, dual-read/write logic, migrations, legacy detection, or transitional abstractions unless I explicitly request them.
+
+If something is incompatible with the new design, change it to the new design. Do not make the new design accommodate the old one.
+
+Prefer deleting obsolete code and simplifying the codebase over preserving it "just in case."
+
+Only introduce backwards compatibility when I explicitly say that legacy support, backwards compatibility, migration, or support for an older version is required.
+
+**Do not infer a need for legacy support.**
