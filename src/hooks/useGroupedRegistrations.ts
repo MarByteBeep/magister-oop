@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import {
-	type RegistrationRow,
-	buildRegistrationRows,
 	buildFilterPairs,
 	buildOrderedReasons,
+	buildRegistrationRows,
+	type RegistrationRow,
 	sortRegistrationRows,
 } from '@/lib/registrationsUtils';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAgendaLoader } from '@/hooks/useAgendaLoader';
 import { useAutoLoadAgenda } from '@/hooks/useAutoLoadAgenda';
+import { useBulkLists } from '@/hooks/useBulkLists';
 import { findLessonEntryPreferringLessons, findNextLessonEntry } from '@/lib/agendaEntryUtils';
 import { needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
 import { getTodayKey } from '@/lib/dateUtils';
@@ -45,6 +46,7 @@ export function useStudents() {
 	}, [loadStoredStudents, fetchStudentsPaginated, fetchLockers]);
 
 	useAutoLoadAgenda(students, selectedStudies, loadAgendaForStudent);
+	useBulkLists(setStudents);
 
 	const refresh = useCallback(async () => {
 		setLoading(true);

@@ -43,7 +43,7 @@ export default function AgendaItemDisplayContent({ entry }: AgendaItemDisplayCon
 						) : isAbsenceNotice ? (
 							<div className="w-full min-w-0">
 								<span className={cn(clampedLabelClasses, absenceTextClasses)}>
-									{entry.notice.attendanceTypeDesc}
+									{entry.notice.attendanceTypeDescription}
 								</span>
 							</div>
 						) : (

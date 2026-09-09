@@ -120,7 +120,7 @@ function AgendaEvent({ entry, isActive = false, isCompact = false }: AgendaEvent
 	const { courseCodes, subject } = lessonItem
 		? getAgendaItemInfo(lessonItem)
 		: { courseCodes: undefined, subject: undefined };
-	const absenceLabel = isAbsenceNotice ? entry.notice.attendanceTypeDesc : undefined;
+	const absenceLabel = isAbsenceNotice ? entry.notice.attendanceTypeDescription : undefined;
 	const title = isReturnMeasure
 		? returnMeasureDisplay?.primaryLabel
 		: isAbsenceNotice

@@ -6,35 +6,47 @@ import type { StoredAbsenceNoticeTemplate } from '../api/utils/absenceNotices';
 const TEST_ABSENCE_NOTICES = [
 	{
 		attendanceTypeCode: 'ZK',
-		attendanceTypeDesc: 'Ziek gemeld',
+		attendanceTypeDescription: 'Ziek gemeld',
 		startDayOffset: -1,
 		startTime: '00:00',
 		endDayOffset: null,
 		endTime: null,
+		expectedEndDayOffset: 2,
+		expectedEndTime: '16:00',
+		comment: '',
+		creatorRole: 'Parent',
 	},
 	{
 		attendanceTypeCode: 'D',
-		attendanceTypeDesc: 'Dokter, Huisarts',
+		attendanceTypeDescription: 'Dokter, Huisarts',
 		startDayOffset: 0,
 		startTime: '08:30',
 		endDayOffset: 0,
 		endTime: '10:30',
+		expectedEndDayOffset: null,
+		expectedEndTime: null,
+		comment: '',
+		creatorRole: 'Parent',
 	},
 	{
 		attendanceTypeCode: 'SL',
-		attendanceTypeDesc: 'Schoolleiding',
+		attendanceTypeDescription: 'Schoolleiding',
 		startDayOffset: 0,
 		startTime: '10:50',
 		endDayOffset: 0,
 		endTime: '12:10',
+		expectedEndDayOffset: null,
+		expectedEndTime: null,
+		comment: 'Gesprek schoolleiding',
+		creatorRole: 'SupportingStaff',
 	},
 ] as const;
 
-function createCreator(studentId: number): AbsenceNoticePerson {
+function createCreator(studentId: number, role: string): AbsenceNoticePerson {
 	faker.seed(studentId + 42);
 	return {
 		accountId: faker.string.uuid(),
-		role: 'Parent',
+		role,
 		initials: faker.string.alpha({ casing: 'upper', length: 2 }),
 		lastName: faker.person.lastName(),
 		infix: '',
@@ -46,14 +58,19 @@ function createTemplate(studentId: number, noticeIndex: number): StoredAbsenceNo
 	faker.seed(studentId + noticeIndex * 1000 + 7);
 
 	return {
-		id: faker.string.uuid(),
+		absenceNoticeId: faker.string.uuid(),
 		attendanceTypeCode: notice.attendanceTypeCode,
-		attendanceTypeDesc: notice.attendanceTypeDesc,
+		attendanceTypeDescription: notice.attendanceTypeDescription,
 		startDayOffset: notice.startDayOffset,
 		startTime: notice.startTime,
 		endDayOffset: notice.endDayOffset,
 		endTime: notice.endTime,
-		creator: createCreator(studentId),
+		expectedEndDayOffset: notice.expectedEndDayOffset,
+		expectedEndTime: notice.expectedEndTime,
+		comment: notice.comment,
+		internalComment: '',
+		creator: createCreator(studentId, notice.creatorRole),
+		isRecurring: false,
 	};
 }
 

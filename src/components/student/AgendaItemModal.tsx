@@ -1,11 +1,12 @@
 'use client';
 
-import { LuClock, LuGraduationCap, LuMapPin, LuUser } from 'react-icons/lu';
+import { LuCalendarClock, LuCalendarRange, LuClock, LuGraduationCap, LuMapPin, LuUser } from 'react-icons/lu';
 import LessonHourBadge from '@/components/LessonHourBadge';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useAgendaItemStudents } from '@/hooks/useAgendaItemStudents';
+import { expectedEndLabel } from '@/lib/absenceNoticeUtils';
 import { isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
 import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
@@ -33,9 +34,10 @@ export default function AgendaItemModal({ entry, isOpen, onClose, onOpenStudent 
 				subject: undefined,
 			};
 	const { lessonStart, lessonEnd, hasLocation, studentsInLocation } = useAgendaItemStudents(entry, students);
+	const expectedEnd = isAbsenceNoticeEntry(entry) ? expectedEndLabel(entry.notice) : null;
 
 	const title = isAbsenceNoticeEntry(entry)
-		? entry.notice.attendanceTypeDesc
+		? entry.notice.attendanceTypeDescription
 		: isReturnMeasureEntry(entry)
 			? getReturnMeasureDisplay(entry.measure).primaryLabel
 			: (courseDescriptions ?? subject ?? 'Agenda item');
@@ -68,6 +70,20 @@ export default function AgendaItemModal({ entry, isOpen, onClose, onOpenStudent 
 							{lessonStart} - {lessonEnd}
 						</span>
 					</div>
+					{isAbsenceNoticeEntry(entry) && entry.notice.consecutiveDays > 1 && (
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<LuCalendarRange className="h-4 w-4" />
+							<span className="font-medium text-foreground">
+								{entry.notice.consecutiveDays} aaneengesloten dagen
+							</span>
+						</div>
+					)}
+					{expectedEnd && (
+						<div className="flex items-center gap-1.5 text-muted-foreground">
+							<LuCalendarClock className="h-4 w-4" />
+							<span className="font-medium text-foreground">Verwacht einde: {expectedEnd}</span>
+						</div>
+					)}
 					{locations && (
 						<div className="flex items-center gap-1.5 text-muted-foreground">
 							<LuMapPin className="h-4 w-4" />

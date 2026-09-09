@@ -22,7 +22,7 @@ export type GroupedRegistrationStudent = {
 };
 
 function normalizeKey(s: string) {
-	return s.replace(/[^a-z0-9]/gi, '').toLowerCase();
+	return s.replace(/[^a-z0-9]+/gi, '').toLowerCase();
 }
 
 export function buildFilterPairs(data: RegistrationsResponse) {

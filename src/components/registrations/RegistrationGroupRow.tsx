@@ -1,8 +1,8 @@
 'use client';
 
-import type { RegistrationRow } from '@/lib/registrationsUtils';
 import { findLessonEntry, isLessonEntry } from '@/lib/agendaEntryUtils';
 import { formatTime, getDateKey, parseOptionalDate } from '@/lib/dateUtils';
+import type { RegistrationRow } from '@/lib/registrationsUtils';
 import type { LessonAgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 import LazyAvatar from '../LazyAvatar';

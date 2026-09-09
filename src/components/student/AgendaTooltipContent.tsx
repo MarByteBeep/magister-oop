@@ -1,6 +1,7 @@
 'use client';
 
 import { LuTriangleAlert } from 'react-icons/lu';
+import { expectedEndLabel } from '@/lib/absenceNoticeUtils';
 import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import { returnMeasureIconClasses } from '@/lib/agendaKindStyles';
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
@@ -18,6 +19,7 @@ function formatCreatorRole(role: string): string {
 	const normalized = role.toLowerCase();
 	if (normalized === 'parent') return 'ouder';
 	if (normalized === 'staff' || normalized === 'employee') return 'medewerker';
+	if (normalized === 'supportingstaff') return 'ondersteuner';
 	if (normalized === 'student') return 'leerling';
 	return role;
 }
@@ -35,16 +37,20 @@ function AgendaTooltipContent({ entry }: AgendaTooltipContentProps) {
 	if (isAbsenceNoticeEntry(entry)) {
 		const { notice } = entry;
 		const creatorLabel = `${formatCreatorName(notice.creator)} (${formatCreatorRole(notice.creator.role)})`;
+		const expectedEnd = expectedEndLabel(notice);
 
 		return (
 			<div className="space-y-1">
-				<div className="font-bold">{notice.attendanceTypeDesc}</div>
+				<div className="font-bold">{notice.attendanceTypeDescription}</div>
 				<div>Code: {notice.attendanceTypeCode}</div>
 				<div>
 					Tijd: {formatTime(beginTime)} - {formatTime(endTime)}
 				</div>
+				{notice.consecutiveDays > 1 && <div>Aaneengesloten dagen: {notice.consecutiveDays}</div>}
+				{expectedEnd && <div>Verwacht einde: {expectedEnd}</div>}
+				{notice.comment.trim() ? <div>Opmerking: {notice.comment}</div> : null}
 				<div>Gemeld door: {creatorLabel}</div>
-				{notice.recurrence != null && <div>Herhaling: ja</div>}
+				{notice.isRecurring && <div>Herhaling: ja</div>}
 			</div>
 		);
 	}

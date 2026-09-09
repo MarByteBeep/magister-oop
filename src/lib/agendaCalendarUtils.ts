@@ -18,7 +18,7 @@ export function isSameCalendarDay(a: Date, b: Date): boolean {
 export function agendaEntryToCalendarEvent(entry: AgendaEntry): CalendarEvent {
 	const title = (() => {
 		if (isReturnMeasureEntry(entry)) return getReturnMeasureDisplay(entry.measure).primaryLabel;
-		if (isAbsenceNoticeEntry(entry)) return entry.notice.attendanceTypeDesc;
+		if (isAbsenceNoticeEntry(entry)) return entry.notice.attendanceTypeDescription;
 		const { courseDescriptions, subject } = getAgendaItemInfo(entry.item);
 		return courseDescriptions ?? subject ?? 'Les';
 	})();

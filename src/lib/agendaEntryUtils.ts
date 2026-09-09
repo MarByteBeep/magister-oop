@@ -1,4 +1,5 @@
-import { getDateKey, parseDateKey, toISOFromDateKeyAndTime } from '@/lib/dateUtils';
+import { absenceNoticeRangeEndMs } from '@/lib/absenceNoticeUtils';
+import { eachDateKey, getNow, parseDateKey, toISOFromDateKeyAndTime } from '@/lib/dateUtils';
 import { isFullDayReturnMeasureEntry } from '@/lib/fullDayScheduleUtils';
 import type { AbsenceNotice } from '@/magister/response/absence-notice.types';
 import type { AgendaItem } from '@/magister/response/agenda.types';
@@ -37,7 +38,7 @@ function entrySourceId(entry: AgendaEntry): string | number {
 		case 'return-measure':
 			return entry.measure.id;
 		case 'absence-notice':
-			return entry.notice.id;
+			return entry.notice.absenceNoticeId;
 	}
 }
 
@@ -57,24 +58,14 @@ function schoolDayBounds(): { start: string; end: string } {
 	return { start: '08:30', end: '16:00' };
 }
 
-function eachDateKey(rangeStart: Date, rangeEnd: Date): string[] {
-	const keys: string[] = [];
-	const current = parseDateKey(getDateKey(rangeStart));
-	const last = parseDateKey(getDateKey(rangeEnd));
-	while (current <= last) {
-		keys.push(getDateKey(current));
-		current.setDate(current.getDate() + 1);
-	}
-	return keys;
-}
-
 export function absenceNoticeEntries(
 	notice: AbsenceNotice,
 	rangeStart: Date,
 	rangeEnd: Date,
+	nowMs = getNow().getTime(),
 ): AbsenceNoticeAgendaEntry[] {
 	const noticeStartMs = new Date(notice.startDateTime).getTime();
-	const noticeEndMs = notice.endDateTime ? new Date(notice.endDateTime).getTime() : Number.POSITIVE_INFINITY;
+	const noticeEndMs = absenceNoticeRangeEndMs(notice, nowMs);
 	const { start: schoolStart, end: schoolEnd } = schoolDayBounds();
 	const entries: AbsenceNoticeAgendaEntry[] = [];
 
@@ -96,6 +87,10 @@ export function absenceNoticeEntries(
 	return entries;
 }
 
+function sortAgendaEntries(entries: AgendaEntry[]): AgendaEntry[] {
+	return entries.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+}
+
 export function buildAgendaEntries(
 	agendaItems: AgendaItem[],
 	returnMeasures: ReturnMeasure[],
@@ -103,12 +98,24 @@ export function buildAgendaEntries(
 	rangeStart: Date,
 	rangeEnd: Date,
 ): AgendaEntry[] {
-	const entries: AgendaEntry[] = [
+	return sortAgendaEntries([
 		...agendaItems.map(lessonEntry),
 		...returnMeasures.map(returnMeasureEntry),
 		...absenceNotices.flatMap((notice) => absenceNoticeEntries(notice, rangeStart, rangeEnd)),
-	];
-	return entries.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+	]);
+}
+
+/** Swap one day's absence overlays for freshly fetched ones, keeping lessons and return measures. */
+export function replaceAbsenceNoticeEntries(
+	dayEntries: AgendaEntry[],
+	notices: AbsenceNotice[],
+	dateKey: string,
+): AgendaEntry[] {
+	const day = parseDateKey(dateKey);
+	return sortAgendaEntries([
+		...dayEntries.filter((entry) => !isAbsenceNoticeEntry(entry)),
+		...notices.flatMap((notice) => absenceNoticeEntries(notice, day, day)),
+	]);
 }
 
 function entryCoversTime(entry: AgendaEntry, date: Date): boolean {

@@ -1,11 +1,13 @@
 import { type Dispatch, type SetStateAction, useCallback, useRef } from 'react';
+import { getAbsenceNoticesForDate, invalidateAbsenceNoticeCache } from '@/lib/absenceNoticeFetch';
+import { noticesForStudent, uniqueNotices } from '@/lib/absenceNoticeUtils';
 import { buildAgendaEntries, isAbsenceNoticeEntry } from '@/lib/agendaEntryUtils';
 import { markDateRangeLoaded } from '@/lib/agendaLoadUtils';
-import { getDateKey } from '@/lib/dateUtils';
+import { eachDateKey, getDateKey } from '@/lib/dateUtils';
 import { deepEqual, groupBy } from '@/lib/utils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
-import type { AbsenceNoticesResponse } from '@/magister/response/absence-notice.types';
+import type { AbsenceNotice } from '@/magister/response/absence-notice.types';
 import type { AgendaResponse } from '@/magister/response/agenda.types';
 import type { ReturnMeasuresResponse } from '@/magister/response/return-measure.types';
 import type { Student } from '@/magister/types';
@@ -30,19 +32,16 @@ async function fetchReturnMeasures(studentId: number, startDateKey: string, endD
 	}
 }
 
-async function fetchAbsenceNotices(studentUuid: string | undefined): Promise<AbsenceNoticesResponse> {
+async function fetchAbsenceNoticesForStudent(
+	studentUuid: string | undefined,
+	dateKeys: string[],
+	refreshCachedDates: boolean,
+): Promise<AbsenceNotice[]> {
 	if (!studentUuid) return [];
-	try {
-		return await getJson<AbsenceNoticesResponse>(
-			endpoints.absenceNotices(studentUuid),
-			'omit',
-			'no-cache',
-			'bearer',
-		);
-	} catch (error) {
-		console.warn('Failed to fetch absence notices for student', studentUuid, error);
-		return [];
-	}
+	if (refreshCachedDates) invalidateAbsenceNoticeCache(dateKeys);
+
+	const noticesByDate = await Promise.all(dateKeys.map((dateKey) => getAbsenceNoticesForDate(dateKey)));
+	return noticesForStudent(uniqueNotices(noticesByDate.flat()), studentUuid);
 }
 
 export function useAgendaLoader(setStudents: Dispatch<SetStateAction<Student[]>>, students: Student[]) {
@@ -54,7 +53,11 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<Student[]>>
 			try {
 				const startDateKey = getDateKey(startDate);
 				const endDateKey = getDateKey(endDate);
-				const studentUuid = studentsRef.current.find((student) => student.id === studentId)?.externeId;
+				const dateKeys = eachDateKey(startDate, endDate);
+				const student = studentsRef.current.find((item) => item.id === studentId);
+				const refreshCachedDates = dateKeys.every(
+					(dateKey) => student?.absenceNoticesLoadedFor?.[dateKey] === true,
+				);
 				const [data, returnMeasuresData, absenceNotices] = await Promise.all([
 					getJson<AgendaResponse>(
 						endpoints.agenda(studentId, startDateKey, endDateKey),
@@ -62,7 +65,7 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<Student[]>>
 						'no-cache',
 					),
 					fetchReturnMeasures(studentId, startDateKey, endDateKey),
-					fetchAbsenceNotices(studentUuid),
+					fetchAbsenceNoticesForStudent(student?.externeId, dateKeys, refreshCachedDates),
 				]);
 
 				for (const item of data.items) {
@@ -94,13 +97,7 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<Student[]>>
 
 					const student = prev[index];
 					const dailyItems = groupBy(entries, (entry) => getDateKey(new Date(entry.start)));
-
-					const dateRange: string[] = [];
-					const currentDate = new Date(startDate);
-					while (currentDate <= endDate) {
-						dateRange.push(getDateKey(currentDate));
-						currentDate.setDate(currentDate.getDate() + 1);
-					}
+					const dateRange = dateKeys;
 
 					const updatedAgenda = { ...student.agenda };
 					for (const [key, dayItems] of Object.entries(dailyItems)) {

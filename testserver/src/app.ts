@@ -15,7 +15,7 @@ import { GET as getParentContactDetails } from './api/ouders/contactgegevens';
 import { GET as getParentChildren } from './api/ouders/kinderen';
 import { GET as getPhoto } from './api/photos/handler';
 import { GET as getLockersDetails } from './api/v1/lockers/details';
-import { GET as getAbsenceNotices } from './api/v2/student/absence-notices';
+import { GET as getAbsenceNoticesToday } from './api/v2/absence-notices/today';
 
 const api = new Hono();
 
@@ -33,7 +33,7 @@ api.get('/data-version', () => getDataVersion());
 api.get('/leerlingen/zoeken', (c) => getSearchStudents(c.req.raw));
 api.get('/medewerkers/zoeken', (c) => getSearchStaff(c.req.raw));
 api.get('/v1/lockers/details', (c) => getLockersDetails(c.req.raw));
-api.get('/v2/student/:uuid/absence-notices', (c) => getAbsenceNotices(c.req.raw, c.req.param('uuid')));
+api.get('/v2/absence-notices/today', (c) => getAbsenceNoticesToday(c.req.raw));
 api.get('/m6/verantwoordingen/ongeoorloofderegistraties', (c) => getRegistrations(c.req.raw));
 
 // Dynamic: leerlingen /:id /...

@@ -1,5 +1,5 @@
-import Registrations from '@/components/Registrations';
 import Occupancy from '@/components/occupancy/Occupancy';
+import Registrations from '@/components/Registrations';
 import Settings from '@/components/Settings';
 import Students from '@/components/Students';
 import { ThemedToaster } from '@/components/ThemedToaster';

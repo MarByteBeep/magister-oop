@@ -21,6 +21,18 @@ export function parseDateKey(dateKey: string): Date {
 	return new Date(`${dateKey}T00:00:00`);
 }
 
+/** Inclusive local calendar keys from `rangeStart` through `rangeEnd`. */
+export function eachDateKey(rangeStart: Date, rangeEnd: Date): string[] {
+	const keys: string[] = [];
+	const current = parseDateKey(getDateKey(rangeStart));
+	const last = parseDateKey(getDateKey(rangeEnd));
+	while (current <= last) {
+		keys.push(getDateKey(current));
+		current.setDate(current.getDate() + 1);
+	}
+	return keys;
+}
+
 /** Parse an ISO/date string; returns null when missing or invalid. */
 export function parseOptionalDate(value?: string | null): Date | null {
 	if (!value) return null;
