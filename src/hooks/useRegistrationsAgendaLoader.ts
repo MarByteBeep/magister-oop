@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
 import { getNow } from '@/lib/dateUtils';
 import { createLimiter } from '@/lib/limiter';
-import type { UnauthorizedAbsencesResponse } from '@/magister/response/unauthorized-absence.types';
+import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import type { Student } from '@/magister/types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
 
-export function useAbsenceAgendaLoader(
-	data: UnauthorizedAbsencesResponse | null,
+export function useRegistrationsAgendaLoader(
+	data: RegistrationsResponse | null,
 	students: Student[],
 	allowedStudentIds: Set<number>,
 	todayKey: string,

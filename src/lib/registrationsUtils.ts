@@ -1,7 +1,7 @@
-import type { UnauthorizedAbsencesResponse } from '@/magister/response/unauthorized-absence.types';
+import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import type { Student } from '@/magister/types';
 
-export type AbsenceRow = {
+export type RegistrationRow = {
 	id: number;
 	reasonKey: string;
 	reasonLabel: string;
@@ -14,18 +14,18 @@ export type AbsenceRow = {
 	einde?: string;
 };
 
-export type GroupedAbsenceStudent = {
+export type GroupedRegistrationStudent = {
 	studentId: number;
 	studentName: string;
 	classCode?: string;
-	absences: AbsenceRow[];
+	registrations: RegistrationRow[];
 };
 
 function normalizeKey(s: string) {
 	return s.replace(/[^a-z0-9]/gi, '').toLowerCase();
 }
 
-export function buildFilterPairs(data: UnauthorizedAbsencesResponse) {
+export function buildFilterPairs(data: RegistrationsResponse) {
 	const filters = data.filters?.types ?? [];
 	const filterPairs = filters.map((f) => ({ key: normalizeKey(f.name), label: f.name }));
 
@@ -52,14 +52,14 @@ function reasonLabelForKey(
 	return filterPairs.find((p) => p.key === reasonKey)?.label ?? (fallbackType ? fallbackType : 'Onbekend');
 }
 
-type UnauthorizedAbsenceItem = NonNullable<UnauthorizedAbsencesResponse['items']>[number];
+type RegistrationItem = NonNullable<RegistrationsResponse['items']>[number];
 
-function collectAbsenceRowsForItem(
-	item: UnauthorizedAbsenceItem,
+function collectRegistrationRowsForItem(
+	item: RegistrationItem,
 	student: Student,
 	filterPairs: { key: string; label: string }[],
-): AbsenceRow[] {
-	const rows: AbsenceRow[] = [];
+): RegistrationRow[] {
+	const rows: RegistrationRow[] = [];
 	const studentName = formatStudentName(student);
 	const classCode = student.klassen?.join(', ');
 
@@ -84,19 +84,19 @@ function collectAbsenceRowsForItem(
 	return rows;
 }
 
-export function buildAbsenceRows(
-	data: UnauthorizedAbsencesResponse,
+export function buildRegistrationRows(
+	data: RegistrationsResponse,
 	studentById: Map<number, Student>,
 	allowedStudentIds: Set<number>,
 	filterPairs: { key: string; label: string }[],
 ) {
-	const byReason = new Map<string, AbsenceRow[]>();
+	const byReason = new Map<string, RegistrationRow[]>();
 
 	for (const item of data.items ?? []) {
 		const student = studentById.get(item.id);
 		if (!student || !allowedStudentIds.has(student.id)) continue;
 
-		for (const row of collectAbsenceRowsForItem(item, student, filterPairs)) {
+		for (const row of collectRegistrationRowsForItem(item, student, filterPairs)) {
 			const arr = byReason.get(row.reasonKey) ?? [];
 			arr.push(row);
 			byReason.set(row.reasonKey, arr);
@@ -106,7 +106,7 @@ export function buildAbsenceRows(
 	return byReason;
 }
 
-export function sortAbsenceRows(byReason: Map<string, AbsenceRow[]>) {
+export function sortRegistrationRows(byReason: Map<string, RegistrationRow[]>) {
 	for (const arr of byReason.values()) {
 		arr.sort((a, b) => {
 			const hourA = a.lesuurBegin ?? 0;
@@ -117,8 +117,8 @@ export function sortAbsenceRows(byReason: Map<string, AbsenceRow[]>) {
 	}
 }
 
-export function groupAbsenceRowsByStudent(rows: AbsenceRow[]): GroupedAbsenceStudent[] {
-	const byStudent = new Map<number, GroupedAbsenceStudent>();
+export function groupRegistrationRowsByStudent(rows: RegistrationRow[]): GroupedRegistrationStudent[] {
+	const byStudent = new Map<number, GroupedRegistrationStudent>();
 
 	for (const row of rows) {
 		let group = byStudent.get(row.studentId);
@@ -127,21 +127,21 @@ export function groupAbsenceRowsByStudent(rows: AbsenceRow[]): GroupedAbsenceStu
 				studentId: row.studentId,
 				studentName: row.studentName,
 				classCode: row.classCode,
-				absences: [],
+				registrations: [],
 			};
 			byStudent.set(row.studentId, group);
 		}
-		group.absences.push(row);
+		group.registrations.push(row);
 	}
 
 	const groups = Array.from(byStudent.values());
 	for (const group of groups) {
-		group.absences.sort((a, b) => (a.lesuurBegin ?? 0) - (b.lesuurBegin ?? 0));
+		group.registrations.sort((a, b) => (a.lesuurBegin ?? 0) - (b.lesuurBegin ?? 0));
 	}
 
 	groups.sort((a, b) => {
-		const maxHourA = Math.max(...a.absences.map((x) => x.lesuurBegin ?? 0));
-		const maxHourB = Math.max(...b.absences.map((x) => x.lesuurBegin ?? 0));
+		const maxHourA = Math.max(...a.registrations.map((x) => x.lesuurBegin ?? 0));
+		const maxHourB = Math.max(...b.registrations.map((x) => x.lesuurBegin ?? 0));
 		if (maxHourA !== maxHourB) return maxHourB - maxHourA;
 		return a.studentName.localeCompare(b.studentName);
 	});
@@ -151,7 +151,7 @@ export function groupAbsenceRowsByStudent(rows: AbsenceRow[]): GroupedAbsenceStu
 
 export function buildOrderedReasons(
 	filterPairs: { key: string; label: string }[],
-	byReason: Map<string, AbsenceRow[]>,
+	byReason: Map<string, RegistrationRow[]>,
 ) {
 	const knownKeys = new Set(filterPairs.map((p) => p.key));
 	const extraKeys = Array.from(byReason.keys()).filter((k) => !knownKeys.has(k));
@@ -162,7 +162,7 @@ export function buildOrderedReasons(
 	];
 }
 
-export function countAbsentForAllowedStudents(data: UnauthorizedAbsencesResponse, allowedStudentIds: Set<number>) {
+export function countRegistrationsForAllowedStudents(data: RegistrationsResponse, allowedStudentIds: Set<number>) {
 	let count = 0;
 	for (const item of data.items ?? []) {
 		if (!allowedStudentIds.has(item.id)) continue;

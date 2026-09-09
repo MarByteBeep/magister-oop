@@ -6,7 +6,7 @@ Chrome-extensie voor **Magister** (magister.net) gericht op OOP (onderwijsonders
 
 - **Leerlingen** — Lijst leerlingen met zoeken, filter op opleiding, sorteren op naam/klas/locker/lesuur. Per leerling: rooster (agenda), huidige en volgende les, locker-code; klik op een leerling voor details en acties (o.a. te laat melden).
 - **Bezetting** — Bezetting per locatie en lesuur (vandaag), met grafiek en filters. Klik op een cel om te zien welke leerlingen daar les hebben.
-- **Absenties** — Overzicht van afwezige leerlingen met reden, lesuur en vak/docent. Filter op opleiding; vernieuwen om de laatste stand op te halen.
+- **Registraties** — Overzicht van afwezige leerlingen met reden, lesuur en vak/docent. Filter op opleiding; vernieuwen om de laatste stand op te halen.
 - **Medewerkers** en **Terugkomers** — Tabbladen zijn aanwezig maar nog niet uitgewerkt.
 
 De extensie gebruikt de **cookies/sessie van een open Magister-tab**: je moet ergens op magister.net ingelogd zijn. Bij een klik op het extensie-icoon opent een popupvenster met de React-app; API-aanroepen gaan via die actieve Magister-tabs.

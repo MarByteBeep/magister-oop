@@ -16,7 +16,7 @@ export const endpoints = {
 		return import.meta.env.PROD ? `https://attendance.magister.net${path}` : path;
 	},
 
-	unauthorizedAbsences: (date: string) => `/api/m6/verantwoordingen/ongeoorloofderegistraties?datum=${date}`,
+	registrations: (date: string) => `/api/m6/verantwoordingen/ongeoorloofderegistraties?datum=${date}`,
 
 	agenda: (studentId: number, start: string, end: string) =>
 		`/api/leerlingen/${studentId}/afspraken?begin=${start}&einde=${end}&status=actief`,

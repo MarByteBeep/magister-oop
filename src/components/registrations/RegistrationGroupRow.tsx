@@ -1,6 +1,6 @@
 'use client';
 
-import type { AbsenceRow } from '@/lib/absenceUtils';
+import type { RegistrationRow } from '@/lib/registrationsUtils';
 import { findLessonEntry, isLessonEntry } from '@/lib/agendaEntryUtils';
 import { formatTime, getDateKey, parseOptionalDate } from '@/lib/dateUtils';
 import type { LessonAgendaEntry } from '@/magister/response/agenda-entry.types';
@@ -11,14 +11,14 @@ import AgendaTooltipContent from '../student/AgendaTooltipContent';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
-function formatLessonRange(row: AbsenceRow) {
+function formatLessonRange(row: RegistrationRow) {
 	if (row.lesuurBegin && row.lesuurEinde) {
 		return row.lesuurBegin === row.lesuurEinde ? `${row.lesuurBegin}` : `${row.lesuurBegin}-${row.lesuurEinde}`;
 	}
 	return '-';
 }
 
-function resolveAgendaEntry(student: Student, row: AbsenceRow): LessonAgendaEntry | null {
+function resolveAgendaEntry(student: Student, row: RegistrationRow): LessonAgendaEntry | null {
 	if (!row.begin) return null;
 
 	const beginDate = parseOptionalDate(row.begin);
@@ -58,7 +58,7 @@ function getInitials(studentName: string) {
 		.toUpperCase();
 }
 
-function AbsenceFallbackTooltipContent({ row }: { row: AbsenceRow }) {
+function RegistrationFallbackTooltipContent({ row }: { row: RegistrationRow }) {
 	const beginTime = parseOptionalDate(row.begin);
 	const endTime = parseOptionalDate(row.einde);
 
@@ -74,7 +74,7 @@ function AbsenceFallbackTooltipContent({ row }: { row: AbsenceRow }) {
 	);
 }
 
-function AbsenceHourIndicator({ row, student }: { row: AbsenceRow; student?: Student }) {
+function RegistrationHourIndicator({ row, student }: { row: RegistrationRow; student?: Student }) {
 	const agendaEntry = student ? resolveAgendaEntry(student, row) : null;
 
 	if (agendaEntry) {
@@ -113,7 +113,7 @@ function AbsenceHourIndicator({ row, student }: { row: AbsenceRow; student?: Stu
 					</span>
 				</TooltipTrigger>
 				<TooltipContent>
-					<AbsenceFallbackTooltipContent row={row} />
+					<RegistrationFallbackTooltipContent row={row} />
 				</TooltipContent>
 			</Tooltip>
 		);
@@ -126,14 +126,14 @@ function AbsenceHourIndicator({ row, student }: { row: AbsenceRow; student?: Stu
 	);
 }
 
-interface AbsenceGroupRowProps {
-	absences: AbsenceRow[];
+interface RegistrationGroupRowProps {
+	registrations: RegistrationRow[];
 	student?: Student;
 	onSelectStudent: (studentId: number) => void;
 }
 
-export default function AbsenceGroupRow({ absences, student, onSelectStudent }: AbsenceGroupRowProps) {
-	const first = absences[0];
+export default function RegistrationGroupRow({ registrations, student, onSelectStudent }: RegistrationGroupRowProps) {
+	const first = registrations[0];
 	if (!first) return null;
 
 	const clickable = Boolean(student);
@@ -165,8 +165,8 @@ export default function AbsenceGroupRow({ absences, student, onSelectStudent }: 
 				</div>
 			</div>
 			<div className="flex items-center gap-1 shrink-0">
-				{absences.map((row) => (
-					<AbsenceHourIndicator key={row.id} row={row} student={student} />
+				{registrations.map((row) => (
+					<RegistrationHourIndicator key={row.id} row={row} student={student} />
 				))}
 			</div>
 		</button>

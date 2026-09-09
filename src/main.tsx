@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { TooltipProvider } from '@/components/ui/tooltip';
-import { AbsencesProvider } from '@/context/AbsencesProvider';
+import { RegistrationsProvider } from '@/context/RegistrationsProvider';
 import { StudentsProvider } from '@/context/StudentsProvider';
 import { ThemeProvider } from '@/context/ThemeContext';
 
@@ -13,9 +13,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 		<ThemeProvider>
 			<TooltipProvider delayDuration={200}>
 				<StudentsProvider>
-					<AbsencesProvider>
+					<RegistrationsProvider>
 						<App />
-					</AbsencesProvider>
+					</RegistrationsProvider>
 				</StudentsProvider>
 			</TooltipProvider>
 		</ThemeProvider>

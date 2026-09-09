@@ -1,14 +1,14 @@
-import Absences from '@/components/Absences';
+import Registrations from '@/components/Registrations';
 import Occupancy from '@/components/occupancy/Occupancy';
 import Settings from '@/components/Settings';
 import Students from '@/components/Students';
 import { ThemedToaster } from '@/components/ThemedToaster';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAbsencesContext } from '@/context/AbsencesContext';
+import { useRegistrationsContext } from '@/context/RegistrationsContext';
 
 function App() {
-	const { absentCount } = useAbsencesContext();
+	const { registrationCount } = useRegistrationsContext();
 
 	return (
 		<main className="flex flex-col items-center w-full h-full p-4 min-h-[600px] mx-auto text-center">
@@ -22,11 +22,11 @@ function App() {
 								Medewerkers
 							</TabsTrigger>
 							<TabsTrigger value="bezetting">Bezetting</TabsTrigger>
-							<TabsTrigger value="absenties">
-								Absenties
-								{absentCount > 0 && (
+							<TabsTrigger value="registraties">
+								Registraties
+								{registrationCount > 0 && (
 									<Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs">
-										{absentCount}
+										{registrationCount}
 									</Badge>
 								)}
 							</TabsTrigger>
@@ -49,8 +49,8 @@ function App() {
 						<TabsContent value="bezetting">
 							<Occupancy />
 						</TabsContent>
-						<TabsContent value="absenties">
-							<Absences />
+						<TabsContent value="registraties">
+							<Registrations />
 						</TabsContent>
 						<TabsContent value="terugkomers">
 							<p>coming soon...</p>

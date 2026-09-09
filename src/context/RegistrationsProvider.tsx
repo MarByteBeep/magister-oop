@@ -2,16 +2,16 @@ import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useAllowedStudentIds } from '@/hooks/useAllowedStudentIds';
-import { countAbsentForAllowedStudents } from '@/lib/absenceUtils';
+import { countRegistrationsForAllowedStudents } from '@/lib/registrationsUtils';
 import { getTodayKey } from '@/lib/dateUtils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
-import type { UnauthorizedAbsencesResponse } from '@/magister/response/unauthorized-absence.types';
-import { AbsencesContext, type AbsencesState } from './AbsencesContext';
+import type { RegistrationsResponse } from '@/magister/response/registrations.types';
+import { RegistrationsContext, type RegistrationsState } from './RegistrationsContext';
 
-export function AbsencesProvider({ children }: { children: ReactNode }) {
+export function RegistrationsProvider({ children }: { children: ReactNode }) {
 	const { students, selectedStudies } = useStudentsContext();
-	const [data, setData] = useState<UnauthorizedAbsencesResponse | null>(null);
+	const [data, setData] = useState<RegistrationsResponse | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -23,8 +23,8 @@ export function AbsencesProvider({ children }: { children: ReactNode }) {
 		setLoading(true);
 		setError(null);
 		try {
-			const url = endpoints.unauthorizedAbsences(todayKey);
-			const res = await getJson<UnauthorizedAbsencesResponse>(url, 'include', 'no-cache');
+			const url = endpoints.registrations(todayKey);
+			const res = await getJson<RegistrationsResponse>(url, 'include', 'no-cache');
 			setData(res);
 		} catch (e) {
 			setError((e as Error).message);
@@ -37,8 +37,8 @@ export function AbsencesProvider({ children }: { children: ReactNode }) {
 	const backgroundRefresh = useCallback(async () => {
 		setRefreshing(true);
 		try {
-			const url = endpoints.unauthorizedAbsences(todayKey);
-			const res = await getJson<UnauthorizedAbsencesResponse>(url, 'include', 'no-cache');
+			const url = endpoints.registrations(todayKey);
+			const res = await getJson<RegistrationsResponse>(url, 'include', 'no-cache');
 			setData(res);
 			setError(null);
 		} catch (e) {
@@ -75,22 +75,22 @@ export function AbsencesProvider({ children }: { children: ReactNode }) {
 
 	const allowedStudentIds = useAllowedStudentIds(students, selectedStudies);
 
-	const absentCount = useMemo(
-		() => (data ? countAbsentForAllowedStudents(data, allowedStudentIds) : 0),
+	const registrationCount = useMemo(
+		() => (data ? countRegistrationsForAllowedStudents(data, allowedStudentIds) : 0),
 		[data, allowedStudentIds],
 	);
 
-	const state: AbsencesState = useMemo(
+	const state: RegistrationsState = useMemo(
 		() => ({
 			data,
 			loading,
 			refreshing,
 			error,
-			absentCount,
+			registrationCount,
 			refresh,
 		}),
-		[data, loading, refreshing, error, absentCount, refresh],
+		[data, loading, refreshing, error, registrationCount, refresh],
 	);
 
-	return <AbsencesContext.Provider value={state}>{children}</AbsencesContext.Provider>;
+	return <RegistrationsContext.Provider value={state}>{children}</RegistrationsContext.Provider>;
 }

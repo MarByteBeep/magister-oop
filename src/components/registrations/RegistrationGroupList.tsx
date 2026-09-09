@@ -1,26 +1,26 @@
 'use client';
 
-import { type AbsenceRow, groupAbsenceRowsByStudent } from '@/lib/absenceUtils';
+import { type RegistrationRow, groupRegistrationRowsByStudent } from '@/lib/registrationsUtils';
 import type { Student } from '@/magister/types';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
-import AbsenceGroupRow from './AbsenceGroupRow';
+import RegistrationGroupRow from './RegistrationGroupRow';
 
-interface AbsenceGroupListProps {
+interface RegistrationGroupListProps {
 	orderedReasons: { key: string; label: string }[];
-	byReason: Map<string, AbsenceRow[]>;
+	byReason: Map<string, RegistrationRow[]>;
 	studentById: Map<number, Student>;
 	onSelectStudent: (studentId: number) => void;
 }
 
-export default function AbsenceGroupList({
+export default function RegistrationGroupList({
 	orderedReasons,
 	byReason,
 	studentById,
 	onSelectStudent,
-}: AbsenceGroupListProps) {
+}: RegistrationGroupListProps) {
 	if (orderedReasons.length === 0) {
-		return <p className="text-sm text-muted-foreground">Geen absenties gevonden.</p>;
+		return <p className="text-sm text-muted-foreground">Geen registraties gevonden.</p>;
 	}
 
 	return (
@@ -40,10 +40,10 @@ export default function AbsenceGroupList({
 						</CardHeader>
 						<CardContent>
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-								{groupAbsenceRowsByStudent(rows).map((group) => (
-									<AbsenceGroupRow
+								{groupRegistrationRowsByStudent(rows).map((group) => (
+									<RegistrationGroupRow
 										key={group.studentId}
-										absences={group.absences}
+										registrations={group.registrations}
 										student={studentById.get(group.studentId)}
 										onSelectStudent={onSelectStudent}
 									/>

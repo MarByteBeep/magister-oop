@@ -7,7 +7,7 @@ import { GET as getStudentParents } from './api/leerlingen/ouders';
 import { GET as getStudentDetails } from './api/leerlingen/personalia';
 import { GET as getReturnMeasures } from './api/leerlingen/verantwoordingen/terugkommaatregelen';
 import { GET as getSearchStudents } from './api/leerlingen/zoeken';
-import { GET as getUnauthorizedAbsences } from './api/m6/verantwoordingen/ongeoorloofderegistraties';
+import { GET as getRegistrations } from './api/m6/verantwoordingen/ongeoorloofderegistraties';
 import { POST as createAccountability } from './api/medewerkers/afspraken/verantwoordingen';
 import { GET as getSearchStaff } from './api/medewerkers/zoeken';
 import { GET as getParentAddress } from './api/ouders/adresgegevens';
@@ -34,7 +34,7 @@ api.get('/leerlingen/zoeken', (c) => getSearchStudents(c.req.raw));
 api.get('/medewerkers/zoeken', (c) => getSearchStaff(c.req.raw));
 api.get('/v1/lockers/details', (c) => getLockersDetails(c.req.raw));
 api.get('/v2/student/:uuid/absence-notices', (c) => getAbsenceNotices(c.req.raw, c.req.param('uuid')));
-api.get('/m6/verantwoordingen/ongeoorloofderegistraties', (c) => getUnauthorizedAbsences(c.req.raw));
+api.get('/m6/verantwoordingen/ongeoorloofderegistraties', (c) => getRegistrations(c.req.raw));
 
 // Dynamic: leerlingen /:id /...
 api.get('/leerlingen/:id/adresgegevens', (c) => {

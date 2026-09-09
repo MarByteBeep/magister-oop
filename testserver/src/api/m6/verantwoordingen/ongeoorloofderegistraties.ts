@@ -1,6 +1,6 @@
 import { timeTable } from '@/lib/agendaUtils';
 import { getTodayKey } from '@/lib/dateUtils';
-import type { UnauthorizedAbsencesResponse } from '@/magister/response/unauthorized-absence.types';
+import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import { getAllStudents } from '../../utils/helpers';
 import { pickRandom } from '../../utils/random';
 import data from './ongeoorloofderegistraties.json' with { type: 'json' };
@@ -45,7 +45,7 @@ export async function GET(_req: Request): Promise<Response> {
 	}
 
 	// Update links to use today's date
-	const response: UnauthorizedAbsencesResponse = {
+	const response: RegistrationsResponse = {
 		...data,
 		links: {
 			first: { href: `/api/m6/verantwoordingen/ongeoorloofderegistraties?datum=${todayKey}` },

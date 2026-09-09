@@ -1,4 +1,4 @@
-export type AbsenceFilterType = {
+export type RegistrationFilterType = {
 	count: number;
 	name: string;
 	id: number;
@@ -42,7 +42,7 @@ export type Reason = {
 	omschrijving: string;
 };
 
-export type UnauthorizedAbsenceItem = {
+export type RegistrationItem = {
 	id: number;
 	voorletters: string;
 	roepnaam: string;
@@ -57,11 +57,11 @@ export type UnauthorizedAbsenceItem = {
 	};
 };
 
-export type UnauthorizedAbsencesResponse = {
+export type RegistrationsResponse = {
 	filters: {
-		types: AbsenceFilterType[];
+		types: RegistrationFilterType[];
 	};
-	items: UnauthorizedAbsenceItem[];
+	items: RegistrationItem[];
 	links: {
 		first: { href: string };
 		last: { href: string };
