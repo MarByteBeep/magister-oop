@@ -3,6 +3,7 @@ import {
 	buildFilterPairs,
 	buildOrderedReasons,
 	buildRegistrationRows,
+	createRegistrationVisibility,
 	type RegistrationRow,
 	sortRegistrationRows,
 } from '@/lib/registrationsUtils';
@@ -12,7 +13,7 @@ import type { Student } from '@/magister/types';
 export function useGroupedRegistrations(
 	data: RegistrationsResponse | null,
 	students: Student[],
-	allowedStudentIds: Set<number>,
+	selectedStudies: Set<string>,
 ) {
 	return useMemo(() => {
 		const studentById = new Map(students.map((s) => [s.id, s]));
@@ -26,10 +27,11 @@ export function useGroupedRegistrations(
 		}
 
 		const filterPairs = buildFilterPairs(data);
-		const byReason = buildRegistrationRows(data, studentById, allowedStudentIds, filterPairs);
+		const isVisible = createRegistrationVisibility(studentById, selectedStudies);
+		const byReason = buildRegistrationRows(data, isVisible, filterPairs);
 		sortRegistrationRows(byReason);
 		const orderedReasons = buildOrderedReasons(filterPairs, byReason);
 
 		return { orderedReasons, byReason, studentById };
-	}, [data, allowedStudentIds, students]);
+	}, [data, students, selectedStudies]);
 }

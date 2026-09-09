@@ -1,21 +1,20 @@
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { useAllowedStudentIds } from '@/hooks/useAllowedStudentIds';
 import { useBulkList } from '@/hooks/useBulkLists';
-import { countRegistrationsForAllowedStudents } from '@/lib/registrationsUtils';
+import { countAbsentRegistrations, createRegistrationVisibility } from '@/lib/registrationsUtils';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import { RegistrationsContext, type RegistrationsState } from './RegistrationsContext';
 
 export function RegistrationsProvider({ children }: { children: ReactNode }) {
 	const { students, selectedStudies } = useStudentsContext();
 	const { data, loading, refreshing, error, refresh } = useBulkList<RegistrationsResponse>('registrations');
-	const allowedStudentIds = useAllowedStudentIds(students, selectedStudies);
 
-	const registrationCount = useMemo(
-		() => (data ? countRegistrationsForAllowedStudents(data, allowedStudentIds) : 0),
-		[data, allowedStudentIds],
-	);
+	const registrationCount = useMemo(() => {
+		if (!data) return 0;
+		const studentById = new Map(students.map((s) => [s.id, s]));
+		return countAbsentRegistrations(data, createRegistrationVisibility(studentById, selectedStudies));
+	}, [data, students, selectedStudies]);
 
 	const state: RegistrationsState = useMemo(
 		() => ({

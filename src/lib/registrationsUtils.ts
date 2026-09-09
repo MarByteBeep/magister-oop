@@ -40,8 +40,8 @@ export function buildFilterPairs(data: RegistrationsResponse) {
 	return filterPairs;
 }
 
-function formatStudentName(student: Student) {
-	return `${student.roepnaam} ${student.tussenvoegsel ?? ''} ${student.achternaam}`.replace(/\s+/g, ' ').trim();
+function formatPersonName(firstName: string, infix: string | null | undefined, lastName: string) {
+	return `${firstName} ${infix ?? ''} ${lastName}`.replace(/\s+/g, ' ').trim();
 }
 
 function reasonLabelForKey(
@@ -54,14 +54,31 @@ function reasonLabelForKey(
 
 type RegistrationItem = NonNullable<RegistrationsResponse['items']>[number];
 
+export type RegistrationVisibility = (studentId: number) => boolean;
+
+/**
+ * Single visibility rule for the cached registrations, shared by the list and the tab badge.
+ * A study selection is a positive filter, so students that are not loaded yet only pass
+ * while no study is selected.
+ */
+export function createRegistrationVisibility(
+	studentById: Map<number, Student>,
+	selectedStudies: Set<string>,
+): RegistrationVisibility {
+	return (studentId) => {
+		if (!selectedStudies.size) return true;
+		const student = studentById.get(studentId);
+		return student ? student.studies.some((study) => selectedStudies.has(study)) : false;
+	};
+}
+
 function collectRegistrationRowsForItem(
 	item: RegistrationItem,
-	student: Student,
 	filterPairs: { key: string; label: string }[],
 ): RegistrationRow[] {
 	const rows: RegistrationRow[] = [];
-	const studentName = formatStudentName(student);
-	const classCode = student.klassen?.join(', ');
+	const studentName = formatPersonName(item.roepnaam, item.tussenvoegsel, item.achternaam);
+	const classCode = item.stamklas?.code;
 
 	for (const afspraak of item.afspraken ?? []) {
 		for (const v of afspraak.verantwoordingen ?? []) {
@@ -86,17 +103,15 @@ function collectRegistrationRowsForItem(
 
 export function buildRegistrationRows(
 	data: RegistrationsResponse,
-	studentById: Map<number, Student>,
-	allowedStudentIds: Set<number>,
+	isVisible: RegistrationVisibility,
 	filterPairs: { key: string; label: string }[],
 ) {
 	const byReason = new Map<string, RegistrationRow[]>();
 
 	for (const item of data.items ?? []) {
-		const student = studentById.get(item.id);
-		if (!student || !allowedStudentIds.has(student.id)) continue;
+		if (!isVisible(item.id)) continue;
 
-		for (const row of collectRegistrationRowsForItem(item, student, filterPairs)) {
+		for (const row of collectRegistrationRowsForItem(item, filterPairs)) {
 			const arr = byReason.get(row.reasonKey) ?? [];
 			arr.push(row);
 			byReason.set(row.reasonKey, arr);
@@ -162,10 +177,10 @@ export function buildOrderedReasons(
 	];
 }
 
-export function countRegistrationsForAllowedStudents(data: RegistrationsResponse, allowedStudentIds: Set<number>) {
+export function countAbsentRegistrations(data: RegistrationsResponse, isVisible: RegistrationVisibility) {
 	let count = 0;
 	for (const item of data.items ?? []) {
-		if (!allowedStudentIds.has(item.id)) continue;
+		if (!isVisible(item.id)) continue;
 
 		for (const afspraak of item.afspraken ?? []) {
 			for (const v of afspraak.verantwoordingen ?? []) {

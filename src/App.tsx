@@ -22,7 +22,7 @@ function App() {
 								Medewerkers
 							</TabsTrigger>
 							<TabsTrigger value="bezetting">Bezetting</TabsTrigger>
-							<TabsTrigger value="registraties">
+							<TabsTrigger value="registrations">
 								Registraties
 								{registrationCount > 0 && (
 									<Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs">
@@ -49,7 +49,7 @@ function App() {
 						<TabsContent value="bezetting">
 							<Occupancy />
 						</TabsContent>
-						<TabsContent value="registraties">
+						<TabsContent value="registrations">
 							<Registrations />
 						</TabsContent>
 						<TabsContent value="terugkomers">

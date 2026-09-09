@@ -37,7 +37,7 @@ export default function Registrations() {
 		return selectedStudentRef.current;
 	}, [selectedStudentId, students]);
 
-	const grouped = useGroupedRegistrations(data, students, allowedStudentIds);
+	const grouped = useGroupedRegistrations(data, students, selectedStudies);
 
 	if (loading) {
 		return (

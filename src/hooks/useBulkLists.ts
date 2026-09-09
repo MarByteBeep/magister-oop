@@ -6,12 +6,17 @@ import type { Student } from '@/magister/types';
 
 const REFRESH_INTERVAL_MS = 60_000;
 
+/** Shared mount + interval refresh for all bulk lists (absence notices, registrations, …). */
 export function useBulkLists(setStudents: Dispatch<SetStateAction<Student[]>>) {
 	const refreshAll = useCallback(async (mode: BulkListMode) => {
 		await bulkListRegistry.refreshAll(getTodayKey(), mode);
 	}, []);
 
 	useEffect(() => bulkListRegistry.attachStudentUpdater(setStudents), [setStudents]);
+
+	useEffect(() => {
+		void refreshAll('initial');
+	}, [refreshAll]);
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -21,6 +26,7 @@ export function useBulkLists(setStudents: Dispatch<SetStateAction<Student[]>>) {
 	}, [refreshAll]);
 }
 
+/** Subscribe to one snapshot-publishing bulk list (e.g. registrations). */
 export function useBulkList<T>(id: string) {
 	const [snapshot, setSnapshot] = useState<BulkListSnapshot<T>>(() => {
 		const initial = bulkListRegistry.snapshot(id);
@@ -29,12 +35,6 @@ export function useBulkList<T>(id: string) {
 	});
 
 	useEffect(() => bulkListRegistry.subscribe(id, (next) => setSnapshot(next as BulkListSnapshot<T>)), [id]);
-
-	useEffect(() => {
-		const current = bulkListRegistry.snapshot(id);
-		if (!current || current.data != null) return;
-		void bulkListRegistry.refresh(id, getTodayKey(), 'initial');
-	}, [id]);
 
 	const refresh = useCallback(async () => {
 		const mode: BulkListMode = snapshot.data != null ? 'background' : 'initial';
