@@ -6,7 +6,7 @@ import { formatPersonName, getInitials } from '@/lib/stringUtils';
 import { cn } from '@/lib/utils';
 import type { Student } from '@/magister/types';
 
-interface StudentListItemProps {
+interface StudentItemProps {
 	student?: Student;
 	name?: string;
 	photoUrl?: string;
@@ -18,7 +18,7 @@ interface StudentListItemProps {
 	className?: string;
 }
 
-export default function StudentListItem({
+export default function StudentItem({
 	student,
 	name,
 	photoUrl,
@@ -28,7 +28,7 @@ export default function StudentListItem({
 	disabled = false,
 	variant = 'card',
 	className,
-}: StudentListItemProps) {
+}: StudentItemProps) {
 	const displayName =
 		name ?? (student ? formatPersonName(student.roepnaam, student.tussenvoegsel, student.achternaam) : '');
 	const photo = photoUrl ?? student?.links.foto?.href;
@@ -37,9 +37,8 @@ export default function StudentListItem({
 		'flex items-center gap-3 text-left',
 		variant === 'card' && 'w-full rounded-md border bg-muted/50 p-2',
 		variant === 'plain' && 'w-fit max-w-full rounded-md',
-		isButton
-			? 'cursor-pointer hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
-			: 'cursor-default',
+		isButton &&
+			'cursor-pointer hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
 		className,
 	);
 

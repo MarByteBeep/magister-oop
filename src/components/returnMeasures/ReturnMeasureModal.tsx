@@ -2,7 +2,7 @@
 
 import { LuCalendar, LuClock, LuTriangleAlert, LuUser } from 'react-icons/lu';
 import ReturnMeasureStatusBadges from '@/components/returnMeasures/ReturnMeasureStatusBadges';
-import StudentListItem from '@/components/student/StudentListItem';
+import StudentItem from '@/components/student/StudentItem';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useStudentAgendaFocus } from '@/context/StudentAgendaFocusContext';
 import { useStudentsContext } from '@/context/StudentsContext';
@@ -68,7 +68,7 @@ export default function ReturnMeasureModal({ measure, isOpen, onClose, onOpenStu
 			<DialogContent className="max-w-[800px]">
 				<DialogHeader className="pr-8">
 					<DialogTitle className="sr-only">{studentName}</DialogTitle>
-					<StudentListItem
+					<StudentItem
 						student={student}
 						name={studentName}
 						photoUrl={student?.links.foto?.href || details.links.foto?.href}

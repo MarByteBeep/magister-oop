@@ -30,3 +30,5 @@ AI_RULES.md
 pnpm-lock.yaml
 .cursor/hooks/state/
 .fallow-dead-code.json
+
+.tmp/

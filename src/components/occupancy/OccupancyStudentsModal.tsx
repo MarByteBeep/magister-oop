@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import StudentDetailDialog from '@/components/student/StudentDetailDialog';
-import StudentListItem from '@/components/student/StudentListItem';
+import StudentItem from '@/components/student/StudentItem';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -58,7 +58,7 @@ function StudentsByClass({
 						</h4>
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 							{group.students.map((student) => (
-								<StudentListItem
+								<StudentItem
 									key={student.id}
 									student={student}
 									onClick={() => onStudentClick(student)}

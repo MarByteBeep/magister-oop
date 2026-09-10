@@ -1,7 +1,7 @@
 import { LuUsers } from 'react-icons/lu';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Student } from '@/magister/types';
-import StudentListItem from './StudentListItem';
+import StudentItem from './StudentItem';
 
 interface AgendaItemStudentsListProps {
 	studentsByClass: Record<string, Student[]>;
@@ -29,7 +29,7 @@ export default function AgendaItemStudentsList({ studentsByClass, onOpenStudent 
 								<p className="text-xs font-medium text-muted-foreground mb-1.5">{className}</p>
 								<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
 									{studentsInClass.map((student) => (
-										<StudentListItem
+										<StudentItem
 											key={student.id}
 											student={student}
 											onClick={() => onOpenStudent?.(student)}

@@ -1,7 +1,7 @@
 'use client';
 
 import ReturnMeasureStatusBadges from '@/components/returnMeasures/ReturnMeasureStatusBadges';
-import StudentListItem from '@/components/student/StudentListItem';
+import StudentItem from '@/components/student/StudentItem';
 import { formatTime, parseOptionalDate } from '@/lib/dateUtils';
 import type { ReturnMeasureRow as Row } from '@/lib/returnMeasureOverview';
 import type { ReturnMeasureStudent } from '@/magister/response/return-measure.types';
@@ -33,7 +33,7 @@ export default function ReturnMeasureRow({ row, student, onSelectMeasure }: Retu
 			aria-label={`Toon terugkommaatregel voor ${row.studentName}`}
 		>
 			<div className="min-w-0 flex-1">
-				<StudentListItem
+				<StudentItem
 					student={student}
 					name={row.studentName}
 					photoUrl={student?.links.foto?.href}
