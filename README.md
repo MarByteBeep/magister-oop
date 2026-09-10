@@ -1,13 +1,14 @@
 # Magister OOP
 
-Chrome-extensie voor **Magister** (magister.net) gericht op OOP (onderwijsondersteunend personeel). De extensie opent een apart venster waarmee je leerlingen, bezetting en absenties overzichtelijk kunt bekijken en beheren, met de sessie van je ingelogde Magister-tab.
+Chrome-extensie voor **Magister** (magister.net) gericht op OOP (onderwijsondersteunend personeel). De extensie opent een apart venster waarmee je leerlingen, bezetting en absenties overzichtelijk kunt bekijken en beheren.
 
 ## Wat doet de extensie?
 
 - **Leerlingen** — Lijst leerlingen met zoeken, filter op opleiding, sorteren op naam/klas/locker/lesuur. Per leerling: rooster (agenda), huidige en volgende les, locker-code; klik op een leerling voor details en acties (o.a. te laat melden).
 - **Bezetting** — Bezetting per locatie en lesuur (vandaag), met grafiek en filters. Klik op een cel om te zien welke leerlingen daar les hebben.
 - **Registraties** — Overzicht van afwezige leerlingen met reden, lesuur en vak/docent. Filter op opleiding; vernieuwen om de laatste stand op te halen.
-- **Medewerkers** en **Terugkomers** — Tabbladen zijn aanwezig maar nog niet uitgewerkt.
+- **Terugkomers** — Overzicht per dag van terugkommaatregelen: leerling, tijd en maatregel. Filter op periode (vandaag/week/maand) en status.
+- **Medewerkers** — Tabblad is aanwezig maar nog niet uitgewerkt.
 
 De extensie gebruikt de **cookies/sessie van een open Magister-tab**. Klik op het extensie-icoon: als je nog niet in Magister zit, opent de extensie Magister zodat je kunt inloggen. Daarna opent een popupvenster met de app; API-aanroepen gaan via die Magister-tab.
 

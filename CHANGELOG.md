@@ -2,15 +2,12 @@
 
 Alle gebruikersgerichte wijzigingen in de Magister OOP Chrome-extensie.
 
-## 1.1.1 — 2026-09-10
-
-- Extensie-icoon: klik vanaf **elke pagina**; opent Magister om in te loggen
-- Rechten: toegang tot **browsegeschiedenis** niet nodig en is weggehaald
-
-## 1.1.0 — 2026-09-09
+# 1.1.0 — 2026-09-10
 
 - Terugkomers: nieuwe tab met **overzicht per dag** — leerling, tijd en maatregel
 - Absenties heet nu **Registraties**
+- Extensie-icoon: klik vanaf **elke pagina**; opent Magister om in te loggen
+- Rechten: toegang tot **browsegeschiedenis** niet nodig en is weggehaald
 
 ## 1.0.7 — 2026-09-03
 
