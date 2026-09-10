@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { eachMonthKey, getDateKey, getMonthKey, getMonthRange, parseDateKey } from './dateUtils';
+import { eachMonthKey, getDateKey, getMonthKey, getMonthRange, parseDateKey, weekOffsetFromDate } from './dateUtils';
 
 describe('getMonthRange', () => {
 	test('spans the first through the last local day of the month', () => {
@@ -26,5 +26,19 @@ describe('eachMonthKey', () => {
 	test('returns a single month when the range stays inside it', () => {
 		expect(eachMonthKey(parseDateKey('2026-09-01'), parseDateKey('2026-09-30'))).toEqual(['2026-09']);
 		expect(getMonthKey(parseDateKey('2026-09-30'))).toBe('2026-09');
+	});
+});
+
+describe('weekOffsetFromDate', () => {
+	test('is zero for the current week', () => {
+		const now = parseDateKey('2026-09-09');
+		expect(weekOffsetFromDate(now, now)).toBe(0);
+		expect(weekOffsetFromDate(parseDateKey('2026-09-11'), now)).toBe(0);
+	});
+
+	test('counts whole weeks forwards and backwards', () => {
+		const now = parseDateKey('2026-09-09');
+		expect(weekOffsetFromDate(parseDateKey('2026-09-14'), now)).toBe(1);
+		expect(weekOffsetFromDate(parseDateKey('2026-09-02'), now)).toBe(-1);
 	});
 });

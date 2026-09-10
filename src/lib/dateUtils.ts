@@ -112,6 +112,13 @@ export function getStartOfWeek(date: Date): Date {
 	return d;
 }
 
+/** Weeks between this week's Monday and the Monday of `date`. Negative is in the past. */
+export function weekOffsetFromDate(date: Date, now: Date = getNow()): number {
+	const target = getStartOfWeek(date).getTime();
+	const current = getStartOfWeek(now).getTime();
+	return Math.round((target - current) / (7 * 24 * 60 * 60 * 1000));
+}
+
 /**
  * Get all weekdays (Mon-Fri) for the week containing the given date
  */

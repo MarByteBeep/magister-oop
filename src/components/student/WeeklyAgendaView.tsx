@@ -16,9 +16,10 @@ import WeeklyAgendaSkeleton from './WeeklyAgendaSkeleton';
 interface WeeklyAgendaViewProps {
 	studentId: number;
 	onOpenStudent?: (student: Student) => void;
+	focusDate?: Date;
 }
 
-export default function WeeklyAgendaView({ studentId, onOpenStudent }: WeeklyAgendaViewProps) {
+export default function WeeklyAgendaView({ studentId, onOpenStudent, focusDate }: WeeklyAgendaViewProps) {
 	const currentTime = useCurrentTime();
 	const { students, loadAgendaForStudent } = useStudentsContext();
 	const student = students.find((s) => s.id === studentId);
@@ -37,7 +38,7 @@ export default function WeeklyAgendaView({ studentId, onOpenStudent }: WeeklyAge
 		goToPreviousWeek,
 		goToNextWeek,
 		goToCurrentWeek,
-	} = useWeeklyAgenda(studentId, student, loadAgendaForStudent);
+	} = useWeeklyAgenda(studentId, student, loadAgendaForStudent, focusDate);
 
 	const activeEntry = useMemo(() => {
 		const todayItems = weekAgenda[todayKey] || [];

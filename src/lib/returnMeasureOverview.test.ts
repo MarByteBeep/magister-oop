@@ -72,6 +72,7 @@ describe('buildReturnMeasureRows', () => {
 		expect(rows[0].secondaryLabel).toBe('Te laat op 3 september');
 		expect(rows[0].studentName).toBe('Ada Boyer');
 		expect(rows[0].dateKey).toBe('2026-09-09');
+		expect(rows[0].measure.id).toBe(1);
 	});
 
 	test('skips students the visibility filter rejects', () => {

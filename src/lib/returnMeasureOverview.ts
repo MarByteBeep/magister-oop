@@ -27,6 +27,7 @@ export type ReturnMeasureRow = {
 	end: string | null;
 	reportStatus: ReturnMeasureReportStatus;
 	planning: ReturnMeasurePlanning;
+	measure: ReturnMeasureStudent;
 };
 
 /** Days without a planned slot are grouped under a null key. */
@@ -69,6 +70,7 @@ export function buildReturnMeasureRows(
 			end: measure.einde,
 			reportStatus: returnMeasureReportStatus(measure),
 			planning: returnMeasurePlanning(measure),
+			measure,
 		});
 	}
 

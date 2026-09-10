@@ -32,7 +32,7 @@ export default function AgendaItemStudentsList({ studentsByClass, onOpenStudent 
 										<StudentListItem
 											key={student.id}
 											student={student}
-											onClick={(s) => onOpenStudent?.(s)}
+											onClick={() => onOpenStudent?.(student)}
 										/>
 									))}
 								</div>

@@ -20,7 +20,7 @@ export default function RegistrationGroupList({
 	onSelectStudent,
 }: RegistrationGroupListProps) {
 	if (orderedReasons.length === 0) {
-		return <p className="text-sm text-muted-foreground">Geen registraties gevonden.</p>;
+		return <p className="text-sm text-muted-foreground">Geen registraties.</p>;
 	}
 
 	return (

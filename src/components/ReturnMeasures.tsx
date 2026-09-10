@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { LuRefreshCw } from 'react-icons/lu';
 import ReturnMeasureDayList from '@/components/returnMeasures/ReturnMeasureDayList';
 import ReturnMeasureFilters from '@/components/returnMeasures/ReturnMeasureFilters';
+import ReturnMeasureModal from '@/components/returnMeasures/ReturnMeasureModal';
+import type { StudentDetailTab } from '@/components/student/StudentDetailContent';
 import { useReturnMeasuresContext } from '@/context/ReturnMeasuresContext';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { eachMonthKey, getMonthKey, getNow, parseDateKey } from '@/lib/dateUtils';
@@ -22,12 +24,6 @@ import type { ReturnMeasureStudent } from '@/magister/response/return-measure.ty
 import LoadingSpinner from './LoadingSpinner';
 import StudentModal from './StudentModal';
 import { Button } from './ui/button';
-
-const EMPTY_MESSAGES: Record<ReturnMeasurePeriod, string> = {
-	today: 'Geen terugkomers voor vandaag.',
-	week: 'Geen terugkomers deze week.',
-	month: 'Geen terugkomers deze maand.',
-};
 
 /**
  * The bulk list only holds the current month, while a week can run across the month boundary.
@@ -64,6 +60,9 @@ export default function ReturnMeasures() {
 	const { data, loading, refreshing, error, refresh } = useReturnMeasuresContext();
 	const { students, selectedStudies } = useStudentsContext();
 	const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+	const [selectedMeasure, setSelectedMeasure] = useState<ReturnMeasureStudent | null>(null);
+	const [studentTab, setStudentTab] = useState<StudentDetailTab>('gegevens');
+	const [agendaDate, setAgendaDate] = useState<Date | undefined>(undefined);
 	const [period, setPeriod] = useState<ReturnMeasurePeriod>('today');
 	const [status, setStatus] = useState<ReturnMeasureStatusFilter>('open');
 
@@ -102,8 +101,14 @@ export default function ReturnMeasures() {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="flex items-center justify-between">
-				<h2 className="text-lg font-semibold">Terugkomers</h2>
+			<div className="flex items-center justify-between gap-2">
+				<ReturnMeasureFilters
+					period={period}
+					status={status}
+					counts={counts}
+					onPeriodChange={setPeriod}
+					onStatusChange={setStatus}
+				/>
 				<Button
 					variant="ghost"
 					size="icon"
@@ -116,22 +121,39 @@ export default function ReturnMeasures() {
 				</Button>
 			</div>
 
-			<ReturnMeasureFilters
-				period={period}
-				status={status}
-				counts={counts}
-				onPeriodChange={setPeriod}
-				onStatusChange={setStatus}
-			/>
-
 			<ReturnMeasureDayList
 				groups={groups}
 				studentById={studentById}
-				emptyMessage={status === 'unplanned' ? 'Geen ongeplande terugkomers.' : EMPTY_MESSAGES[period]}
-				onSelectStudent={setSelectedStudentId}
+				emptyMessage="Geen terugkomers."
+				onSelectMeasure={setSelectedMeasure}
 			/>
 
-			{selectedStudent && <StudentModal student={selectedStudent} onClose={() => setSelectedStudentId(null)} />}
+			{selectedMeasure && (
+				<ReturnMeasureModal
+					measure={selectedMeasure}
+					isOpen={selectedMeasure !== null}
+					onClose={() => setSelectedMeasure(null)}
+					onOpenStudent={(opened, options) => {
+						setStudentTab(options?.tab ?? 'gegevens');
+						setAgendaDate(options?.date);
+						setSelectedStudentId(opened.id);
+						if (options?.tab === 'agenda') setSelectedMeasure(null);
+					}}
+				/>
+			)}
+
+			{selectedStudent && (
+				<StudentModal
+					student={selectedStudent}
+					initialTab={studentTab}
+					agendaDate={agendaDate}
+					onClose={() => {
+						setSelectedStudentId(null);
+						setStudentTab('gegevens');
+						setAgendaDate(undefined);
+					}}
+				/>
+			)}
 		</div>
 	);
 }

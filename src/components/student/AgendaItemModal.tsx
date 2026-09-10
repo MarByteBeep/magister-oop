@@ -2,6 +2,7 @@
 
 import { LuCalendarClock, LuCalendarRange, LuClock, LuGraduationCap, LuMapPin, LuUser } from 'react-icons/lu';
 import LessonHourBadge from '@/components/LessonHourBadge';
+import ReturnMeasureModal from '@/components/returnMeasures/ReturnMeasureModal';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useStudentsContext } from '@/context/StudentsContext';
@@ -9,7 +10,6 @@ import { useAgendaItemStudents } from '@/hooks/useAgendaItemStudents';
 import { expectedEndLabel } from '@/lib/absenceNoticeUtils';
 import { isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
-import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 import AgendaItemStudentsList from './AgendaItemStudentsList';
@@ -22,6 +22,21 @@ interface AgendaItemModalProps {
 }
 
 export default function AgendaItemModal({ entry, isOpen, onClose, onOpenStudent }: AgendaItemModalProps) {
+	if (isReturnMeasureEntry(entry)) {
+		return (
+			<ReturnMeasureModal
+				measure={entry.measure}
+				isOpen={isOpen}
+				onClose={onClose}
+				onOpenStudent={onOpenStudent}
+			/>
+		);
+	}
+
+	return <StandardAgendaItemModal entry={entry} isOpen={isOpen} onClose={onClose} onOpenStudent={onOpenStudent} />;
+}
+
+function StandardAgendaItemModal({ entry, isOpen, onClose, onOpenStudent }: AgendaItemModalProps) {
 	const { students } = useStudentsContext();
 	const lessonEntry = isLessonEntry(entry) ? entry : null;
 	const { courseDescriptions, courseCodes, teachers, locations, subject } = lessonEntry
@@ -38,9 +53,7 @@ export default function AgendaItemModal({ entry, isOpen, onClose, onOpenStudent 
 
 	const title = isAbsenceNoticeEntry(entry)
 		? entry.notice.attendanceTypeDescription
-		: isReturnMeasureEntry(entry)
-			? getReturnMeasureDisplay(entry.measure).primaryLabel
-			: (courseDescriptions ?? subject ?? 'Agenda item');
+		: (courseDescriptions ?? subject ?? 'Agenda item');
 
 	return (
 		<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

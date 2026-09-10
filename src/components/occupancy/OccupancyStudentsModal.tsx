@@ -58,7 +58,11 @@ function StudentsByClass({
 						</h4>
 						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 							{group.students.map((student) => (
-								<StudentListItem key={student.id} student={student} onClick={onStudentClick} />
+								<StudentListItem
+									key={student.id}
+									student={student}
+									onClick={() => onStudentClick(student)}
+								/>
 							))}
 						</div>
 					</div>

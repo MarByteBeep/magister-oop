@@ -2,6 +2,10 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { LuRefreshCw } from 'react-icons/lu';
+import RegistrationCategoryFilter, {
+	ALL_CATEGORIES,
+	type RegistrationCategory,
+} from '@/components/registrations/RegistrationCategoryFilter';
 import RegistrationGroupList from '@/components/registrations/RegistrationGroupList';
 import { useRegistrationsContext } from '@/context/RegistrationsContext';
 import { useStudentsContext } from '@/context/StudentsContext';
@@ -18,6 +22,7 @@ export default function Registrations() {
 	const { data, loading, refreshing, error, refresh } = useRegistrationsContext();
 	const { students, selectedStudies, loadAgendaForStudent } = useStudentsContext();
 	const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+	const [category, setCategory] = useState<string>(ALL_CATEGORIES);
 
 	const todayKey = getTodayKey();
 	const allowedStudentIds = useAllowedStudentIds(students, selectedStudies);
@@ -38,6 +43,23 @@ export default function Registrations() {
 	}, [selectedStudentId, students]);
 
 	const grouped = useGroupedRegistrations(data, students, selectedStudies);
+
+	const categories: RegistrationCategory[] = useMemo(
+		() =>
+			grouped.orderedReasons.map(({ key, label }) => ({
+				key,
+				label,
+				count: grouped.byReason.get(key)?.length ?? 0,
+			})),
+		[grouped],
+	);
+
+	// A category can disappear when the data refreshes, so fall back to showing everything.
+	const activeCategory = categories.some((c) => c.key === category) ? category : ALL_CATEGORIES;
+	const visibleReasons =
+		activeCategory === ALL_CATEGORIES
+			? grouped.orderedReasons
+			: grouped.orderedReasons.filter((reason) => reason.key === activeCategory);
 
 	if (loading) {
 		return (
@@ -62,10 +84,8 @@ export default function Registrations() {
 
 	return (
 		<div className="flex flex-col gap-4">
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-2">
-					<h2 className="text-lg font-semibold">Registraties</h2>
-				</div>
+			<div className="flex items-center justify-between gap-2">
+				<RegistrationCategoryFilter value={activeCategory} categories={categories} onChange={setCategory} />
 				<Button
 					variant="ghost"
 					size="icon"
@@ -79,7 +99,7 @@ export default function Registrations() {
 			</div>
 
 			<RegistrationGroupList
-				orderedReasons={grouped.orderedReasons}
+				orderedReasons={visibleReasons}
 				byReason={grouped.byReason}
 				studentById={grouped.studentById}
 				onSelectStudent={setSelectedStudentId}
