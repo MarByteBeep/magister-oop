@@ -1,4 +1,5 @@
 import { jsonCacheGet, jsonCacheSet, loadJsonCache } from '@/lib/cache';
+import { findSchoolSessionTab, isSchoolSessionUrl } from '@/popup-utils/tabs';
 
 type CredentialsOption = 'include' | 'omit' | 'same-origin';
 /**
@@ -92,24 +93,68 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type ScriptError = { ok: false; error: string };
 
+async function resolveActiveMagisterTabId(): Promise<number | undefined> {
+	const storedId = Number((await chrome.storage.session.get('activeTabId')).activeTabId);
+	if (!Number.isNaN(storedId)) {
+		try {
+			const tab = await chrome.tabs.get(storedId);
+			if (tab.id !== undefined && tab.url && isSchoolSessionUrl(tab.url)) return tab.id;
+		} catch {
+			// Tab was closed or replaced during login redirects.
+		}
+	}
+
+	const tab = await findSchoolSessionTab();
+	if (tab?.id === undefined) return undefined;
+	await chrome.storage.session.set({ activeTabId: tab.id });
+	return tab.id;
+}
+
+async function executeScriptInTab<T, Args extends unknown[]>(
+	tabId: number,
+	func: (...args: Args) => Promise<T>,
+	args: Args,
+): Promise<T | ScriptError> {
+	try {
+		const [result] = await chrome.scripting.executeScript({
+			target: { tabId },
+			world: 'MAIN',
+			func,
+			args,
+		});
+
+		if (result.result) return result.result;
+		return { ok: false, error: 'unknown' };
+	} catch (err) {
+		return { ok: false, error: (err as Error).message };
+	}
+}
+
 async function executeInActiveMagisterTab<T, Args extends unknown[]>(
 	func: (...args: Args) => Promise<T>,
 	args: Args,
 ): Promise<T | ScriptError> {
-	const tabId = Number((await chrome.storage.session.get('activeTabId')).activeTabId);
-
-	if (Number.isNaN(tabId)) return { ok: false, error: 'no active magister tab' };
+	const tabId = await resolveActiveMagisterTabId();
+	if (tabId === undefined) return { ok: false, error: 'no active magister tab' };
 	await sleep(Math.random() * 250);
 
-	const [result] = await chrome.scripting.executeScript({
-		target: { tabId },
-		world: 'MAIN',
-		func,
-		args,
-	});
+	const first = await executeScriptInTab(tabId, func, args);
+	if (!isMissingTabError(first)) return first;
 
-	if (result.result) return result.result;
-	return { ok: false, error: 'unknown' };
+	await chrome.storage.session.remove('activeTabId');
+	const retryId = await resolveActiveMagisterTabId();
+	if (retryId === undefined) return { ok: false, error: 'no active magister tab' };
+	return executeScriptInTab(retryId, func, args);
+}
+
+function isMissingTabError<T>(result: T | ScriptError): result is ScriptError {
+	return (
+		typeof result === 'object' &&
+		result !== null &&
+		'ok' in result &&
+		result.ok === false &&
+		result.error.includes('No tab with id')
+	);
 }
 
 /** Shown when Magister returns 404 (session cookies invalid or expired). */

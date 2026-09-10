@@ -39,6 +39,7 @@ In local storage wordt uitsluitend bewaard wat je zelf kiest:
 
 - **Geselecteerde opleidingen** — Het filter dat je in het tabblad Leerlingen hebt ingesteld (bijv. alleen 3B, 4K).
 - **Geselecteerde bezettingslocaties** — Welke locaties je in het tabblad Bezetting wilt zien.
+- **Magister-schooladres** — De `{school}.magister.net`-origin van je laatst gebruikte sessie, zodat een volgende klik Magister weer op de juiste school opent.
 
 Dit zijn geen persoonsgegevens. Het zijn voorkeuren die het gebruik van de extensie vergemakkelijken; je kunt ze altijd wijzigen of de extensie verwijderen om alles te wissen.
 

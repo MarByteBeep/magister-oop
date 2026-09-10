@@ -38,7 +38,7 @@ bun run build:watch
 3. Klik op **Load unpacked**.
 4. Selecteer de map **`build`** (in de projectroot).
 
-De extensie staat nu geladen. Zorg dat je ergens op magister.net ingelogd bent; de extensie gebruikt die tab voor API-aanroepen (behalve in dev met de testserver).
+De extensie is nu ingeladen. Klik op het icoon: als je nog niet in Magister zit, opent de extensie Magister om in te loggen. API-aanroepen gaan via die tab (behalve in dev met de testserver).
 
 ## Overzicht commando's
 

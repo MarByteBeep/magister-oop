@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { SearchAndFiltersBar } from '@/components/SearchAndFiltersBar';
 import StudentsTable from '@/components/StudentsTable';
+import { useMagisterSession } from '@/context/MagisterSessionContext';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { type SortColumn, type SortDirection, useStudentListFilters } from '@/hooks/useStudentListFilters';
 import type { Student } from '@/magister/types';
@@ -21,6 +22,7 @@ function Students() {
 		currentLessonInfo,
 		nextLessonInfo,
 	} = useStudentsContext();
+	const session = useMagisterSession();
 	const [searchTerm, setSearchTerm] = useState('');
 	const [sortColumn, setSortColumn] = useState<SortColumn>('name');
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
@@ -58,7 +60,11 @@ function Students() {
 	);
 
 	const loadingTooltip =
-		studentsNeedingAgendaCount > 0 ? `${studentsNeedingAgendaCount} leerlingen nog te laden` : 'Laden...';
+		session === 'connecting'
+			? 'Wachten tot Magister is ingelogd...'
+			: studentsNeedingAgendaCount > 0
+				? `${studentsNeedingAgendaCount} leerlingen nog te laden`
+				: 'Laden...';
 
 	return (
 		<div className="w-full">

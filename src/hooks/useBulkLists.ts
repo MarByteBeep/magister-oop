@@ -7,7 +7,7 @@ import type { Student } from '@/magister/types';
 const REFRESH_INTERVAL_MS = 60_000;
 
 /** Shared mount + interval refresh for all bulk lists (absence notices, registrations, …). */
-export function useBulkLists(setStudents: Dispatch<SetStateAction<Student[]>>) {
+export function useBulkLists(setStudents: Dispatch<SetStateAction<Student[]>>, enabled = true) {
 	const refreshAll = useCallback(async (mode: BulkListMode) => {
 		await bulkListRegistry.refreshAll(getTodayKey(), mode);
 	}, []);
@@ -15,15 +15,17 @@ export function useBulkLists(setStudents: Dispatch<SetStateAction<Student[]>>) {
 	useEffect(() => bulkListRegistry.attachStudentUpdater(setStudents), [setStudents]);
 
 	useEffect(() => {
+		if (!enabled) return;
 		void refreshAll('initial');
-	}, [refreshAll]);
+	}, [enabled, refreshAll]);
 
 	useEffect(() => {
+		if (!enabled) return;
 		const interval = setInterval(() => {
 			void refreshAll('background');
 		}, REFRESH_INTERVAL_MS);
 		return () => clearInterval(interval);
-	}, [refreshAll]);
+	}, [enabled, refreshAll]);
 }
 
 /** Subscribe to one snapshot-publishing bulk list (e.g. registrations). */

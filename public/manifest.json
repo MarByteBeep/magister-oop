@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"default_locale": "nl",
 	"name": "__MSG_extensionName__",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "__MSG_extensionDescription__",
 	"action": {
 		"default_icon": {
@@ -19,11 +19,12 @@
 		"128": "icons/icon128.png"
 	},
 	"background": {
-		"service_worker": "background.js"
+		"service_worker": "background.js",
+		"type": "module"
 	},
 	"content_security_policy": {
 		"extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self';"
 	},
-	"permissions": ["tabs", "scripting", "storage"],
+	"permissions": ["scripting", "storage"],
 	"host_permissions": ["*://*.magister.net/*"]
 }

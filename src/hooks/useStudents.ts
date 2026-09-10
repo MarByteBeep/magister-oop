@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMagisterSession } from '@/context/MagisterSessionContext';
 import { useAgendaLoader } from '@/hooks/useAgendaLoader';
 import { useAutoLoadAgenda } from '@/hooks/useAutoLoadAgenda';
 import { useBulkLists } from '@/hooks/useBulkLists';
@@ -12,7 +13,10 @@ import { useSelectedStudiesStorage } from './useSelectedStudiesStorage';
 import { useStudentFetch } from './useStudentFetch';
 import { useStudentStorageSync } from './useStudentStorageSync';
 
+const LOGIN_CANCELLED_MESSAGE = 'Inloggen op Magister is afgebroken. Klik opnieuw op het extensie-icoon.';
+
 export function useStudents() {
+	const session = useMagisterSession();
 	const [students, setStudents] = useState<Student[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
@@ -33,6 +37,18 @@ export function useStudents() {
 			if (cancelled) return;
 
 			setStudents(stored);
+
+			if (session !== 'ready') {
+				if (session === 'connecting') {
+					setError(null);
+				} else if (session === 'cancelled') {
+					setError(LOGIN_CANCELLED_MESSAGE);
+					setLoading(false);
+				}
+				return;
+			}
+
+			setError(null);
 			await fetchStudentsPaginated().catch((err) => setError(err instanceof Error ? err.message : String(err)));
 			if (cancelled) return;
 			await fetchLockers().catch((err) => setError(err instanceof Error ? err.message : String(err)));
@@ -43,10 +59,10 @@ export function useStudents() {
 		return () => {
 			cancelled = true;
 		};
-	}, [loadStoredStudents, fetchStudentsPaginated, fetchLockers]);
+	}, [session, loadStoredStudents, fetchStudentsPaginated, fetchLockers]);
 
-	useAutoLoadAgenda(students, selectedStudies, loadAgendaForStudent);
-	useBulkLists(setStudents);
+	useAutoLoadAgenda(session === 'ready' ? students : [], selectedStudies, loadAgendaForStudent);
+	useBulkLists(setStudents, session === 'ready');
 
 	const refresh = useCallback(async () => {
 		setLoading(true);
@@ -80,7 +96,7 @@ export function useStudents() {
 
 	return {
 		students: studentsWithAgendaInfo,
-		loading: loading || studentsNeedingAgendaCount > 0,
+		loading: session === 'connecting' || loading || studentsNeedingAgendaCount > 0,
 		studentsNeedingAgendaCount,
 		error,
 		refresh,
