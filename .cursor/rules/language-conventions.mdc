@@ -1,11 +1,27 @@
 ---
-description: Code comments in English; user-facing UI copy in Dutch
+description: Code in English (identifiers included); user-facing UI copy in Dutch
 alwaysApply: true
 ---
 
 # Language conventions
 
-- **Comments**: Write all code comments in **English** only — including `//`, `/* */`, and `/** */` (JSDoc). Do not use Dutch in comments.
-- **Frontend (user-facing text)**: Keep visible UI strings in **Dutch** — labels, buttons, dialog titles, descriptions, placeholders, tooltips, and `aria-label` / `aria-description` text that users or assistive tech encounter in the app UI.
+**Code is English. Only the product language is Dutch.** No Dutch in code, ever, unless one of the two exceptions below applies.
 
-Technical identifiers (component names, props, URLs) stay as they are; this rule is about human-readable comment language vs. product language in the interface.
+## English — everything we write ourselves
+
+- **Identifiers**: variables, parameters, functions, types, type properties, interfaces, enums, React components, props, hooks, and the files and directories they live in.
+- **Comments**: `//`, `/* */`, and `/** */` (JSDoc).
+- **Internal string values**: union members, discriminators, state values, filter keys, map keys, bulk list ids, test names. Write `type Period = 'today' | 'week' | 'month'`, never `'vandaag' | 'week' | 'maand'`.
+- **Test fixtures and helpers** are code too: `returnMeasureStudentDetails`, not `returnMeasureLeerling`.
+
+Never name something after the Dutch API field it happens to read: `const description = measure.omschrijving`, `for (const appointment of item.afspraken)`.
+
+## Dutch — only these two
+
+1. **User-facing text**: labels, buttons, dialog titles, descriptions, placeholders, tooltips, badges, empty states, error messages, and `aria-label` / `aria-description` — anything a user or screen reader reads.
+2. **The Magister API surface, verbatim.** It is fixed by an external server, so mirror it exactly and never translate it:
+   - **Keys of request/response types** stay Dutch (`leerling`, `omschrijving`, `heeftGemeld`, `begin`, `einde`) — while the **type name itself is English** (`ReturnMeasureStudent`, `ReturnMeasureHandler`). Same for nested link keys.
+   - **Values the API sends**, such as the discriminator `type: 'medewerker'`.
+   - **Endpoint paths and query params** (`/api/m6/leerlingen/terugkomers?begin=…&einde=…`), including the directories that mirror those paths in the test server.
+
+Do not restate the Dutch API shape in our own code: read `measure.omschrijving` and expose it as `description`, read `.leerling` and pass it on as `student`. Map internal English values to Dutch labels in the component that renders them, e.g. `{ value: 'today', label: 'Vandaag' }`.

@@ -5,10 +5,9 @@ export function isAgendaDayLoaded(student: Student, dateKey: string): boolean {
 	return student.agenda?.[dateKey] !== undefined;
 }
 
-/** Whether agenda, return measures, or absence notices still need to be fetched for this day. */
+/** Whether the agenda or the absence notices still need to be fetched for this day. */
 export function needsAgendaDayFetch(student: Student, dateKey: string): boolean {
 	if (!isAgendaDayLoaded(student, dateKey)) return true;
-	if (student.returnMeasuresLoadedFor?.[dateKey] !== true) return true;
 	if (student.absenceNoticesLoadedFor?.[dateKey] !== true) return true;
 	return false;
 }

@@ -3,10 +3,10 @@ import {
 	buildFilterPairs,
 	buildOrderedReasons,
 	buildRegistrationRows,
-	createRegistrationVisibility,
 	type RegistrationRow,
 	sortRegistrationRows,
 } from '@/lib/registrationsUtils';
+import { createStudentVisibility } from '@/lib/studentVisibility';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import type { Student } from '@/magister/types';
 
@@ -27,7 +27,7 @@ export function useGroupedRegistrations(
 		}
 
 		const filterPairs = buildFilterPairs(data);
-		const isVisible = createRegistrationVisibility(studentById, selectedStudies);
+		const isVisible = createStudentVisibility(studentById, selectedStudies);
 		const byReason = buildRegistrationRows(data, isVisible, filterPairs);
 		sortRegistrationRows(byReason);
 		const orderedReasons = buildOrderedReasons(filterPairs, byReason);

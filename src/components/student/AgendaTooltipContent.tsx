@@ -60,9 +60,9 @@ function AgendaTooltipContent({ entry }: AgendaTooltipContentProps) {
 
 		return (
 			<div className="space-y-1">
-				{display.hasMaatregel && <div className="font-bold">{display.maatregelOmschrijving}</div>}
-				{display.hasOmschrijving && (
-					<div className={display.hasMaatregel ? undefined : 'font-bold'}>
+				{display.hasMeasureLabel && <div className="font-bold">{display.measureLabel}</div>}
+				{display.hasDescription && (
+					<div className={display.hasMeasureLabel ? undefined : 'font-bold'}>
 						{display.hasBoth && (
 							<LuTriangleAlert
 								className={cn(
@@ -72,7 +72,7 @@ function AgendaTooltipContent({ entry }: AgendaTooltipContentProps) {
 								aria-hidden
 							/>
 						)}
-						{display.omschrijving}
+						{display.description}
 					</div>
 				)}
 				<div>

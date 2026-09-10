@@ -38,11 +38,11 @@ export default function StudentsTable({
 						<th className="text-center">
 							{sortedStudents.length} van {filteredCount}
 						</th>
-						<th scope="col" onClick={() => onSort('naam')} className="px-6 py-3">
-							Naam{getSortIndicator(sortColumn, 'naam', sortDirection)}
+						<th scope="col" onClick={() => onSort('name')} className="px-6 py-3">
+							Naam{getSortIndicator(sortColumn, 'name', sortDirection)}
 						</th>
-						<th scope="col" onClick={() => onSort('klas')}>
-							Klas{getSortIndicator(sortColumn, 'klas', sortDirection)}
+						<th scope="col" onClick={() => onSort('class')}>
+							Klas{getSortIndicator(sortColumn, 'class', sortDirection)}
 						</th>
 						<th
 							scope="col"

@@ -25,21 +25,21 @@ export async function GET(_req: Request): Promise<Response> {
 		item.voorletters = student.voorletters;
 
 		// Update appointment times to use today's date
-		for (const afspraak of item.afspraken) {
-			const lesuurBegin = afspraak.lesuurBegin;
-			const lesuurEinde = afspraak.lesuurEinde;
+		for (const appointment of item.afspraken) {
+			const lessonHourStart = appointment.lesuurBegin;
+			const lessonHourEnd = appointment.lesuurEinde;
 
 			if (
-				lesuurBegin >= 1 &&
-				lesuurBegin <= timeTable.length &&
-				lesuurEinde >= 1 &&
-				lesuurEinde <= timeTable.length
+				lessonHourStart >= 1 &&
+				lessonHourStart <= timeTable.length &&
+				lessonHourEnd >= 1 &&
+				lessonHourEnd <= timeTable.length
 			) {
-				const beginSlot = timeTable[lesuurBegin - 1];
-				const eindeSlot = timeTable[lesuurEinde - 1];
+				const startSlot = timeTable[lessonHourStart - 1];
+				const endSlot = timeTable[lessonHourEnd - 1];
 
-				afspraak.begin = cetToUtcISO(beginSlot.begin, todayKey);
-				afspraak.einde = cetToUtcISO(eindeSlot.einde, todayKey);
+				appointment.begin = cetToUtcISO(startSlot.start, todayKey);
+				appointment.einde = cetToUtcISO(endSlot.end, todayKey);
 			}
 		}
 	}

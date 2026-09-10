@@ -3,16 +3,16 @@ import { formatLocations } from '@/lib/locationUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 
 export const timeTable = [
-	{ begin: '08:30', einde: '09:10' },
-	{ begin: '09:10', einde: '09:50' },
-	{ begin: '09:50', einde: '10:30' },
-	{ begin: '10:50', einde: '11:30' },
-	{ begin: '11:30', einde: '12:10' },
-	{ begin: '12:10', einde: '12:50' },
-	{ begin: '13:20', einde: '14:00' },
-	{ begin: '14:00', einde: '14:40' },
-	{ begin: '14:40', einde: '15:20' },
-	{ begin: '15:20', einde: '16:00' },
+	{ start: '08:30', end: '09:10' },
+	{ start: '09:10', end: '09:50' },
+	{ start: '09:50', end: '10:30' },
+	{ start: '10:50', end: '11:30' },
+	{ start: '11:30', end: '12:10' },
+	{ start: '12:10', end: '12:50' },
+	{ start: '13:20', end: '14:00' },
+	{ start: '14:00', end: '14:40' },
+	{ start: '14:40', end: '15:20' },
+	{ start: '15:20', end: '16:00' },
 ];
 
 export type LessonInfo = {
@@ -84,26 +84,26 @@ export function getLesson(date: Date): LessonInfo {
 	const first = timeTable[0];
 	const last = timeTable[timeTable.length - 1];
 
-	if (time < first.begin) return { status: 'before-school' };
-	if (time >= last.einde) return { status: 'after-school' };
+	if (time < first.start) return { status: 'before-school' };
+	if (time >= last.end) return { status: 'after-school' };
 
 	for (let i = 0; i < timeTable.length; i++) {
 		const slot = timeTable[i];
 		const next = timeTable[i + 1];
 
-		if (slot.begin <= time && time < slot.einde) {
+		if (slot.start <= time && time < slot.end) {
 			return {
 				status: 'lesson',
 				lesson: i + 1,
-				range: `${slot.begin}-${slot.einde}`,
+				range: `${slot.start}-${slot.end}`,
 			};
 		}
 
-		if (next && slot.einde <= time && time < next.begin) {
+		if (next && slot.end <= time && time < next.start) {
 			return {
 				status: 'break',
 				lesson: i + 1,
-				range: `${slot.einde}-${next.begin}`,
+				range: `${slot.end}-${next.start}`,
 			};
 		}
 	}
@@ -119,7 +119,7 @@ export function getCurrentLesson(): LessonInfo {
 export function getNextLesson(current: LessonInfo): LessonInfo {
 	if (current.status === 'before-school') {
 		const slot = timeTable[0];
-		return { status: 'lesson', lesson: 1, range: `${slot.begin}-${slot.einde}` };
+		return { status: 'lesson', lesson: 1, range: `${slot.start}-${slot.end}` };
 	}
 
 	if (current.status === 'after-school') {
@@ -133,7 +133,7 @@ export function getNextLesson(current: LessonInfo): LessonInfo {
 	}
 
 	const slot = timeTable[next - 1];
-	return { status: 'lesson', lesson: next, range: `${slot.begin}-${slot.einde}` };
+	return { status: 'lesson', lesson: next, range: `${slot.start}-${slot.end}` };
 }
 
 /** Recurring Magister appointments can reuse the same id across days; begin distinguishes occurrences. */

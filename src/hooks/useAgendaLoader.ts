@@ -3,34 +3,16 @@ import { getAbsenceNoticesForDate, invalidateAbsenceNoticeCache } from '@/lib/ab
 import { noticesForStudent, uniqueNotices } from '@/lib/absenceNoticeUtils';
 import { buildAgendaEntries, isAbsenceNoticeEntry } from '@/lib/agendaEntryUtils';
 import { markDateRangeLoaded } from '@/lib/agendaLoadUtils';
-import { eachDateKey, getDateKey } from '@/lib/dateUtils';
+import { eachDateKey, eachMonthKey, getDateKey } from '@/lib/dateUtils';
+import { getReturnMeasuresForRange, invalidateReturnMeasureCache } from '@/lib/returnMeasureFetch';
+import { scheduledReturnMeasuresForStudent } from '@/lib/returnMeasureUtils';
 import { deepEqual, groupBy } from '@/lib/utils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { AbsenceNotice } from '@/magister/response/absence-notice.types';
 import type { AgendaResponse } from '@/magister/response/agenda.types';
-import type { ReturnMeasuresResponse } from '@/magister/response/return-measure.types';
 import type { Student } from '@/magister/types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
-
-const emptyReturnMeasuresResponse = (): ReturnMeasuresResponse => ({
-	items: [],
-	links: { first: { href: '' }, last: { href: '' } },
-	totalCount: 0,
-});
-
-async function fetchReturnMeasures(studentId: number, startDateKey: string, endDateKey: string) {
-	try {
-		return await getJson<ReturnMeasuresResponse>(
-			endpoints.returnMeasures(studentId, startDateKey, endDateKey),
-			'include',
-			'no-cache',
-		);
-	} catch (error) {
-		console.warn('Failed to fetch return measures for student', studentId, error);
-		return emptyReturnMeasuresResponse();
-	}
-}
 
 async function fetchAbsenceNoticesForStudent(
 	studentUuid: string | undefined,
@@ -58,15 +40,24 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<Student[]>>
 				const refreshCachedDates = dateKeys.every(
 					(dateKey) => student?.absenceNoticesLoadedFor?.[dateKey] === true,
 				);
-				const [data, returnMeasuresData, absenceNotices] = await Promise.all([
+				// A repeat load is a manual sync, so the shared month cache must go back to the network too.
+				if (refreshCachedDates) invalidateReturnMeasureCache(eachMonthKey(startDate, endDate));
+
+				const [data, allReturnMeasures, absenceNotices] = await Promise.all([
 					getJson<AgendaResponse>(
 						endpoints.agenda(studentId, startDateKey, endDateKey),
 						'include',
 						'no-cache',
 					),
-					fetchReturnMeasures(studentId, startDateKey, endDateKey),
+					getReturnMeasuresForRange(startDate, endDate),
 					fetchAbsenceNoticesForStudent(student?.externeId, dateKeys, refreshCachedDates),
 				]);
+				const returnMeasures = scheduledReturnMeasuresForStudent(
+					allReturnMeasures,
+					studentId,
+					startDate,
+					endDate,
+				);
 
 				for (const item of data.items) {
 					item.deelnames = item.deelnames.filter((e) => e.type === 'medewerker' || e.type === 'groep');
@@ -76,18 +67,12 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<Student[]>>
 					}
 				}
 
-				const entries = buildAgendaEntries(
-					data.items,
-					returnMeasuresData.items,
-					absenceNotices,
-					startDate,
-					endDate,
-				);
+				const entries = buildAgendaEntries(data.items, returnMeasures, absenceNotices, startDate, endDate);
 
 				let agendaChanged = false;
 
 				const receivedAgendaItems = data.items.length > 0;
-				const receivedReturnMeasures = returnMeasuresData.items.length > 0;
+				const receivedReturnMeasures = returnMeasures.length > 0;
 				const receivedAbsenceNotices = entries.some(isAbsenceNoticeEntry);
 				const canConfirmEmptyDays = !receivedAgendaItems && !receivedReturnMeasures && !receivedAbsenceNotices;
 
@@ -119,30 +104,22 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<Student[]>>
 							student.agenda?.[dateKey] !== undefined,
 					);
 
-					const returnMeasuresLoadedFor = rangeFullyResolved
-						? markDateRangeLoaded(student.returnMeasuresLoadedFor, startDate, endDate)
-						: student.returnMeasuresLoadedFor;
 					const absenceNoticesLoadedFor = rangeFullyResolved
 						? markDateRangeLoaded(student.absenceNoticesLoadedFor, startDate, endDate)
 						: student.absenceNoticesLoadedFor;
 
 					const agendaUnchanged = deepEqual(student.agenda, updatedAgenda);
-					const returnMeasuresFlagUnchanged = deepEqual(
-						student.returnMeasuresLoadedFor,
-						returnMeasuresLoadedFor,
-					);
 					const absenceNoticesFlagUnchanged = deepEqual(
 						student.absenceNoticesLoadedFor,
 						absenceNoticesLoadedFor,
 					);
-					if (agendaUnchanged && returnMeasuresFlagUnchanged && absenceNoticesFlagUnchanged) return prev;
+					if (agendaUnchanged && absenceNoticesFlagUnchanged) return prev;
 
 					agendaChanged = !agendaUnchanged;
 
 					const updatedStudent = {
 						...student,
 						agenda: updatedAgenda,
-						returnMeasuresLoadedFor,
 						absenceNoticesLoadedFor,
 					};
 					const newStudents = [...prev];

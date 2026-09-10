@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import agendaData from '@data/agenda.json' with { type: 'json' };
-import students from '@data/leerlingen.json' with { type: 'json' };
 import lockers from '@data/lockers.json' with { type: 'json' };
-import staffMembers from '@data/medewerkers.json' with { type: 'json' };
+import staffMembers from '@data/staff-members.json' with { type: 'json' };
+import students from '@data/students.json' with { type: 'json' };
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Locker } from '@/magister/response/locker.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
@@ -35,7 +35,7 @@ export function getDataVersion(): string {
 	return parsed.version ?? '0';
 }
 
-const RETURN_MEASURES_FILE_PATH = join(import.meta.dirname, '../../../data/terugkommaatregelen.json');
+const RETURN_MEASURES_FILE_PATH = join(import.meta.dirname, '../../../data/return-measures.json');
 const ABSENCE_NOTICES_FILE_PATH = join(import.meta.dirname, '../../../data/absence-notices.json');
 
 export function getReturnMeasureTemplates(): Record<number, StoredReturnMeasureTemplate[]> {

@@ -1,6 +1,6 @@
 import type { AbsenceNotice } from '@/magister/response/absence-notice.types';
 import type { AgendaItem } from '@/magister/response/agenda.types';
-import type { ReturnMeasure } from '@/magister/response/return-measure.types';
+import type { ScheduledReturnMeasure } from '@/magister/response/return-measure.types';
 
 export type LessonAgendaEntry = {
 	kind: 'lesson';
@@ -13,7 +13,7 @@ export type ReturnMeasureAgendaEntry = {
 	kind: 'return-measure';
 	start: string;
 	end: string;
-	measure: ReturnMeasure;
+	measure: ScheduledReturnMeasure;
 };
 
 export type AbsenceNoticeAgendaEntry = {

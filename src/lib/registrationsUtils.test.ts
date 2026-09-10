@@ -1,12 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import type { Student } from '@/magister/types';
-import {
-	buildFilterPairs,
-	buildRegistrationRows,
-	countAbsentRegistrations,
-	createRegistrationVisibility,
-} from './registrationsUtils';
+import { buildFilterPairs, buildRegistrationRows, countAbsentRegistrations } from './registrationsUtils';
+import { createStudentVisibility } from './studentVisibility';
 
 function registrationResponse(itemId: number): RegistrationsResponse {
 	return {
@@ -78,7 +74,7 @@ function student(id: number): Student {
 }
 
 function rowsFor(data: ReturnType<typeof registrationResponse>, studentById: Map<number, Student>, studies: string[]) {
-	const isVisible = createRegistrationVisibility(studentById, new Set(studies));
+	const isVisible = createStudentVisibility(studentById, new Set(studies));
 	return buildRegistrationRows(data, isVisible, buildFilterPairs(data));
 }
 
@@ -110,17 +106,17 @@ describe('buildRegistrationRows', () => {
 describe('countAbsentRegistrations', () => {
 	test('matches the list: counts unfiltered rows without loaded students', () => {
 		const data = registrationResponse(42);
-		expect(countAbsentRegistrations(data, createRegistrationVisibility(new Map(), new Set()))).toBe(1);
+		expect(countAbsentRegistrations(data, createStudentVisibility(new Map(), new Set()))).toBe(1);
 	});
 
 	test('matches the list: skips unloaded students once a study is selected', () => {
 		const data = registrationResponse(42);
-		expect(countAbsentRegistrations(data, createRegistrationVisibility(new Map(), new Set(['3B'])))).toBe(0);
+		expect(countAbsentRegistrations(data, createStudentVisibility(new Map(), new Set(['3B'])))).toBe(0);
 	});
 
 	test('counts a loaded student that matches the selected study', () => {
 		const data = registrationResponse(1);
-		const isVisible = createRegistrationVisibility(new Map([[1, student(1)]]), new Set(['3B']));
+		const isVisible = createStudentVisibility(new Map([[1, student(1)]]), new Set(['3B']));
 		expect(countAbsentRegistrations(data, isVisible)).toBe(1);
 	});
 });

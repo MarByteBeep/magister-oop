@@ -12,14 +12,14 @@ export type OccupancyChartPoint = {
 	breakTotal: number;
 };
 
-function getLessonHourIndices(beginTime: string, endTime: string) {
-	let begin = timeTable.findIndex((e) => beginTime >= e.begin && beginTime < e.einde);
-	let end = timeTable.findIndex((e) => endTime >= e.begin && endTime < e.einde);
+function getLessonHourIndices(startTime: string, endTime: string) {
+	let startIndex = timeTable.findIndex((slot) => startTime >= slot.start && startTime < slot.end);
+	let endIndex = timeTable.findIndex((slot) => endTime >= slot.start && endTime < slot.end);
 
-	if (begin < 0) begin = end;
-	if (end < 0) end = begin;
+	if (startIndex < 0) startIndex = endIndex;
+	if (endIndex < 0) endIndex = startIndex;
 
-	return { begin, end };
+	return { startIndex, endIndex };
 }
 
 function incrementOccupancy(
@@ -34,16 +34,16 @@ function incrementOccupancy(
 }
 
 function addAgendaItemToOccupancy(occupancy: Record<string, Record<string, number>>, item: AgendaItem) {
-	const beginTime = formatTime(new Date(item.begin));
+	const startTime = formatTime(new Date(item.begin));
 	const endDate = new Date(item.einde);
 	endDate.setMinutes(endDate.getMinutes() - 1);
 	const endTime = formatTime(endDate);
 
-	const { begin, end } = getLessonHourIndices(beginTime, endTime);
-	if (begin < 0 || end < 0) return;
+	const { startIndex, endIndex } = getLessonHourIndices(startTime, endTime);
+	if (startIndex < 0 || endIndex < 0) return;
 
-	for (let i = begin; i <= end; ++i) {
-		const lessonRange = `${timeTable[i].begin}-${timeTable[i].einde}`;
+	for (let i = startIndex; i <= endIndex; ++i) {
+		const lessonRange = `${timeTable[i].start}-${timeTable[i].end}`;
 		for (const location of item.locaties) {
 			const locationCode = formatLocation(location);
 			if (locationCode) {
@@ -55,7 +55,7 @@ function addAgendaItemToOccupancy(occupancy: Record<string, Record<string, numbe
 
 function sortOccupancyForLocation(locationOccupancy: Record<string, number>) {
 	for (const slot of timeTable) {
-		const lessonRange = `${slot.begin}-${slot.einde}`;
+		const lessonRange = `${slot.start}-${slot.end}`;
 		if (!locationOccupancy[lessonRange]) {
 			locationOccupancy[lessonRange] = 0;
 		}

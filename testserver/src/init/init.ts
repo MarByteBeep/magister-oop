@@ -6,23 +6,23 @@ import type { StaffMember } from '@/magister/response/staffmember.types';
 import type { StudentBase } from '@/magister/response/student.types';
 import { generateAbsenceNoticeData } from './absence-notices';
 import { generateAgendaData } from './agenda';
-import { generateDummyLeerling } from './leerling';
 import { generateDummyLocker } from './locker';
-import { generateDummyMedewerker } from './medewerker';
+import { generateReturnMeasureData } from './returnMeasures';
 import { ALL_PHOTOS_DIR, DATA_DIR } from './shared';
-import { generateReturnMeasureData } from './terugkommaatregelen';
+import { generateDummyStaffMember } from './staffMember';
+import { generateDummyStudent } from './student';
 
-const MEDEWERKERS_FILE_PATH = join(DATA_DIR, 'medewerkers.json');
-const LEERLINGEN_FILE_PATH = join(DATA_DIR, 'leerlingen.json');
+const STAFF_MEMBERS_FILE_PATH = join(DATA_DIR, 'staff-members.json');
+const STUDENTS_FILE_PATH = join(DATA_DIR, 'students.json');
 const LOCKERS_FILE_PATH = join(DATA_DIR, 'lockers.json');
 const AGENDA_FILE_PATH = join(DATA_DIR, 'agenda.json');
-const RETURN_MEASURES_FILE_PATH = join(DATA_DIR, 'terugkommaatregelen.json');
+const RETURN_MEASURES_FILE_PATH = join(DATA_DIR, 'return-measures.json');
 const ABSENCE_NOTICES_FILE_PATH = join(DATA_DIR, 'absence-notices.json');
 const DATA_VERSION_FILE_PATH = join(DATA_DIR, 'data-version.json');
 
-const totalLeerlingen = 400;
-const totalMedewerkers = 100;
-const totalLockers = totalLeerlingen - 30;
+const totalStudents = 400;
+const totalStaffMembers = 100;
+const totalLockers = totalStudents - 30;
 
 // Helper to generate a set of unique IDs
 function generateUniqueIds(count: number, min: number, max: number): Set<number> {
@@ -35,13 +35,13 @@ function generateUniqueIds(count: number, min: number, max: number): Set<number>
 
 async function init() {
 	console.log('Clearing existing data...');
-	if (existsSync(MEDEWERKERS_FILE_PATH)) {
-		rmSync(MEDEWERKERS_FILE_PATH);
-		console.log(`Removed ${MEDEWERKERS_FILE_PATH}`);
+	if (existsSync(STAFF_MEMBERS_FILE_PATH)) {
+		rmSync(STAFF_MEMBERS_FILE_PATH);
+		console.log(`Removed ${STAFF_MEMBERS_FILE_PATH}`);
 	}
-	if (existsSync(LEERLINGEN_FILE_PATH)) {
-		rmSync(LEERLINGEN_FILE_PATH);
-		console.log(`Removed ${LEERLINGEN_FILE_PATH}`);
+	if (existsSync(STUDENTS_FILE_PATH)) {
+		rmSync(STUDENTS_FILE_PATH);
+		console.log(`Removed ${STUDENTS_FILE_PATH}`);
 	}
 	if (existsSync(LOCKERS_FILE_PATH)) {
 		rmSync(LOCKERS_FILE_PATH);
@@ -72,45 +72,45 @@ async function init() {
 	mkdirSync(ALL_PHOTOS_DIR, { recursive: true });
 	console.log(`Created directory: ${ALL_PHOTOS_DIR}`);
 
-	// Generate a pool of unique IDs for both medewerkers and leerlingen
-	const totalEntities = totalLeerlingen + totalMedewerkers;
+	// Generate a pool of unique IDs for both staff members and students
+	const totalEntities = totalStudents + totalStaffMembers;
 	const allUniqueIds = Array.from(generateUniqueIds(totalEntities, 1, 1_000_000));
 
-	const medewerkerIds = allUniqueIds.slice(0, totalMedewerkers);
-	const leerlingIds = allUniqueIds.slice(totalMedewerkers, totalEntities);
+	const staffMemberIds = allUniqueIds.slice(0, totalStaffMembers);
+	const studentIds = allUniqueIds.slice(totalStaffMembers, totalEntities);
 
-	console.log('Generating dummy medewerker data using faker...');
-	const medewerkers: StaffMember[] = [];
-	for (const id of medewerkerIds) {
-		medewerkers.push(await generateDummyMedewerker(id));
+	console.log('Generating dummy staff member data using faker...');
+	const staffMembers: StaffMember[] = [];
+	for (const id of staffMemberIds) {
+		staffMembers.push(await generateDummyStaffMember(id));
 	}
 	mkdirSync(DATA_DIR, { recursive: true });
-	writeFileSync(MEDEWERKERS_FILE_PATH, JSON.stringify({ data: medewerkers }, null, 2), 'utf-8');
-	console.log(`Generated ${medewerkers.length} medewerkers and saved to ${MEDEWERKERS_FILE_PATH}`);
+	writeFileSync(STAFF_MEMBERS_FILE_PATH, JSON.stringify({ data: staffMembers }, null, 2), 'utf-8');
+	console.log(`Generated ${staffMembers.length} staff members and saved to ${STAFF_MEMBERS_FILE_PATH}`);
 
-	console.log('Generating dummy leerling data using faker...');
-	const leerlingen: StudentBase[] = [];
-	for (const id of leerlingIds) {
-		leerlingen.push(await generateDummyLeerling(id));
+	console.log('Generating dummy student data using faker...');
+	const students: StudentBase[] = [];
+	for (const id of studentIds) {
+		students.push(await generateDummyStudent(id));
 	}
-	writeFileSync(LEERLINGEN_FILE_PATH, JSON.stringify({ data: leerlingen }, null, 2), 'utf-8');
-	console.log(`Generated ${leerlingen.length} leerlingen and saved to ${LEERLINGEN_FILE_PATH}`);
+	writeFileSync(STUDENTS_FILE_PATH, JSON.stringify({ data: students }, null, 2), 'utf-8');
+	console.log(`Generated ${students.length} students and saved to ${STUDENTS_FILE_PATH}`);
 
 	// --- Agenda Generation ---
 	console.log('Generating dummy agenda data...');
-	const { agenda: agendaData } = generateAgendaData(leerlingen, medewerkers);
+	const { agenda: agendaData } = generateAgendaData(students, staffMembers);
 	writeFileSync(AGENDA_FILE_PATH, JSON.stringify(agendaData, null, 2), 'utf-8');
-	console.log(`Generated agenda for ${leerlingen.length} students and saved to ${AGENDA_FILE_PATH}`);
+	console.log(`Generated agenda for ${students.length} students and saved to ${AGENDA_FILE_PATH}`);
 
 	console.log('Generating dummy return measures data...');
-	const returnMeasuresData = generateReturnMeasureData(leerlingen);
+	const returnMeasuresData = generateReturnMeasureData(students, staffMembers);
 	writeFileSync(RETURN_MEASURES_FILE_PATH, JSON.stringify(returnMeasuresData, null, 2), 'utf-8');
 	console.log(
 		`Generated return measures for ${Object.keys(returnMeasuresData).length} students and saved to ${RETURN_MEASURES_FILE_PATH}`,
 	);
 
 	console.log('Generating dummy absence-notices data...');
-	const absenceNoticesData = generateAbsenceNoticeData(leerlingen);
+	const absenceNoticesData = generateAbsenceNoticeData(students);
 	writeFileSync(ABSENCE_NOTICES_FILE_PATH, JSON.stringify(absenceNoticesData, null, 2), 'utf-8');
 	console.log(
 		`Generated absence notices for ${Object.keys(absenceNoticesData).length} students and saved to ${ABSENCE_NOTICES_FILE_PATH}`,
@@ -124,13 +124,13 @@ async function init() {
 	const numLockersWithRentalPeriod = Math.floor(totalLockers * 0.95);
 
 	// Determine how many students are eligible to receive a locker (95% of all students)
-	const numEligibleStudents = Math.floor(leerlingen.length * 0.95);
+	const numEligibleStudents = Math.floor(students.length * 0.95);
 
 	// Select students who will actually get a locker.
 	// We need 'numLockersWithRentalPeriod' unique students.
 	// Ensure we don't try to assign more lockers than eligible students.
 	const studentsToAssignLockers = faker.helpers
-		.shuffle([...leerlingen])
+		.shuffle([...students])
 		.slice(0, Math.min(numEligibleStudents, numLockersWithRentalPeriod));
 
 	// Keep track of assigned students to ensure one locker per student

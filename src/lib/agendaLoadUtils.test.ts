@@ -27,14 +27,13 @@ describe('needsAgendaDayFetch', () => {
 	test('returns false when agenda and loaded-for flags are present', () => {
 		const student = createStudent({
 			agenda: { [todayKey]: [] },
-			returnMeasuresLoadedFor: { [todayKey]: true },
 			absenceNoticesLoadedFor: { [todayKey]: true },
 		});
 
 		expect(needsAgendaDayFetch(student, todayKey)).toBe(false);
 	});
 
-	test('returns true when measure or notice flags are missing', () => {
+	test('returns true when the notice flag is missing', () => {
 		const student = createStudent({
 			agenda: { [todayKey]: [] },
 		});

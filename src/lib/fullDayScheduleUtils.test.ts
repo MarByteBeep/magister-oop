@@ -1,22 +1,15 @@
 import { expect, test } from 'bun:test';
 import { returnMeasureEntry } from '@/lib/agendaEntryUtils';
-import type { ReturnMeasure } from '@/magister/response/return-measure.types';
 import {
 	configureFullDaySchedule,
 	getFullDayScheduleLabel,
 	isFullDayReturnMeasureEntry,
 	resetFullDayScheduleConfig,
 } from './fullDayScheduleUtils';
+import { scheduledReturnMeasure } from './returnMeasureFixtures';
 
-function measure(begin: string, einde: string): ReturnMeasure {
-	return {
-		id: 1,
-		begin,
-		einde,
-		omschrijving: 'test',
-		maatregel: null,
-		links: {},
-	};
+function measure(start: string, end: string) {
+	return scheduledReturnMeasure(start, end, { id: 1 });
 }
 
 test('isFullDayReturnMeasureEntry matches default 08:00–16:00 school day', () => {

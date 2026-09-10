@@ -22,7 +22,7 @@ function Students() {
 		nextLessonInfo,
 	} = useStudentsContext();
 	const [searchTerm, setSearchTerm] = useState('');
-	const [sortColumn, setSortColumn] = useState<SortColumn>('naam');
+	const [sortColumn, setSortColumn] = useState<SortColumn>('name');
 	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 	const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 	const [activeQuickFilterId, setActiveQuickFilterId] = useState<string | null>(null);

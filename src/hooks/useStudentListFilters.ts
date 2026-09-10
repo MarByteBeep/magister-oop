@@ -3,7 +3,7 @@ import { normalizeString } from '@/lib/stringUtils';
 import type { AttendanceStaffMember } from '@/magister/response/agenda.types';
 import type { Student } from '@/magister/types';
 
-export type SortColumn = 'naam' | 'klas' | 'lockerCode' | 'now' | 'next';
+export type SortColumn = 'name' | 'class' | 'lockerCode' | 'now' | 'next';
 export type SortDirection = 'asc' | 'desc';
 
 export function studentMatchesSearch(student: Student, searchTerm: string): boolean {
@@ -49,8 +49,8 @@ export function studentMatchesSearch(student: Student, searchTerm: string): bool
 }
 
 const sortValueGetters: Record<Exclude<SortColumn, 'now' | 'next'>, (student: Student) => string> = {
-	naam: (student) => normalizeString(`${student.achternaam} ${student.roepnaam}`),
-	klas: (student) => normalizeString(student.klassen.join(', ')),
+	name: (student) => normalizeString(`${student.achternaam} ${student.roepnaam}`),
+	class: (student) => normalizeString(student.klassen.join(', ')),
 	lockerCode: (student) => normalizeString(student.lockerCode || ''),
 };
 

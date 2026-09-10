@@ -2,6 +2,11 @@
 
 Alle gebruikersgerichte wijzigingen in de Magister OOP Chrome-extensie.
 
+## 1.1.0 — 2026-09-09
+
+- Terugkomers: nieuwe tab met **overzicht per dag** — leerling, tijd en maatregel
+- Absenties heet nu **Registraties**
+
 ## 1.0.7 — 2026-09-03
 
 - Leerlingen: **absentie** gaat voor de les; toont "Ziek gemeld" in plaats van het vak

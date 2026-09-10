@@ -1,7 +1,6 @@
 import { expect, test } from 'bun:test';
 import type { AbsenceNotice } from '@/magister/response/absence-notice.types';
 import type { AgendaItem } from '@/magister/response/agenda.types';
-import type { ReturnMeasure } from '@/magister/response/return-measure.types';
 import { scaleLayoutToGutter, shiftLayoutForGutter } from './agendaDayLayout';
 import {
 	absenceNoticeEntries,
@@ -17,6 +16,7 @@ import {
 	returnMeasureEntry,
 } from './agendaEntryUtils';
 import { getDateKey, parseDateKey, toISOFromDateKeyAndTime } from './dateUtils';
+import { scheduledReturnMeasure } from './returnMeasureFixtures';
 
 const creator = {
 	accountId: '11111111-1111-4111-8111-111111111111',
@@ -59,7 +59,7 @@ function notice(partial: Partial<AbsenceNotice> & Pick<AbsenceNotice, 'startDate
 	};
 }
 
-function lesson(begin: string, einde: string): AgendaItem {
+function lesson(start: string, end: string): AgendaItem {
 	return {
 		id: 1,
 		heeftInhoud: false,
@@ -68,8 +68,8 @@ function lesson(begin: string, einde: string): AgendaItem {
 		subtype: 'nvt',
 		heeftBijlagen: false,
 		herhaalStatus: 'geen',
-		begin,
-		einde,
+		begin: start,
+		einde: end,
 		onderwerp: 'Nederlands',
 		type: 'les',
 		deelnames: [],
@@ -79,15 +79,8 @@ function lesson(begin: string, einde: string): AgendaItem {
 	};
 }
 
-function returnMeasure(begin: string, einde: string): ReturnMeasure {
-	return {
-		id: 42,
-		begin,
-		einde,
-		omschrijving: 'test',
-		maatregel: null,
-		links: {},
-	};
+function returnMeasure(start: string, end: string) {
+	return scheduledReturnMeasure(start, end);
 }
 
 test('isAbsenceNoticeEntry keeps full notice payload', () => {

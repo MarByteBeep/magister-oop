@@ -1,10 +1,13 @@
-import type { ReturnMeasure } from '@/magister/response/return-measure.types';
+import { getDateKey } from '@/lib/dateUtils';
+import type { ReturnMeasureStudent, ScheduledReturnMeasure } from '@/magister/response/return-measure.types';
 
 export type ReturnMeasureDisplay = {
-	maatregelOmschrijving: string | null;
-	omschrijving: string | null;
-	hasMaatregel: boolean;
-	hasOmschrijving: boolean;
+	/** Name of the measure itself, e.g. "Uur nakomen". */
+	measureLabel: string | null;
+	/** Free text explaining why the measure was given. */
+	description: string | null;
+	hasMeasureLabel: boolean;
+	hasDescription: boolean;
 	hasBoth: boolean;
 	primaryLabel: string;
 };
@@ -15,20 +18,56 @@ function normalizeLabel(value: string | null | undefined): string | null {
 	return trimmed.length > 0 ? trimmed : null;
 }
 
-export function getReturnMeasureDisplay(measure: ReturnMeasure): ReturnMeasureDisplay {
-	const maatregelOmschrijving = normalizeLabel(measure.maatregel?.omschrijving);
-	const omschrijving = normalizeLabel(measure.omschrijving);
-	const hasMaatregel = maatregelOmschrijving != null;
-	const hasOmschrijving = omschrijving != null;
-	const hasBoth = hasMaatregel && hasOmschrijving;
-	const primaryLabel = maatregelOmschrijving ?? omschrijving ?? '';
+export function getReturnMeasureDisplay(measure: ReturnMeasureStudent): ReturnMeasureDisplay {
+	const measureLabel = normalizeLabel(measure.maatregel?.omschrijving);
+	const description = normalizeLabel(measure.omschrijving);
+	const hasMeasureLabel = measureLabel != null;
+	const hasDescription = description != null;
 
 	return {
-		maatregelOmschrijving,
-		omschrijving,
-		hasMaatregel,
-		hasOmschrijving,
-		hasBoth,
-		primaryLabel,
+		measureLabel,
+		description,
+		hasMeasureLabel,
+		hasDescription,
+		hasBoth: hasMeasureLabel && hasDescription,
+		primaryLabel: measureLabel ?? description ?? '',
 	};
+}
+
+export function isScheduledReturnMeasure(measure: ReturnMeasureStudent): measure is ScheduledReturnMeasure {
+	return measure.begin != null && measure.einde != null;
+}
+
+/** Scheduled measures of one student that start within the inclusive local day range. */
+export function scheduledReturnMeasuresForStudent(
+	measures: ReturnMeasureStudent[],
+	studentId: number,
+	rangeStart: Date,
+	rangeEnd: Date,
+): ScheduledReturnMeasure[] {
+	const startKey = getDateKey(rangeStart);
+	const endKey = getDateKey(rangeEnd);
+
+	return measures.filter(isScheduledReturnMeasure).filter((measure) => {
+		if (measure.leerling.id !== studentId) return false;
+		const dateKey = getDateKey(new Date(measure.begin));
+		return dateKey >= startKey && dateKey <= endKey;
+	});
+}
+
+/** Scheduled measures per student, keyed by the local day they start on. */
+export function groupScheduledReturnMeasures(
+	measures: ReturnMeasureStudent[],
+): Map<number, Map<string, ScheduledReturnMeasure[]>> {
+	const byStudent = new Map<number, Map<string, ScheduledReturnMeasure[]>>();
+
+	for (const measure of measures) {
+		if (!isScheduledReturnMeasure(measure)) continue;
+		const byDate = byStudent.get(measure.leerling.id) ?? new Map<string, ScheduledReturnMeasure[]>();
+		const dateKey = getDateKey(new Date(measure.begin));
+		byDate.set(dateKey, [...(byDate.get(dateKey) ?? []), measure]);
+		byStudent.set(measure.leerling.id, byDate);
+	}
+
+	return byStudent;
 }

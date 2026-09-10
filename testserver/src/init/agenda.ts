@@ -5,7 +5,7 @@ import type { StaffMember } from '@/magister/response/staffmember.types';
 import type { StudentBase } from '@/magister/response/student.types';
 import { pickRandom } from '../api/utils/random';
 
-const vakken = [
+const courses = [
 	{ code: 'BI', omschrijving: 'Biologie' },
 	{ code: 'SK', omschrijving: 'Scheikunde' },
 	{ code: 'NK', omschrijving: 'Natuurkunde' },
@@ -31,8 +31,8 @@ function toUtcISO(timeString: string) {
 
 function generateBaseAgendaItem(classCode: string, teacher: StaffMember, hour: number): AgendaItem {
 	const slot = timeTable[hour - 1];
-	const vak = pickRandom(vakken);
-	const locatie = pickRandom(['d01', 'd02', 'd03', 'd04', 'd05', 'd06', '654', '243']);
+	const course = pickRandom(courses);
+	const location = pickRandom(['d01', 'd02', 'd03', 'd04', 'd05', 'd06', '654', '243']);
 
 	const teacherParticipant: AttendanceStaffMember = {
 		code: teacher.code,
@@ -57,13 +57,13 @@ function generateBaseAgendaItem(classCode: string, teacher: StaffMember, hour: n
 		subtype: 'nvt',
 		heeftBijlagen: faker.datatype.boolean(),
 		herhaalStatus: 'geen',
-		begin: toUtcISO(slot.begin),
-		einde: toUtcISO(slot.einde),
+		begin: toUtcISO(slot.start),
+		einde: toUtcISO(slot.end),
 		lesuur: {
 			begin: hour,
 			einde: hour,
 		},
-		onderwerp: `${vak.code} - ${classCode}`,
+		onderwerp: `${course.code} - ${classCode}`,
 		type: 'les',
 		opmerking: faker.datatype.boolean(0.2) ? faker.lorem.sentence() : null,
 		isPrive: faker.datatype.boolean(0.1),
@@ -84,8 +84,8 @@ function generateBaseAgendaItem(classCode: string, teacher: StaffMember, hour: n
 		vakken: [
 			{
 				id: faker.number.int({ min: 1, max: 20 }),
-				code: vak.code,
-				omschrijving: vak.omschrijving,
+				code: course.code,
+				omschrijving: course.omschrijving,
 				links: {
 					self: {
 						href: `/api/vakken/${faker.number.int({ min: 1, max: 20 })}`,
@@ -95,7 +95,7 @@ function generateBaseAgendaItem(classCode: string, teacher: StaffMember, hour: n
 		],
 		locaties: [
 			{
-				omschrijving: locatie,
+				omschrijving: location,
 				type: 'lokaal',
 				links: {},
 			},

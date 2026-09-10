@@ -2,7 +2,7 @@ import { fakerNL as faker } from '@faker-js/faker';
 import type { StudentBase } from '@/magister/response/student.types';
 import { downloadEntityPhoto } from './shared';
 
-export async function generateDummyLeerling(id: number): Promise<StudentBase> {
+export async function generateDummyStudent(id: number): Promise<StudentBase> {
 	faker.seed(id);
 
 	const firstName = faker.person.firstName();
@@ -10,9 +10,9 @@ export async function generateDummyLeerling(id: number): Promise<StudentBase> {
 	const phone = faker.helpers.replaceSymbols('06-########');
 	const code = faker.string.numeric({ length: 6 });
 	const email = `${code}@edu.somedomain.nl`;
-	const externeId = faker.string.uuid();
+	const externalId = faker.string.uuid();
 
-	const klassenOptions: StudentBase['klassen'][number][] = [
+	const classOptions: StudentBase['klassen'][number][] = [
 		'1B1',
 		'1K1',
 		'1K2',
@@ -69,12 +69,14 @@ export async function generateDummyLeerling(id: number): Promise<StudentBase> {
 	const studyYear = chosenStudy.charAt(0);
 	const studyType = chosenStudy.substring(1);
 
-	const matchingKlassen = klassenOptions.filter((klas) => klas.startsWith(studyYear) && klas.includes(studyType));
+	const matchingClasses = classOptions.filter(
+		(classCode) => classCode.startsWith(studyYear) && classCode.includes(studyType),
+	);
 
-	const klassen =
-		matchingKlassen.length > 0
-			? [faker.helpers.arrayElement(matchingKlassen)]
-			: [faker.helpers.arrayElement(klassenOptions)];
+	const classes =
+		matchingClasses.length > 0
+			? [faker.helpers.arrayElement(matchingClasses)]
+			: [faker.helpers.arrayElement(classOptions)];
 
 	const hasPhoto = Math.random() > 0.05;
 
@@ -94,9 +96,9 @@ export async function generateDummyLeerling(id: number): Promise<StudentBase> {
 		emailadres: email,
 		lesgroepen: [],
 		telefoonnummer: phone,
-		klassen: klassen,
+		klassen: classes,
 		studies: studies,
-		externeId: externeId,
+		externeId: externalId,
 		links: {
 			self: {
 				href: `/api/leerlingen/${id}`,

@@ -14,3 +14,8 @@ export function formatWeekRange(weekDays: Date[]): string {
 	}
 	return `${firstDayName} ${firstDay.getDate()} ${MONTHS[firstDay.getMonth()]} - ${lastDayName} ${lastDay.getDate()} ${MONTHS[lastDay.getMonth()]} ${lastDay.getFullYear()}`;
 }
+
+/** Single day label, e.g. "woensdag 9 sep". */
+export function formatDayLabel(date: Date): string {
+	return `${DAY_NAMES[date.getDay()]} ${date.getDate()} ${MONTHS[date.getMonth()]}`;
+}

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
+import { formatWeekRange } from '@/lib/dateLabels';
 import { getDateKey, getNow, getStartOfWeek, getWeekDays } from '@/lib/dateUtils';
-import { formatWeekRange } from '@/lib/weekRangeUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 

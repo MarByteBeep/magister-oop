@@ -58,14 +58,7 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 		return () => {
 			cancelled = true;
 		};
-	}, [
-		student,
-		student?.agenda,
-		student?.returnMeasuresLoadedFor,
-		student?.absenceNoticesLoadedFor,
-		todayKey,
-		loadAgendaForStudent,
-	]);
+	}, [student, student?.agenda, student?.absenceNoticesLoadedFor, todayKey, loadAgendaForStudent]);
 
 	const agendaEntries: AgendaEntry[] | undefined =
 		agendaFromContext !== undefined ? agendaFromContext : bootstrapAgenda;

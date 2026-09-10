@@ -5,8 +5,8 @@ import { GET as getStudentAddress } from './api/leerlingen/adresgegevens';
 import { GET as getStudentAgenda } from './api/leerlingen/afspraken';
 import { GET as getStudentParents } from './api/leerlingen/ouders';
 import { GET as getStudentDetails } from './api/leerlingen/personalia';
-import { GET as getReturnMeasures } from './api/leerlingen/verantwoordingen/terugkommaatregelen';
 import { GET as getSearchStudents } from './api/leerlingen/zoeken';
+import { GET as getReturnMeasures } from './api/m6/leerlingen/terugkomers';
 import { GET as getRegistrations } from './api/m6/verantwoordingen/ongeoorloofderegistraties';
 import { POST as createAccountability } from './api/medewerkers/afspraken/verantwoordingen';
 import { GET as getSearchStaff } from './api/medewerkers/zoeken';
@@ -35,6 +35,7 @@ api.get('/medewerkers/zoeken', (c) => getSearchStaff(c.req.raw));
 api.get('/v1/lockers/details', (c) => getLockersDetails(c.req.raw));
 api.get('/v2/absence-notices/today', (c) => getAbsenceNoticesToday(c.req.raw));
 api.get('/m6/verantwoordingen/ongeoorloofderegistraties', (c) => getRegistrations(c.req.raw));
+api.get('/m6/leerlingen/terugkomers', (c) => getReturnMeasures(c.req.raw));
 
 // Dynamic: leerlingen /:id /...
 api.get('/leerlingen/:id/adresgegevens', (c) => {
@@ -44,10 +45,6 @@ api.get('/leerlingen/:id/adresgegevens', (c) => {
 api.get('/leerlingen/:id/afspraken', (c) => {
 	const id = Number.parseInt(c.req.param('id'), 10);
 	return getStudentAgenda(c.req.raw, id);
-});
-api.get('/leerlingen/:id/verantwoordingen/terugkommaatregelen', (c) => {
-	const id = Number.parseInt(c.req.param('id'), 10);
-	return getReturnMeasures(c.req.raw, id);
 });
 api.get('/leerlingen/:id/ouders', (c) => {
 	const id = Number.parseInt(c.req.param('id'), 10);

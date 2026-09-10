@@ -8,8 +8,8 @@ export function hhmmToDate(base: Date, hhmm: string) {
 }
 
 export function getLessonDayBounds() {
-	const firstRaw = timeTable[0]?.begin ?? '08:00';
-	const lastRaw = timeTable[timeTable.length - 1]?.einde ?? '16:00';
+	const firstRaw = timeTable[0]?.start ?? '08:00';
+	const lastRaw = timeTable[timeTable.length - 1]?.end ?? '16:00';
 
 	const firstHour = Number.parseInt(firstRaw.split(':')[0], 10);
 	const firstLessonTime = `${String(firstHour).padStart(2, '0')}:00`;

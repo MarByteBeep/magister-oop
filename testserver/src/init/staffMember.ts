@@ -2,7 +2,7 @@ import { fakerNL as faker } from '@faker-js/faker';
 import type { StaffMember } from '@/magister/response/staffmember.types';
 import { downloadEntityPhoto } from './shared';
 
-export async function generateDummyMedewerker(id: number): Promise<StaffMember> {
+export async function generateDummyStaffMember(id: number): Promise<StaffMember> {
 	faker.seed(id);
 
 	const firstName = faker.person.firstName();

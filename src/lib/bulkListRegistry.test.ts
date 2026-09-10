@@ -7,7 +7,7 @@ import { createBulkListRegistry, defineBulkList } from './bulkListRegistry';
 import { parseDateKey, toISOFromDateKeyAndTime } from './dateUtils';
 
 const dateKey = '2026-09-02';
-const externeId = '88fb9576-7670-4661-aed2-75a547cf319f';
+const externalId = '88fb9576-7670-4661-aed2-75a547cf319f';
 
 function notice(partial: Partial<AbsenceNotice> = {}): AbsenceNotice {
 	return {
@@ -20,7 +20,7 @@ function notice(partial: Partial<AbsenceNotice> = {}): AbsenceNotice {
 		createdDateTime: '2026-09-01T12:00:00.000Z',
 		consecutiveDays: 1,
 		student: {
-			id: externeId,
+			id: externalId,
 			firstName: 'Ada',
 			lastName: 'Boyer',
 			infix: '',
@@ -63,7 +63,7 @@ function student(overrides: Partial<Student> = {}): Student {
 		emailadres: 'ada@school.nl',
 		telefoonnummer: '0612345678',
 		lesgroepen: [],
-		externeId,
+		externeId: externalId,
 		links: { self: { href: '/students/1' } },
 		...overrides,
 	};

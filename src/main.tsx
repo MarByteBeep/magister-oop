@@ -4,6 +4,7 @@ import App from './App.tsx';
 import './index.css';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { RegistrationsProvider } from '@/context/RegistrationsProvider';
+import { ReturnMeasuresProvider } from '@/context/ReturnMeasuresProvider';
 import { StudentsProvider } from '@/context/StudentsProvider';
 import { ThemeProvider } from '@/context/ThemeContext';
 
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 			<TooltipProvider delayDuration={200}>
 				<StudentsProvider>
 					<RegistrationsProvider>
-						<App />
+						<ReturnMeasuresProvider>
+							<App />
+						</ReturnMeasuresProvider>
 					</RegistrationsProvider>
 				</StudentsProvider>
 			</TooltipProvider>

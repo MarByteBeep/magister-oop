@@ -33,6 +33,30 @@ export function eachDateKey(rangeStart: Date, rangeEnd: Date): string[] {
 	return keys;
 }
 
+/** Local month key `YYYY-MM`. */
+export function getMonthKey(date: Date): string {
+	return getDateKey(date).slice(0, 7);
+}
+
+/** First and last local calendar day of the month that `date` falls in. */
+export function getMonthRange(date: Date): { start: Date; end: Date } {
+	const start = new Date(date.getFullYear(), date.getMonth(), 1);
+	const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+	return { start, end };
+}
+
+/** Every month key touched by the inclusive range, in chronological order. */
+export function eachMonthKey(rangeStart: Date, rangeEnd: Date): string[] {
+	const keys: string[] = [];
+	const current = new Date(rangeStart.getFullYear(), rangeStart.getMonth(), 1);
+	const last = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), 1);
+	while (current <= last) {
+		keys.push(getMonthKey(current));
+		current.setMonth(current.getMonth() + 1);
+	}
+	return keys;
+}
+
 /** Parse an ISO/date string; returns null when missing or invalid. */
 export function parseOptionalDate(value?: string | null): Date | null {
 	if (!value) return null;

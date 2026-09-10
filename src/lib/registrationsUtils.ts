@@ -1,5 +1,6 @@
+import { formatPersonName } from '@/lib/stringUtils';
+import type { StudentVisibility } from '@/lib/studentVisibility';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
-import type { Student } from '@/magister/types';
 
 export type RegistrationRow = {
 	id: number;
@@ -8,10 +9,10 @@ export type RegistrationRow = {
 	studentId: number;
 	studentName: string;
 	classCode?: string;
-	lesuurBegin?: number;
-	lesuurEinde?: number;
-	begin?: string;
-	einde?: string;
+	lessonHourStart?: number;
+	lessonHourEnd?: number;
+	start?: string;
+	end?: string;
 };
 
 export type GroupedRegistrationStudent = {
@@ -40,10 +41,6 @@ export function buildFilterPairs(data: RegistrationsResponse) {
 	return filterPairs;
 }
 
-function formatPersonName(firstName: string, infix: string | null | undefined, lastName: string) {
-	return `${firstName} ${infix ?? ''} ${lastName}`.replace(/\s+/g, ' ').trim();
-}
-
 function reasonLabelForKey(
 	reasonKey: string,
 	filterPairs: { key: string; label: string }[],
@@ -54,24 +51,6 @@ function reasonLabelForKey(
 
 type RegistrationItem = NonNullable<RegistrationsResponse['items']>[number];
 
-export type RegistrationVisibility = (studentId: number) => boolean;
-
-/**
- * Single visibility rule for the cached registrations, shared by the list and the tab badge.
- * A study selection is a positive filter, so students that are not loaded yet only pass
- * while no study is selected.
- */
-export function createRegistrationVisibility(
-	studentById: Map<number, Student>,
-	selectedStudies: Set<string>,
-): RegistrationVisibility {
-	return (studentId) => {
-		if (!selectedStudies.size) return true;
-		const student = studentById.get(studentId);
-		return student ? student.studies.some((study) => selectedStudies.has(study)) : false;
-	};
-}
-
 function collectRegistrationRowsForItem(
 	item: RegistrationItem,
 	filterPairs: { key: string; label: string }[],
@@ -80,8 +59,8 @@ function collectRegistrationRowsForItem(
 	const studentName = formatPersonName(item.roepnaam, item.tussenvoegsel, item.achternaam);
 	const classCode = item.stamklas?.code;
 
-	for (const afspraak of item.afspraken ?? []) {
-		for (const v of afspraak.verantwoordingen ?? []) {
+	for (const appointment of item.afspraken ?? []) {
+		for (const v of appointment.verantwoordingen ?? []) {
 			const reasonKey = normalizeKey(v.reden?.type ?? 'unknown');
 			rows.push({
 				id: v.id,
@@ -90,10 +69,10 @@ function collectRegistrationRowsForItem(
 				studentId: item.id,
 				studentName,
 				classCode,
-				lesuurBegin: afspraak.lesuurBegin,
-				lesuurEinde: afspraak.lesuurEinde,
-				begin: afspraak.begin,
-				einde: afspraak.einde,
+				lessonHourStart: appointment.lesuurBegin,
+				lessonHourEnd: appointment.lesuurEinde,
+				start: appointment.begin,
+				end: appointment.einde,
 			});
 		}
 	}
@@ -103,7 +82,7 @@ function collectRegistrationRowsForItem(
 
 export function buildRegistrationRows(
 	data: RegistrationsResponse,
-	isVisible: RegistrationVisibility,
+	isVisible: StudentVisibility,
 	filterPairs: { key: string; label: string }[],
 ) {
 	const byReason = new Map<string, RegistrationRow[]>();
@@ -124,8 +103,8 @@ export function buildRegistrationRows(
 export function sortRegistrationRows(byReason: Map<string, RegistrationRow[]>) {
 	for (const arr of byReason.values()) {
 		arr.sort((a, b) => {
-			const hourA = a.lesuurBegin ?? 0;
-			const hourB = b.lesuurBegin ?? 0;
+			const hourA = a.lessonHourStart ?? 0;
+			const hourB = b.lessonHourStart ?? 0;
 			if (hourA !== hourB) return hourB - hourA;
 			return a.studentName.localeCompare(b.studentName);
 		});
@@ -151,12 +130,12 @@ export function groupRegistrationRowsByStudent(rows: RegistrationRow[]): Grouped
 
 	const groups = Array.from(byStudent.values());
 	for (const group of groups) {
-		group.registrations.sort((a, b) => (a.lesuurBegin ?? 0) - (b.lesuurBegin ?? 0));
+		group.registrations.sort((a, b) => (a.lessonHourStart ?? 0) - (b.lessonHourStart ?? 0));
 	}
 
 	groups.sort((a, b) => {
-		const maxHourA = Math.max(...a.registrations.map((x) => x.lesuurBegin ?? 0));
-		const maxHourB = Math.max(...b.registrations.map((x) => x.lesuurBegin ?? 0));
+		const maxHourA = Math.max(...a.registrations.map((x) => x.lessonHourStart ?? 0));
+		const maxHourB = Math.max(...b.registrations.map((x) => x.lessonHourStart ?? 0));
 		if (maxHourA !== maxHourB) return maxHourB - maxHourA;
 		return a.studentName.localeCompare(b.studentName);
 	});
@@ -177,13 +156,13 @@ export function buildOrderedReasons(
 	];
 }
 
-export function countAbsentRegistrations(data: RegistrationsResponse, isVisible: RegistrationVisibility) {
+export function countAbsentRegistrations(data: RegistrationsResponse, isVisible: StudentVisibility) {
 	let count = 0;
 	for (const item of data.items ?? []) {
 		if (!isVisible(item.id)) continue;
 
-		for (const afspraak of item.afspraken ?? []) {
-			for (const v of afspraak.verantwoordingen ?? []) {
+		for (const appointment of item.afspraken ?? []) {
+			for (const v of appointment.verantwoordingen ?? []) {
 				if (v.reden?.type?.toLowerCase() === 'absent') {
 					count++;
 				}

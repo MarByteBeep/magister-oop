@@ -9,7 +9,7 @@ import type {
 	LessonAgendaEntry,
 	ReturnMeasureAgendaEntry,
 } from '@/magister/response/agenda-entry.types';
-import type { ReturnMeasure } from '@/magister/response/return-measure.types';
+import type { ScheduledReturnMeasure } from '@/magister/response/return-measure.types';
 
 export function isLessonEntry(entry: AgendaEntry): entry is LessonAgendaEntry {
 	return entry.kind === 'lesson';
@@ -27,7 +27,7 @@ export function lessonEntry(item: AgendaItem): LessonAgendaEntry {
 	return { kind: 'lesson', start: item.begin, end: item.einde, item };
 }
 
-export function returnMeasureEntry(measure: ReturnMeasure): ReturnMeasureAgendaEntry {
+export function returnMeasureEntry(measure: ScheduledReturnMeasure): ReturnMeasureAgendaEntry {
 	return { kind: 'return-measure', start: measure.begin, end: measure.einde, measure };
 }
 
@@ -93,7 +93,7 @@ function sortAgendaEntries(entries: AgendaEntry[]): AgendaEntry[] {
 
 export function buildAgendaEntries(
 	agendaItems: AgendaItem[],
-	returnMeasures: ReturnMeasure[],
+	returnMeasures: ScheduledReturnMeasure[],
 	absenceNotices: AbsenceNotice[],
 	rangeStart: Date,
 	rangeEnd: Date,
@@ -115,6 +115,17 @@ export function replaceAbsenceNoticeEntries(
 	return sortAgendaEntries([
 		...dayEntries.filter((entry) => !isAbsenceNoticeEntry(entry)),
 		...notices.flatMap((notice) => absenceNoticeEntries(notice, day, day)),
+	]);
+}
+
+/** Swap one day's return measure overlays for freshly fetched ones, keeping lessons and absences. */
+export function replaceReturnMeasureEntries(
+	dayEntries: AgendaEntry[],
+	measures: ScheduledReturnMeasure[],
+): AgendaEntry[] {
+	return sortAgendaEntries([
+		...dayEntries.filter((entry) => !isReturnMeasureEntry(entry)),
+		...measures.map(returnMeasureEntry),
 	]);
 }
 

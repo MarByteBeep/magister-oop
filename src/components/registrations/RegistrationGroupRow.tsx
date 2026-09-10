@@ -12,40 +12,41 @@ import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 function formatLessonRange(row: RegistrationRow) {
-	if (row.lesuurBegin && row.lesuurEinde) {
-		return row.lesuurBegin === row.lesuurEinde ? `${row.lesuurBegin}` : `${row.lesuurBegin}-${row.lesuurEinde}`;
+	const { lessonHourStart, lessonHourEnd } = row;
+	if (lessonHourStart && lessonHourEnd) {
+		return lessonHourStart === lessonHourEnd ? `${lessonHourStart}` : `${lessonHourStart}-${lessonHourEnd}`;
 	}
 	return '-';
 }
 
 function resolveAgendaEntry(student: Student, row: RegistrationRow): LessonAgendaEntry | null {
-	if (!row.begin) return null;
+	if (!row.start) return null;
 
-	const beginDate = parseOptionalDate(row.begin);
-	if (!beginDate) return null;
+	const startDate = parseOptionalDate(row.start);
+	if (!startDate) return null;
 
-	const dateKey = getDateKey(beginDate);
+	const dateKey = getDateKey(startDate);
 	const agendaForDay = student.agenda?.[dateKey];
 	if (!agendaForDay?.length) return null;
 
 	const lessonEntries = agendaForDay.filter(isLessonEntry);
 
-	if (row.lesuurBegin) {
-		const lesuurBegin = row.lesuurBegin;
-		const lesuurEinde = row.lesuurEinde ?? lesuurBegin;
+	if (row.lessonHourStart) {
+		const lessonHourStart = row.lessonHourStart;
+		const lessonHourEnd = row.lessonHourEnd ?? lessonHourStart;
 		const byHour =
-			lessonEntries.find((entry) => entry.item.lesuur?.begin === lesuurBegin) ??
+			lessonEntries.find((entry) => entry.item.lesuur?.begin === lessonHourStart) ??
 			lessonEntries.find(
 				(entry) =>
 					entry.item.lesuur?.begin &&
 					entry.item.lesuur?.einde &&
-					entry.item.lesuur.begin <= lesuurBegin &&
-					entry.item.lesuur.einde >= lesuurEinde,
+					entry.item.lesuur.begin <= lessonHourStart &&
+					entry.item.lesuur.einde >= lessonHourEnd,
 			);
 		if (byHour) return byHour;
 	}
 
-	return findLessonEntry(beginDate, lessonEntries);
+	return findLessonEntry(startDate, lessonEntries);
 }
 
 function getInitials(studentName: string) {
@@ -59,15 +60,15 @@ function getInitials(studentName: string) {
 }
 
 function RegistrationFallbackTooltipContent({ row }: { row: RegistrationRow }) {
-	const beginTime = parseOptionalDate(row.begin);
-	const endTime = parseOptionalDate(row.einde);
+	const startTime = parseOptionalDate(row.start);
+	const endTime = parseOptionalDate(row.end);
 
 	return (
 		<div className="space-y-1">
 			<div>Lesuur: {formatLessonRange(row)}</div>
-			{beginTime && endTime ? (
+			{startTime && endTime ? (
 				<div>
-					Tijd: {formatTime(beginTime)} - {formatTime(endTime)}
+					Tijd: {formatTime(startTime)} - {formatTime(endTime)}
 				</div>
 			) : null}
 		</div>
@@ -82,9 +83,9 @@ function RegistrationHourIndicator({ row, student }: { row: RegistrationRow; stu
 			<Tooltip>
 				<TooltipTrigger asChild>
 					<span className="inline-flex">
-						{row.lesuurBegin ? (
+						{row.lessonHourStart ? (
 							<LessonHourBadge
-								lessonInfo={{ status: 'lesson', lesson: row.lesuurBegin }}
+								lessonInfo={{ status: 'lesson', lesson: row.lessonHourStart }}
 								className="h-5 w-5 text-xs shrink-0"
 							/>
 						) : (
@@ -101,13 +102,13 @@ function RegistrationHourIndicator({ row, student }: { row: RegistrationRow; stu
 		);
 	}
 
-	if (row.lesuurBegin) {
+	if (row.lessonHourStart) {
 		return (
 			<Tooltip>
 				<TooltipTrigger asChild>
 					<span className="inline-flex">
 						<LessonHourBadge
-							lessonInfo={{ status: 'lesson', lesson: row.lesuurBegin }}
+							lessonInfo={{ status: 'lesson', lesson: row.lessonHourStart }}
 							className="h-5 w-5 text-xs shrink-0"
 						/>
 					</span>
