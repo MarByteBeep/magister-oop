@@ -1,10 +1,17 @@
 import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
-import { timeTable } from '@/lib/agendaUtils';
+import { getPreSchoolTimeTable, getSelectableTimeTable } from '@/lib/agendaUtils';
 import { hhmmToDate } from '@/lib/bigCalendarUtils';
 import { formatTime } from '@/lib/dateUtils';
+import { getFullDayScheduleSelection } from '@/lib/fullDayScheduleUtils';
+
+function lessonHourNumberFromIndex(index: number): number {
+	const preSchoolCount = getPreSchoolTimeTable().length;
+	if (index < preSchoolCount) return 0;
+	return index - preSchoolCount + 1;
+}
 
 export function findLessonIndexContainingTime(time: string): number {
-	return timeTable.findIndex((slot) => time >= slot.start && time < slot.end);
+	return getSelectableTimeTable().findIndex((slot) => time >= slot.start && time < slot.end);
 }
 
 export function findLessonIndexForDateTime(date: Date): number {
@@ -12,9 +19,10 @@ export function findLessonIndexForDateTime(date: Date): number {
 }
 
 export function getLessonHourDateRange(date: Date, lessonIndex: number): AgendaSlotSelection {
+	const slot = getSelectableTimeTable()[lessonIndex];
 	return {
-		start: hhmmToDate(date, timeTable[lessonIndex].start),
-		end: hhmmToDate(date, timeTable[lessonIndex].end),
+		start: hhmmToDate(date, slot.start),
+		end: hhmmToDate(date, slot.end),
 	};
 }
 
@@ -22,16 +30,18 @@ export function findNearestLessonIndex(time: string): number {
 	const containing = findLessonIndexContainingTime(time);
 	if (containing >= 0) return containing;
 
-	for (let index = 0; index < timeTable.length; index++) {
-		if (time < timeTable[index].start) return index;
+	const slots = getSelectableTimeTable();
+	for (let index = 0; index < slots.length; index++) {
+		if (time < slots[index].start) return index;
 	}
 
-	return timeTable.length - 1;
+	return slots.length - 1;
 }
 
 export function findLessonIndexAtEndTime(endTime: string): number {
-	for (let index = timeTable.length - 1; index >= 0; index--) {
-		const slot = timeTable[index];
+	const slots = getSelectableTimeTable();
+	for (let index = slots.length - 1; index >= 0; index--) {
+		const slot = slots[index];
 		if (endTime > slot.start && endTime <= slot.end) return index;
 	}
 	return -1;
@@ -46,8 +56,9 @@ export function findOverlappingLessonIndexRangeByTime(
 	let from = -1;
 	let to = -1;
 
-	for (let index = 0; index < timeTable.length; index++) {
-		const slot = timeTable[index];
+	const slots = getSelectableTimeTable();
+	for (let index = 0; index < slots.length; index++) {
+		const slot = slots[index];
 		if (slot.start < rangeEnd && slot.end > rangeStart) {
 			if (from < 0) from = index;
 			to = index;
@@ -67,9 +78,10 @@ export function findOverlappingLessonIndexRangeByDate(start: Date, end: Date): {
 	let from = -1;
 	let to = -1;
 
-	for (let index = 0; index < timeTable.length; index++) {
-		const slotStart = hhmmToDate(rangeStart, timeTable[index].start);
-		const slotEnd = hhmmToDate(rangeStart, timeTable[index].end);
+	const slots = getSelectableTimeTable();
+	for (let index = 0; index < slots.length; index++) {
+		const slotStart = hhmmToDate(rangeStart, slots[index].start);
+		const slotEnd = hhmmToDate(rangeStart, slots[index].end);
 		if (slotStart < rangeEnd && slotEnd > rangeStart) {
 			if (from < 0) from = index;
 			to = index;
@@ -86,7 +98,8 @@ export function findOverlappingLessonIndexRangeByDate(start: Date, end: Date): {
 export function lessonHourNumbersFromIndexRange(range: { from: number; to: number }): number[] {
 	const hours: number[] = [];
 	for (let index = range.from; index <= range.to; index++) {
-		hours.push(index + 1);
+		const hour = lessonHourNumberFromIndex(index);
+		if (hour > 0) hours.push(hour);
 	}
 	return hours;
 }
@@ -111,7 +124,8 @@ export function getReturnMeasureLessonHours(startTime: string, endTime: string):
 	if (startIndex < 0 && endIndex < 0) return [];
 	if (startIndex < 0) startIndex = endIndex;
 
-	if (startIndex >= 0 && startTime > timeTable[startIndex].start) {
+	const slots = getSelectableTimeTable();
+	if (startIndex >= 0 && startTime > slots[startIndex].start) {
 		startIndex += 1;
 	}
 
@@ -138,16 +152,20 @@ export function getLessonHourBadgePlacements(selection: { start: Date; end: Date
 	if (totalMs <= 0) return [];
 
 	const placements: LessonHourBadgePlacement[] = [];
+	const slots = getSelectableTimeTable();
 	for (let index = range.from; index <= range.to; index++) {
-		const slotStart = hhmmToDate(rangeStart, timeTable[index].start);
-		const slotEnd = hhmmToDate(rangeStart, timeTable[index].end);
+		const lessonHour = lessonHourNumberFromIndex(index);
+		if (lessonHour <= 0) continue;
+
+		const slotStart = hhmmToDate(rangeStart, slots[index].start);
+		const slotEnd = hhmmToDate(rangeStart, slots[index].end);
 		const topMs = Math.max(0, slotStart.getTime() - rangeStart.getTime());
 		const bottomMs = Math.min(totalMs, slotEnd.getTime() - rangeStart.getTime());
 		const segmentMs = bottomMs - topMs;
 		if (segmentMs <= 0) continue;
 
 		placements.push({
-			lessonHour: index + 1,
+			lessonHour,
 			topPercent: (topMs / totalMs) * 100,
 			heightPercent: (segmentMs / totalMs) * 100,
 		});
@@ -156,17 +174,63 @@ export function getLessonHourBadgePlacements(selection: { start: Date; end: Date
 	return placements;
 }
 
+export function selectionCoversFullSchoolDay(selection: { start: Date; end: Date }): boolean {
+	const range = findOverlappingLessonIndexRangeByDate(selection.start, selection.end);
+	if (!range) return false;
+
+	const firstRegularIndex = getPreSchoolTimeTable().length;
+	const lastRegularIndex = getSelectableTimeTable().length - 1;
+	return range.from <= firstRegularIndex && range.to >= lastRegularIndex;
+}
+
 export function snapSelectionToLessonHours(selection: { start: Date; end: Date }): AgendaSlotSelection | null {
+	if (selectionCoversFullSchoolDay(selection)) {
+		const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
+		return getFullDayScheduleSelection(rangeStart);
+	}
+
 	const range = findOverlappingLessonIndexRangeByDate(selection.start, selection.end);
 	if (!range) return null;
 
 	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
 	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
 
+	const slots = getSelectableTimeTable();
 	return {
-		start: hhmmToDate(rangeStart, timeTable[range.from].start),
-		end: hhmmToDate(rangeEnd, timeTable[range.to].end),
+		start: hhmmToDate(rangeStart, slots[range.from].start),
+		end: hhmmToDate(rangeEnd, slots[range.to].end),
 	};
+}
+
+export function getLessonGridLinePercents(min: Date, max: Date): number[] {
+	const boundaries = new Set<string>();
+	for (const slot of getSelectableTimeTable()) {
+		boundaries.add(slot.start);
+		boundaries.add(slot.end);
+	}
+
+	const totalMs = max.getTime() - min.getTime();
+	if (totalMs <= 0) return [];
+
+	return [...boundaries]
+		.map((time) => ((hhmmToDate(min, time).getTime() - min.getTime()) / totalMs) * 100)
+		.filter((percent) => percent > 0 && percent < 100)
+		.sort((left, right) => left - right);
+}
+
+export function buildLessonGridGradient(percents: number[]): string {
+	if (percents.length === 0) return 'none';
+
+	const stops = ['transparent 0'];
+	for (const percent of percents) {
+		stops.push(`transparent calc(${percent}% - 0.5px)`);
+		stops.push(`var(--rbc-grid) calc(${percent}% - 0.5px)`);
+		stops.push(`var(--rbc-grid) calc(${percent}% + 0.5px)`);
+		stops.push(`transparent calc(${percent}% + 0.5px)`);
+	}
+	stops.push('transparent 100%');
+
+	return `linear-gradient(to bottom, ${stops.join(', ')})`;
 }
 
 export function formatLessonHoursCompact(hours: number[]): string | null {

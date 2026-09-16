@@ -3,6 +3,7 @@ import { parseLocalDateAndTime } from '@/lib/agendaSlotSelection';
 import {
 	formatLessonHoursCompact,
 	formatLessonHoursLabel,
+	getLessonGridLinePercents,
 	getLessonHourBadgePlacements,
 	getOverlappingLessonHours,
 	getOverlappingLessonHoursForSelection,
@@ -17,6 +18,19 @@ function at(dateKey: string, time: string): Date {
 }
 
 describe('snapSelectionToLessonHours', () => {
+	test('snaps a click before school start to the pre-school slot', () => {
+		const snapped = snapSelectionToLessonHours({
+			start: at('2026-09-16', '08:10'),
+			end: at('2026-09-16', '08:20'),
+		});
+
+		expect(snapped).toEqual({
+			start: at('2026-09-16', '08:00'),
+			end: at('2026-09-16', '08:30'),
+		});
+		expect(getOverlappingLessonHoursForSelection(snapped!)).toEqual([]);
+	});
+
 	test('snaps a click inside one lesson to that full lesson hour', () => {
 		const snapped = snapSelectionToLessonHours({
 			start: at('2026-09-16', '08:45'),
@@ -27,6 +41,19 @@ describe('snapSelectionToLessonHours', () => {
 			start: at('2026-09-16', '08:30'),
 			end: at('2026-09-16', '09:10'),
 		});
+	});
+
+	test('snaps a whole-day drag to the full-day schedule (vierkant rooster)', () => {
+		const snapped = snapSelectionToLessonHours({
+			start: at('2026-09-16', '08:05'),
+			end: at('2026-09-16', '15:55'),
+		});
+
+		expect(snapped).toEqual({
+			start: at('2026-09-16', '08:00'),
+			end: at('2026-09-16', '16:00'),
+		});
+		expect(getOverlappingLessonHoursForSelection(snapped!)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 	});
 
 	test('snaps a drag across two lesson hours', () => {
@@ -94,6 +121,19 @@ describe('getLessonHourBadgePlacements', () => {
 			topPercent: (100 / 140) * 100,
 			heightPercent: (40 / 140) * 100,
 		});
+	});
+});
+
+describe('getLessonGridLinePercents', () => {
+	test('returns a line at each lesson start and end between min and max', () => {
+		const min = at('2026-09-16', '08:00');
+		const max = at('2026-09-16', '17:00');
+		const percents = getLessonGridLinePercents(min, max);
+
+		expect(percents[0]).toBeCloseTo((30 / 540) * 100, 4);
+		expect(percents).toContainEqual(expect.closeTo((70 / 540) * 100, 4));
+		expect(percents.at(-1)).toBeCloseTo((480 / 540) * 100, 4);
+		expect(percents).toHaveLength(13);
 	});
 });
 

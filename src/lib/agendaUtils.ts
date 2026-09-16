@@ -2,7 +2,17 @@ import { formatTime, getNow } from '@/lib/dateUtils';
 import { formatLocations } from '@/lib/locationUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 
-export const timeTable = [
+export type BreakPeriod = {
+	start: string;
+	end: string;
+};
+
+export type TimeSlot = {
+	start: string;
+	end: string;
+};
+
+export const timeTable: TimeSlot[] = [
 	{ start: '08:30', end: '09:10' },
 	{ start: '09:10', end: '09:50' },
 	{ start: '09:50', end: '10:30' },
@@ -14,6 +24,40 @@ export const timeTable = [
 	{ start: '14:40', end: '15:20' },
 	{ start: '15:20', end: '16:00' },
 ];
+
+/** Matches the calendar min hour from {@link getLessonDayBounds}. */
+export function getCalendarVisibleStartTime(): string {
+	const firstRaw = timeTable[0]?.start ?? '08:00';
+	const firstHour = Number.parseInt(firstRaw.split(':')[0], 10);
+	return `${String(firstHour).padStart(2, '0')}:00`;
+}
+
+/** Selectable slots before the first regular lesson hour (e.g. 08:00–08:30). */
+export function getPreSchoolTimeTable(): TimeSlot[] {
+	const visibleStart = getCalendarVisibleStartTime();
+	const schoolStart = timeTable[0]?.start;
+	if (!schoolStart || visibleStart >= schoolStart) return [];
+	return [{ start: visibleStart, end: schoolStart }];
+}
+
+/** All slots that can be selected in the agenda (pre-school + regular lessons). */
+export function getSelectableTimeTable(): TimeSlot[] {
+	return [...getPreSchoolTimeTable(), ...timeTable];
+}
+
+export function getBreakPeriods(): BreakPeriod[] {
+	const breaks: BreakPeriod[] = [];
+
+	for (let index = 0; index < timeTable.length - 1; index++) {
+		const current = timeTable[index];
+		const next = timeTable[index + 1];
+		if (current.end < next.start) {
+			breaks.push({ start: current.end, end: next.start });
+		}
+	}
+
+	return breaks;
+}
 
 export type LessonInfo = {
 	status: 'before-school' | 'after-school' | 'break' | 'lesson';

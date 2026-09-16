@@ -1,5 +1,6 @@
 import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
 import { addSchoolDays, formatTime } from '@/lib/dateUtils';
+import { getFullDayScheduleLabel, isFullDayScheduleSelection } from '@/lib/fullDayScheduleUtils';
 import { formatLessonHoursLabel, getReturnMeasureLessonHours } from '@/lib/lessonHours';
 
 const DAY_NAMES = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'] as const;
@@ -39,12 +40,16 @@ export function formatReturnMeasureSummary(selection: AgendaSlotSelection, dayCo
 	const startTime = formatTime(selection.start);
 	const endTime = formatTime(selection.end);
 	const timeRange = `${startTime} - ${endTime}`;
-	const lessonHours = formatLessonHoursLabel(getReturnMeasureLessonHours(startTime, endTime));
-	const lessonSuffix = lessonHours ? ` (${lessonHours})` : '';
+	const scheduleSuffix = isFullDayScheduleSelection(selection)
+		? ` (${getFullDayScheduleLabel()})`
+		: (() => {
+				const lessonHours = formatLessonHoursLabel(getReturnMeasureLessonHours(startTime, endTime));
+				return lessonHours ? ` (${lessonHours})` : '';
+			})();
 
 	if (dayCount <= 1) {
-		return `Terugkomen op ${formatSingleReturnDate(startDate)} om ${timeRange}${lessonSuffix}`;
+		return `Terugkomen op ${formatSingleReturnDate(startDate)} om ${timeRange}${scheduleSuffix}`;
 	}
 
-	return `Terugkomen van ${formatReturnDateRange(startDate, endDate)} om ${timeRange}${lessonSuffix}`;
+	return `Terugkomen van ${formatReturnDateRange(startDate, endDate)} om ${timeRange}${scheduleSuffix}`;
 }

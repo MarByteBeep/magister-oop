@@ -1,6 +1,8 @@
 import { getAgendaEntryKey, isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
-import { getAgendaItemInfo } from '@/lib/agendaUtils';
+import { getAgendaItemInfo, getBreakPeriods } from '@/lib/agendaUtils';
+import { hhmmToDate } from '@/lib/bigCalendarUtils';
+import { getDateKey, parseDateKey } from '@/lib/dateUtils';
 import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 
@@ -12,6 +14,7 @@ export type CalendarEvent = {
 	resource?: AgendaEntry;
 	isDraft?: boolean;
 	isHoverSlot?: boolean;
+	isBreak?: boolean;
 };
 
 export function isDraftCalendarEvent(event: CalendarEvent): boolean {
@@ -22,8 +25,28 @@ export function isHoverSlotCalendarEvent(event: CalendarEvent): boolean {
 	return event.isHoverSlot === true;
 }
 
+export function isBreakCalendarEvent(event: CalendarEvent): boolean {
+	return event.isBreak === true;
+}
+
 export function isBackgroundOverlayCalendarEvent(event: CalendarEvent): boolean {
 	return isDraftCalendarEvent(event) || isHoverSlotCalendarEvent(event);
+}
+
+export function breakPeriodsToCalendarEvents(dates: Date[]): CalendarEvent[] {
+	const periods = getBreakPeriods();
+
+	return dates.flatMap((day) => {
+		const dateKey = getDateKey(day);
+		const dayStart = parseDateKey(dateKey);
+		return periods.map((period) => ({
+			id: `break-${dateKey}-${period.start}`,
+			title: 'Pauze',
+			start: hhmmToDate(dayStart, period.start),
+			end: hhmmToDate(dayStart, period.end),
+			isBreak: true,
+		}));
+	});
 }
 
 export function hoverLessonSlotToBackgroundEvent(selection: AgendaSlotSelection): CalendarEvent {
@@ -41,8 +64,8 @@ export function draftSelectionToBackgroundEvent(
 	options?: { title?: string },
 ): CalendarEvent {
 	return {
-		id: 'draft-appointment',
-		title: options?.title ?? 'Nieuwe afspraak',
+		id: 'draft-return-measure',
+		title: options?.title ?? 'Nieuwe terugkommaatregel',
 		start: selection.start,
 		end: selection.end,
 		isDraft: true,

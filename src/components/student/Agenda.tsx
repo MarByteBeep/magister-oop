@@ -1,8 +1,10 @@
 'use client';
 
+import { type CSSProperties, useMemo } from 'react';
 import { Calendar, type View } from 'react-big-calendar';
 import { useAgendaCalendar } from '@/hooks/useAgendaCalendar';
 import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
+import { buildLessonGridGradient, getLessonGridLinePercents } from '@/lib/lessonHours';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import { agendaCalendarFormats, agendaCalendarMessages, agendaLocalizer } from './agendaCalendarConfig';
 
@@ -43,8 +45,13 @@ export default function Agenda({
 		dayLayoutAlgorithm,
 	} = useAgendaCalendar(entries, date, view, activeEntry, onSelectEntry, { draftSelection, onSelectSlot });
 
+	const lessonGridStyle = useMemo((): CSSProperties => {
+		const percents = getLessonGridLinePercents(min, max);
+		return { '--agenda-lesson-grid': buildLessonGridGradient(percents) } as CSSProperties;
+	}, [min, max]);
+
 	return (
-		<div className="h-full overflow-hidden">
+		<div className="agenda-lesson-grid h-full overflow-hidden" style={lessonGridStyle}>
 			<Calendar
 				localizer={agendaLocalizer}
 				culture="nl"

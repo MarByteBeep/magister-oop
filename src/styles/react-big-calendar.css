@@ -98,6 +98,24 @@
 	border-top: 1px solid var(--rbc-grid-half);
 }
 
+/* Lesson-hour grid: hide 15-minute lines, draw boundaries from timeTable instead */
+.agenda-lesson-grid .rbc-timeslot-group {
+	border-bottom: none;
+}
+
+.agenda-lesson-grid .rbc-day-slot .rbc-time-slot {
+	border-top: none;
+}
+
+.agenda-lesson-grid .rbc-day-slot::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background-image: var(--agenda-lesson-grid);
+}
+
 .rbc-day-bg + .rbc-day-bg,
 .rbc-time-content > * + * {
 	border-left: 1px solid var(--rbc-grid);
@@ -137,6 +155,9 @@
 	border: 0;
 	padding: 0;
 	box-shadow: none;
+	/* RBC defaults to 20px; short breaks (~17px) must not grow into the next slot. */
+	min-height: 0;
+	max-height: 100%;
 }
 
 .rbc-day-slot .rbc-event {
@@ -165,6 +186,7 @@
 
 .rbc-day-slot .rbc-event-content {
 	height: 100%;
+	min-height: 0;
 }
 
 .rbc-event:focus,
@@ -189,6 +211,11 @@
 
 .rbc-day-slot .rbc-background-event {
 	pointer-events: none;
+}
+
+.rbc-day-slot .rbc-event.agenda-break-band,
+.rbc-day-slot .rbc-background-event.agenda-break-band {
+	z-index: 1;
 }
 
 .rbc-time-content::-webkit-scrollbar,

@@ -5,6 +5,7 @@ import AgendaCalendarHeader from '@/components/student/AgendaCalendarHeader';
 import { firstLessonTime, lastLessonTime } from '@/components/student/agendaCalendarConfig';
 import {
 	agendaEntriesToCalendarEvents,
+	breakPeriodsToCalendarEvents,
 	type CalendarEvent,
 	draftSelectionToBackgroundEvent,
 	getOverlappingEventIds,
@@ -16,8 +17,12 @@ import { isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib
 import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
 import { slotInfoToSelection } from '@/lib/agendaSlotSelection';
 import { hhmmToDate } from '@/lib/bigCalendarUtils';
-import { getDateKey, parseDateKey } from '@/lib/dateUtils';
-import { isFullDayReturnMeasureEntry } from '@/lib/fullDayScheduleUtils';
+import { getDateKey, getWeekDays, parseDateKey } from '@/lib/dateUtils';
+import {
+	getFullDayScheduleLabel,
+	isFullDayReturnMeasureEntry,
+	isFullDayScheduleSelection,
+} from '@/lib/fullDayScheduleUtils';
 import {
 	findLessonIndexForDateTime,
 	findOverlappingLessonIndexRangeByDate,
@@ -66,29 +71,37 @@ export function useAgendaCalendar(
 
 		return occupied;
 	}, [entries]);
-	const backgroundEvents = useMemo(() => {
+	const visibleDates = useMemo(() => (view === 'work_week' ? getWeekDays(date) : [date]), [date, view]);
+	const breakEvents = useMemo(() => breakPeriodsToCalendarEvents(visibleDates), [visibleDates]);
+	const overlayEvents = useMemo(() => {
 		if (activePreview) {
+			const isFullDay = isFullDayScheduleSelection(activePreview);
 			const lessonHours = getOverlappingLessonHoursForSelection(activePreview);
 			const lessonLabel = formatLessonHoursCompact(lessonHours);
 			return [
 				draftSelectionToBackgroundEvent(activePreview, {
-					title: lessonLabel ?? 'Nieuwe afspraak',
+					title: isFullDay ? getFullDayScheduleLabel() : (lessonLabel ?? 'Nieuwe terugkommaatregel'),
 				}),
 			];
 		}
 
 		if (!hoveredLessonSlot || !onSelectSlot) return [];
 
-		const date = parseDateKey(hoveredLessonSlot.dateKey);
-		return [hoverLessonSlotToBackgroundEvent(getLessonHourDateRange(date, hoveredLessonSlot.lessonIndex))];
+		const hoverDate = parseDateKey(hoveredLessonSlot.dateKey);
+		return [hoverLessonSlotToBackgroundEvent(getLessonHourDateRange(hoverDate, hoveredLessonSlot.lessonIndex))];
 	}, [activePreview, hoveredLessonSlot, onSelectSlot]);
-	const overlappingEventIds = useMemo(() => getOverlappingEventIds(events), [events]);
+	const calendarEvents = useMemo(
+		() => [...events, ...breakEvents, ...overlayEvents],
+		[breakEvents, events, overlayEvents],
+	);
+	const backgroundEvents: CalendarEvent[] = [];
+	const overlappingEventIds = useMemo(() => getOverlappingEventIds(calendarEvents), [calendarEvents]);
 	const min = useMemo(() => hhmmToDate(date, firstLessonTime), [date]);
 	const max = useMemo(() => hhmmToDate(date, lastLessonTime), [date]);
 
 	const handleSelectEvent = useCallback(
 		(ev: CalendarEvent) => {
-			if (ev.isDraft || ev.isHoverSlot || !ev.resource) return;
+			if (ev.isDraft || ev.isHoverSlot || ev.isBreak || !ev.resource) return;
 			onSelectEntry(ev.resource);
 		},
 		[onSelectEntry],
@@ -165,6 +178,12 @@ export function useAgendaCalendar(
 	);
 	const tooltipAccessor = useCallback(() => '', []);
 	const eventPropGetter = useCallback((event: CalendarEvent) => {
+		if (event.isBreak) {
+			return {
+				className: 'agenda-break-band',
+				style: { zIndex: 1, pointerEvents: 'none' as const },
+			};
+		}
 		if (event.isHoverSlot) {
 			return {
 				className: 'agenda-hover-slot',
@@ -172,9 +191,10 @@ export function useAgendaCalendar(
 			};
 		}
 		if (event.isDraft) {
+			const isFullDayDraft = isFullDayScheduleSelection(event);
 			return {
-				className: 'agenda-draft-event',
-				style: { zIndex: 3 },
+				className: cn('agenda-draft-event', isFullDayDraft && 'agenda-draft-full-day-event'),
+				style: { zIndex: isFullDayDraft ? 1 : 3, pointerEvents: 'none' as const },
 			};
 		}
 		const resource = event.resource;
@@ -217,7 +237,7 @@ export function useAgendaCalendar(
 	const views: View[] = view === 'work_week' ? ['work_week'] : ['day'];
 
 	return {
-		events,
+		events: calendarEvents,
 		backgroundEvents,
 		min,
 		max,

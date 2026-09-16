@@ -22,6 +22,11 @@ describe('formatReturnMeasureSummary', () => {
 		);
 	});
 
+	test('uses vierkant rooster label for a full-day selection', () => {
+		const summary = formatReturnMeasureSummary(selection('2026-09-16T08:00:00', '2026-09-16T16:00:00'), 1);
+		expect(summary).toBe('Terugkomen op woensdag 16 september 2026 om 08:00 - 16:00 (Vierkant rooster)');
+	});
+
 	test('skips weekends when counting school days', () => {
 		const summary = formatReturnMeasureSummary(selection('2026-09-18T10:00:00', '2026-09-18T11:15:00'), 2);
 		expect(summary).toBe(
