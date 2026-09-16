@@ -1,10 +1,12 @@
 import { cva, type VariantProps } from 'class-variance-authority';
-import type * as React from 'react';
+import { LuClock3 } from 'react-icons/lu';
 
 import LessonHourBadge from '@/components/LessonHourBadge';
+import { formatTime } from '@/lib/dateUtils';
+import { getLessonHourBadgePlacements } from '@/lib/lessonHours';
 import { cn } from '@/lib/utils';
 
-const agendaSlotGhostStyles = cva('mx-1 h-full rounded-lg border', {
+const agendaSlotGhostStyles = cva('relative mx-1 h-full overflow-hidden rounded-lg border', {
 	variants: {
 		variant: {
 			hover: 'border-dashed border-primary/40 bg-primary/8 dark:border-primary/45 dark:bg-primary/8',
@@ -17,23 +19,37 @@ const agendaSlotGhostStyles = cva('mx-1 h-full rounded-lg border', {
 });
 
 interface AgendaSlotGhostProps extends VariantProps<typeof agendaSlotGhostStyles> {
-	lessonHour?: number;
-	children?: React.ReactNode;
-	className?: string;
+	selection: { start: Date; end: Date };
 }
 
-export default function AgendaSlotGhost({ variant, lessonHour, children, className }: AgendaSlotGhostProps) {
+export default function AgendaSlotGhost({ variant, selection }: AgendaSlotGhostProps) {
+	const placements = getLessonHourBadgePlacements(selection);
+	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
+	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
+
 	return (
-		<div className={cn(agendaSlotGhostStyles({ variant }), className)}>
-			<div className="flex h-full min-w-0 items-center gap-1 px-1.5">
-				{lessonHour !== undefined && (
+		<div className={cn(agendaSlotGhostStyles({ variant }))}>
+			<div className="absolute right-1.5 top-0.5 z-10 flex items-center gap-1 text-[9px] text-muted-foreground">
+				<LuClock3 className="h-2.5 w-2.5 shrink-0" />
+				<span>
+					{formatTime(rangeStart)} - {formatTime(rangeEnd)}
+				</span>
+			</div>
+			{placements.map((placement) => (
+				<div
+					key={placement.lessonHour}
+					className="absolute left-1.5 flex items-center"
+					style={{
+						top: `${placement.topPercent}%`,
+						height: `${placement.heightPercent}%`,
+					}}
+				>
 					<LessonHourBadge
-						lessonInfo={{ status: 'lesson', lesson: lessonHour }}
+						lessonInfo={{ status: 'lesson', lesson: placement.lessonHour }}
 						className="h-4 w-4 shrink-0 text-[0.65rem]"
 					/>
-				)}
-				{children}
-			</div>
+				</div>
+			))}
 		</div>
 	);
 }

@@ -3,6 +3,7 @@ import { parseLocalDateAndTime } from '@/lib/agendaSlotSelection';
 import {
 	formatLessonHoursCompact,
 	formatLessonHoursLabel,
+	getLessonHourBadgePlacements,
 	getOverlappingLessonHours,
 	getOverlappingLessonHoursForSelection,
 	getReturnMeasureLessonHours,
@@ -70,6 +71,29 @@ describe('getReturnMeasureLessonHours', () => {
 describe('getOverlappingLessonHours', () => {
 	test('includes every lesson hour touched by the range', () => {
 		expect(getOverlappingLessonHours('09:30', '11:30')).toEqual([2, 3, 4]);
+	});
+});
+
+describe('getLessonHourBadgePlacements', () => {
+	test('positions each lesson hour badge within a multi-hour selection', () => {
+		const selection = snapSelectionToLessonHours({
+			start: at('2026-09-16', '09:15'),
+			end: at('2026-09-16', '11:15'),
+		});
+
+		const placements = getLessonHourBadgePlacements(selection!);
+		expect(placements.map((placement) => placement.lessonHour)).toEqual([2, 3, 4]);
+		expect(placements[0]).toEqual({ lessonHour: 2, topPercent: 0, heightPercent: (40 / 140) * 100 });
+		expect(placements[1]).toEqual({
+			lessonHour: 3,
+			topPercent: (40 / 140) * 100,
+			heightPercent: (40 / 140) * 100,
+		});
+		expect(placements[2]).toEqual({
+			lessonHour: 4,
+			topPercent: (100 / 140) * 100,
+			heightPercent: (40 / 140) * 100,
+		});
 	});
 });
 

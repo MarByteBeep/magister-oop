@@ -122,6 +122,40 @@ export function getReturnMeasureLessonHours(startTime: string, endTime: string):
 	return lessonHourNumbersFromIndexRange({ from, to });
 }
 
+export type LessonHourBadgePlacement = {
+	lessonHour: number;
+	topPercent: number;
+	heightPercent: number;
+};
+
+export function getLessonHourBadgePlacements(selection: { start: Date; end: Date }): LessonHourBadgePlacement[] {
+	const range = findOverlappingLessonIndexRangeByDate(selection.start, selection.end);
+	if (!range) return [];
+
+	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
+	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
+	const totalMs = rangeEnd.getTime() - rangeStart.getTime();
+	if (totalMs <= 0) return [];
+
+	const placements: LessonHourBadgePlacement[] = [];
+	for (let index = range.from; index <= range.to; index++) {
+		const slotStart = hhmmToDate(rangeStart, timeTable[index].start);
+		const slotEnd = hhmmToDate(rangeStart, timeTable[index].end);
+		const topMs = Math.max(0, slotStart.getTime() - rangeStart.getTime());
+		const bottomMs = Math.min(totalMs, slotEnd.getTime() - rangeStart.getTime());
+		const segmentMs = bottomMs - topMs;
+		if (segmentMs <= 0) continue;
+
+		placements.push({
+			lessonHour: index + 1,
+			topPercent: (topMs / totalMs) * 100,
+			heightPercent: (segmentMs / totalMs) * 100,
+		});
+	}
+
+	return placements;
+}
+
 export function snapSelectionToLessonHours(selection: { start: Date; end: Date }): AgendaSlotSelection | null {
 	const range = findOverlappingLessonIndexRangeByDate(selection.start, selection.end);
 	if (!range) return null;
