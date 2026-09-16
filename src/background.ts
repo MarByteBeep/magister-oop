@@ -1,3 +1,4 @@
+import { applyActionBadgeText } from './lib/actionBadge';
 import { MAGISTER_SESSION_KEY } from './lib/magisterSession';
 import {
 	clearLoginTabId,
@@ -22,6 +23,18 @@ const DEFAULT_ICONS = {
 
 chrome.runtime.onInstalled.addListener(() => {
 	console.log('Chrome extension installed');
+});
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+	if (message.type !== 'syncActionBadge') return undefined;
+
+	const text = typeof message.text === 'string' ? message.text : '';
+	void applyActionBadgeText(text)
+		.then(() => sendResponse({ ok: true }))
+		.catch((error: unknown) => {
+			sendResponse({ ok: false, error: error instanceof Error ? error.message : String(error) });
+		});
+	return true;
 });
 
 void resetToolbarAction();

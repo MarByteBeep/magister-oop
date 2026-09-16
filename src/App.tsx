@@ -9,11 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMagisterSession } from '@/context/MagisterSessionContext';
 import { useRegistrationsContext } from '@/context/RegistrationsContext';
 import { useReturnMeasuresContext } from '@/context/ReturnMeasuresContext';
+import { useActionBadge } from '@/hooks/useActionBadge';
 
 function App() {
 	const { registrationCount } = useRegistrationsContext();
 	const { openTodayCount } = useReturnMeasuresContext();
 	const session = useMagisterSession();
+
+	useActionBadge(registrationCount);
 
 	return (
 		<main className="flex flex-col items-center w-full h-full p-4 min-h-[600px] mx-auto text-center">
