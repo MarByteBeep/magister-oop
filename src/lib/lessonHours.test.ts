@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test';
+import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
 import { parseLocalDateAndTime } from '@/lib/agendaSlotSelection';
 import {
 	formatLessonHoursCompact,
@@ -17,22 +18,30 @@ function at(dateKey: string, time: string): Date {
 	return date;
 }
 
+function requireSnap(selection: { start: Date; end: Date }): AgendaSlotSelection {
+	const snapped = snapSelectionToLessonHours(selection);
+	expect(snapped).not.toBeNull();
+	if (!snapped) throw new Error('Expected selection to snap to lesson hours');
+	return snapped;
+}
+
 describe('snapSelectionToLessonHours', () => {
 	test('snaps a click before school start to the pre-school slot', () => {
-		const snapped = snapSelectionToLessonHours({
+		const selection = {
 			start: at('2026-09-16', '08:10'),
 			end: at('2026-09-16', '08:20'),
-		});
+		};
+		const snapped = requireSnap(selection);
 
 		expect(snapped).toEqual({
 			start: at('2026-09-16', '08:00'),
 			end: at('2026-09-16', '08:30'),
 		});
-		expect(getOverlappingLessonHoursForSelection(snapped!)).toEqual([]);
+		expect(getOverlappingLessonHoursForSelection(snapped)).toEqual([]);
 	});
 
 	test('snaps a click inside one lesson to that full lesson hour', () => {
-		const snapped = snapSelectionToLessonHours({
+		const snapped = requireSnap({
 			start: at('2026-09-16', '08:45'),
 			end: at('2026-09-16', '09:00'),
 		});
@@ -44,7 +53,7 @@ describe('snapSelectionToLessonHours', () => {
 	});
 
 	test('snaps a whole-day drag to the full-day schedule (vierkant rooster)', () => {
-		const snapped = snapSelectionToLessonHours({
+		const snapped = requireSnap({
 			start: at('2026-09-16', '08:05'),
 			end: at('2026-09-16', '15:55'),
 		});
@@ -53,11 +62,11 @@ describe('snapSelectionToLessonHours', () => {
 			start: at('2026-09-16', '08:00'),
 			end: at('2026-09-16', '16:00'),
 		});
-		expect(getOverlappingLessonHoursForSelection(snapped!)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+		expect(getOverlappingLessonHoursForSelection(snapped)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 	});
 
 	test('snaps a drag across two lesson hours', () => {
-		const snapped = snapSelectionToLessonHours({
+		const snapped = requireSnap({
 			start: at('2026-09-16', '08:35'),
 			end: at('2026-09-16', '09:45'),
 		});
@@ -66,22 +75,23 @@ describe('snapSelectionToLessonHours', () => {
 			start: at('2026-09-16', '08:30'),
 			end: at('2026-09-16', '09:50'),
 		});
-		expect(getOverlappingLessonHoursForSelection(snapped!)).toEqual([1, 2]);
+		expect(getOverlappingLessonHoursForSelection(snapped)).toEqual([1, 2]);
 	});
 
 	test('snaps a reversed drag the same as forward drag', () => {
-		const forward = snapSelectionToLessonHours({
+		const forwardSelection = {
 			start: at('2026-09-16', '09:15'),
 			end: at('2026-09-16', '10:05'),
-		});
-		const reverse = snapSelectionToLessonHours({
+		};
+		const forward = requireSnap(forwardSelection);
+		const reverse = requireSnap({
 			start: at('2026-09-16', '10:05'),
 			end: at('2026-09-16', '09:15'),
 		});
 
 		expect(reverse).toEqual(forward);
-		expect(getOverlappingLessonHoursForSelection(forward!)).toEqual([2, 3]);
-		expect(formatLessonHoursCompact(getOverlappingLessonHoursForSelection(forward!))).toBe('2e t/m 3e uur');
+		expect(getOverlappingLessonHoursForSelection(forward)).toEqual([2, 3]);
+		expect(formatLessonHoursCompact(getOverlappingLessonHoursForSelection(forward))).toBe('2e t/m 3e uur');
 	});
 });
 
@@ -103,12 +113,12 @@ describe('getOverlappingLessonHours', () => {
 
 describe('getLessonHourBadgePlacements', () => {
 	test('positions each lesson hour badge within a multi-hour selection', () => {
-		const selection = snapSelectionToLessonHours({
+		const selection = requireSnap({
 			start: at('2026-09-16', '09:15'),
 			end: at('2026-09-16', '11:15'),
 		});
 
-		const placements = getLessonHourBadgePlacements(selection!);
+		const placements = getLessonHourBadgePlacements(selection);
 		expect(placements.map((placement) => placement.lessonHour)).toEqual([2, 3, 4]);
 		expect(placements[0]).toEqual({ lessonHour: 2, topPercent: 0, heightPercent: (40 / 140) * 100 });
 		expect(placements[1]).toEqual({
@@ -132,7 +142,7 @@ describe('getLessonGridLinePercents', () => {
 
 		expect(percents[0]).toBeCloseTo((30 / 540) * 100, 4);
 		expect(percents).toContainEqual(expect.closeTo((70 / 540) * 100, 4));
-		expect(percents.at(-1)).toBeCloseTo((480 / 540) * 100, 4);
+		expect(percents[percents.length - 1]).toBeCloseTo((480 / 540) * 100, 4);
 		expect(percents).toHaveLength(13);
 	});
 });

@@ -3,7 +3,7 @@ import { isSameCalendarDay } from '@/lib/agendaCalendarUtils';
 import { fullDayScheduleShortcutTooltip } from '@/lib/fullDayScheduleUtils';
 import { cn } from '@/lib/utils';
 
-interface AgendaCalendarHeaderProps {
+export interface AgendaCalendarHeaderProps {
 	date: Date;
 	label: string;
 	onSelectFullDay?: (date: Date) => void;

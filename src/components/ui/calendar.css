@@ -30,6 +30,18 @@
 	color: var(--calendar-hover-fg);
 }
 
+.rdp-selected .rdp-day_button {
+	background-color: var(--primary);
+	color: var(--primary-foreground);
+	font-weight: 600;
+}
+
+.rdp-selected.rdp-today .rdp-day_button {
+	background-color: var(--primary);
+	color: var(--primary-foreground);
+	box-shadow: none;
+}
+
 .rdp-today:not(.rdp-outside):not(.rdp-selected) .rdp-day_button {
 	background-color: transparent;
 	color: var(--foreground);
@@ -41,16 +53,4 @@
 	background-color: var(--calendar-hover-bg);
 	color: var(--calendar-hover-fg);
 	box-shadow: inset 0 0 0 1.5px var(--calendar-today-ring);
-}
-
-.rdp-selected .rdp-day_button {
-	background-color: var(--primary);
-	color: var(--primary-foreground);
-	font-weight: 600;
-}
-
-.rdp-selected.rdp-today .rdp-day_button {
-	background-color: var(--primary);
-	color: var(--primary-foreground);
-	box-shadow: none;
 }
