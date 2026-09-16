@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { type RefObject, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DateAndTimeRangePicker } from '@/components/ui/date-and-time-range-picker';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -8,6 +8,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useAutoFocus } from '@/hooks/useAutofocus';
 import { type AgendaSlotSelection, buildAgendaSlotSelection, selectionToFormValues } from '@/lib/agendaSlotSelection';
 import { formatReturnMeasureSummary } from '@/lib/returnMeasureSummary';
 
@@ -28,6 +29,7 @@ function ReturnMeasureForm({
 	onEndTimeChange,
 	onDescriptionChange,
 	onDayCountChange,
+	descriptionRef,
 	popoverContainer,
 	onDatePickerOpenChange,
 }: {
@@ -41,6 +43,7 @@ function ReturnMeasureForm({
 	onEndTimeChange: (value: string) => void;
 	onDescriptionChange: (value: string) => void;
 	onDayCountChange: (value: string) => void;
+	descriptionRef: RefObject<HTMLTextAreaElement | null>;
 	popoverContainer?: HTMLElement | null;
 	onDatePickerOpenChange?: (open: boolean) => void;
 }) {
@@ -70,11 +73,13 @@ function ReturnMeasureForm({
 			<Field>
 				<Label htmlFor="return-measure-description">Omschrijving</Label>
 				<Textarea
+					ref={descriptionRef}
 					id="return-measure-description"
 					value={description}
 					onChange={(event) => onDescriptionChange(event.target.value)}
 					placeholder="Bijv. Spijbelen NE 16/09"
 					rows={3}
+					className="focus-visible:ring-0 focus-visible:ring-offset-0"
 				/>
 			</Field>
 
@@ -98,6 +103,7 @@ function ReturnMeasureForm({
 }
 
 export default function NewAppointmentDialog({ selection, isOpen, onClose }: NewAppointmentDialogProps) {
+	const descriptionRef = useAutoFocus<HTMLTextAreaElement>(isOpen);
 	const [dialogContainer, setDialogContainer] = useState<HTMLDivElement | null>(null);
 	const [datePickerOpen, setDatePickerOpen] = useState(false);
 	const [description, setDescription] = useState('');
@@ -143,12 +149,16 @@ export default function NewAppointmentDialog({ selection, isOpen, onClose }: New
 			<DialogContent
 				ref={setDialogContainer}
 				className="max-w-md"
+				onOpenAutoFocus={(event) => {
+					event.preventDefault();
+					descriptionRef.current?.focus();
+				}}
 				onPointerDownOutside={(event) => {
 					if (datePickerOpen) event.preventDefault();
 				}}
 			>
 				<DialogHeader>
-					<DialogTitle>Terugkommaatregel</DialogTitle>
+					<DialogTitle>Terugkommaatregel aanmaken</DialogTitle>
 				</DialogHeader>
 
 				<div className="text-sm">
@@ -163,6 +173,7 @@ export default function NewAppointmentDialog({ selection, isOpen, onClose }: New
 						onEndTimeChange={setReturnEndTime}
 						onDescriptionChange={setDescription}
 						onDayCountChange={setDayCount}
+						descriptionRef={descriptionRef}
 						popoverContainer={dialogContainer}
 						onDatePickerOpenChange={setDatePickerOpen}
 					/>

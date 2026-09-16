@@ -59,3 +59,5 @@ export function isFullDayScheduleSelection(selection: { start: Date; end: Date }
 export function getFullDayScheduleLabel(): string {
 	return fullDayScheduleConfig.label;
 }
+
+export const fullDayScheduleShortcutTooltip = 'Aanmaken vierkant rooster';

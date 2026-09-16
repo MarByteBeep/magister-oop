@@ -21,7 +21,7 @@ const defaultClassNames = getDefaultClassNames();
 const calendarClassNames = {
 	...defaultClassNames,
 	root: cn(defaultClassNames.root, 'p-2'),
-	day_button: cn(defaultClassNames.day_button, 'rounded', 'hover:bg-primary hover:text-primary-foreground'),
+	day_button: cn(defaultClassNames.day_button, 'rounded'),
 };
 
 const pastModifiers = { past: isPastDate };

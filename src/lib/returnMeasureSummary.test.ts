@@ -12,13 +12,13 @@ function selection(start: string, end: string): AgendaSlotSelection {
 describe('formatReturnMeasureSummary', () => {
 	test('formats a single-day summary', () => {
 		const summary = formatReturnMeasureSummary(selection('2026-09-16T09:30:00', '2026-09-16T11:30:00'), 1);
-		expect(summary).toBe('Terugkomen op woensdag 16 september 2026 om 09:30 - 11:30 (het 3e en 4e uur)');
+		expect(summary).toBe('Terugkomen op woensdag 16 september 2026 om 09:30 - 11:30 (het 3e-4e uur)');
 	});
 
 	test('formats a multi-day summary using school days only', () => {
 		const summary = formatReturnMeasureSummary(selection('2026-09-16T09:30:00', '2026-09-16T11:30:00'), 8);
 		expect(summary).toBe(
-			'Terugkomen van woensdag 16 september - vrijdag 25 september 2026 om 09:30 - 11:30 (het 3e en 4e uur)',
+			'Terugkomen van woensdag 16 september - vrijdag 25 september 2026 om 09:30 - 11:30 (het 3e-4e uur)',
 		);
 	});
 

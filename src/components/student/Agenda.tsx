@@ -5,6 +5,7 @@ import { Calendar, type View } from 'react-big-calendar';
 import { useAgendaCalendar } from '@/hooks/useAgendaCalendar';
 import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
 import { buildLessonGridGradient, getLessonGridLinePercents } from '@/lib/lessonHours';
+import { cn } from '@/lib/utils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import { agendaCalendarFormats, agendaCalendarMessages, agendaLocalizer } from './agendaCalendarConfig';
 
@@ -50,8 +51,16 @@ export default function Agenda({
 		return { '--agenda-lesson-grid': buildLessonGridGradient(percents) } as CSSProperties;
 	}, [min, max]);
 
+	const weekFullDayShortcut = view === 'work_week' && slotSelectionEnabled;
+
 	return (
-		<div className="agenda-lesson-grid h-full overflow-hidden" style={lessonGridStyle}>
+		<div
+			className={cn(
+				'agenda-lesson-grid h-full overflow-hidden',
+				weekFullDayShortcut && 'agenda-week-full-day-shortcut',
+			)}
+			style={lessonGridStyle}
+		>
 			<Calendar
 				localizer={agendaLocalizer}
 				culture="nl"

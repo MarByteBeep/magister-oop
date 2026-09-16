@@ -239,11 +239,21 @@ export function formatLessonHoursCompact(hours: number[]): string | null {
 	return `${hours[0]}e t/m ${hours[hours.length - 1]}e uur`;
 }
 
+function areConsecutiveLessonHours(hours: number[]): boolean {
+	for (let index = 1; index < hours.length; index++) {
+		if (hours[index] !== hours[index - 1] + 1) return false;
+	}
+	return true;
+}
+
 export function formatLessonHoursLabel(hours: number[]): string | null {
 	if (hours.length === 0) return null;
+	if (hours.length === 1) return `het ${hours[0]}e uur`;
+	if (areConsecutiveLessonHours(hours)) {
+		return `het ${hours[0]}e-${hours[hours.length - 1]}e uur`;
+	}
 
 	const ordinals = hours.map((hour) => `${hour}e`);
-	if (ordinals.length === 1) return `het ${ordinals[0]} uur`;
 	if (ordinals.length === 2) return `het ${ordinals[0]} en ${ordinals[1]} uur`;
 	return `het ${ordinals.slice(0, -1).join(', ')} en ${ordinals[ordinals.length - 1]} uur`;
 }

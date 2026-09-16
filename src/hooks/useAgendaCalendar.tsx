@@ -2,6 +2,7 @@ import { createElement, useCallback, useEffect, useMemo, useRef, useState } from
 import type { EventProps, SlotInfo, View } from 'react-big-calendar';
 import AgendaCalendarEvent from '@/components/student/AgendaCalendarEvent';
 import AgendaCalendarHeader from '@/components/student/AgendaCalendarHeader';
+import AgendaFullDayShortcutCellWrapper from '@/components/student/AgendaFullDayShortcutCellWrapper';
 import { firstLessonTime, lastLessonTime } from '@/components/student/agendaCalendarConfig';
 import {
 	agendaEntriesToCalendarEvents,
@@ -15,11 +16,12 @@ import {
 import { agendaDayLayoutAlgorithm } from '@/lib/agendaDayLayout';
 import { isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
-import { slotInfoToSelection } from '@/lib/agendaSlotSelection';
+import { isAllDaySlotSelection, slotInfoToSelection } from '@/lib/agendaSlotSelection';
 import { hhmmToDate } from '@/lib/bigCalendarUtils';
 import { getDateKey, getWeekDays, parseDateKey } from '@/lib/dateUtils';
 import {
 	getFullDayScheduleLabel,
+	getFullDayScheduleSelection,
 	isFullDayReturnMeasureEntry,
 	isFullDayScheduleSelection,
 } from '@/lib/fullDayScheduleUtils';
@@ -114,6 +116,16 @@ export function useAgendaCalendar(
 		return undefined;
 	}, []);
 
+	const handleSelectFullDay = useCallback(
+		(day: Date) => {
+			if (!onSelectSlot) return;
+			setSelectingPreview(null);
+			setHoveredLessonSlot(null);
+			onSelectSlot(getFullDayScheduleSelection(day));
+		},
+		[onSelectSlot],
+	);
+
 	const handleSelectSlot = useCallback(
 		(slotInfo: SlotInfo) => {
 			if (!onSelectSlot) return;
@@ -121,7 +133,9 @@ export function useAgendaCalendar(
 			selectionCompletedRef.current = true;
 			setSelectingPreview(null);
 			setHoveredLessonSlot(null);
-			const snapped = snapSelectionToLessonHours(slotInfoToSelection(slotInfo));
+			const snapped = isAllDaySlotSelection(slotInfo)
+				? getFullDayScheduleSelection(slotInfo.start)
+				: snapSelectionToLessonHours(slotInfoToSelection(slotInfo));
 			if (!snapped) return;
 			onSelectSlot(snapped);
 		},
@@ -225,13 +239,20 @@ export function useAgendaCalendar(
 		};
 	}, []);
 
+	const weekFullDayShortcut = view === 'work_week' && onSelectSlot !== undefined;
+
 	const components = useMemo(
 		() => ({
-			header: AgendaCalendarHeader,
+			header: (props: { date: Date; label: string }) =>
+				createElement(AgendaCalendarHeader, {
+					...props,
+					onSelectFullDay: weekFullDayShortcut ? handleSelectFullDay : undefined,
+				}),
+			dateCellWrapper: weekFullDayShortcut ? AgendaFullDayShortcutCellWrapper : undefined,
 			event: (props: EventProps<CalendarEvent>) =>
 				createElement(AgendaCalendarEvent, { ...props, activeEntry, overlappingEventIds }),
 		}),
-		[activeEntry, overlappingEventIds],
+		[activeEntry, handleSelectFullDay, overlappingEventIds, weekFullDayShortcut],
 	);
 
 	const views: View[] = view === 'work_week' ? ['work_week'] : ['day'];

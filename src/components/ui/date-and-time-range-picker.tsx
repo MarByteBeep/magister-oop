@@ -1,14 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { nl } from 'react-day-picker/locale';
-import { LuChevronDown } from 'react-icons/lu';
-
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { getDateKey, parseDateKey } from '@/lib/dateUtils';
 
 interface DateAndTimeRangePickerProps {
@@ -25,14 +19,6 @@ interface DateAndTimeRangePickerProps {
 	onDatePickerOpenChange?: (open: boolean) => void;
 }
 
-function formatPickerDate(date: Date): string {
-	return date.toLocaleDateString('nl-NL', {
-		day: 'numeric',
-		month: 'long',
-		year: 'numeric',
-	});
-}
-
 export function DateAndTimeRangePicker({
 	dateKey,
 	startTime,
@@ -46,13 +32,7 @@ export function DateAndTimeRangePicker({
 	popoverContainer,
 	onDatePickerOpenChange,
 }: DateAndTimeRangePickerProps) {
-	const [open, setOpen] = useState(false);
 	const selectedDate = dateKey ? parseDateKey(dateKey) : undefined;
-
-	const handleOpenChange = (nextOpen: boolean) => {
-		setOpen(nextOpen);
-		onDatePickerOpenChange?.(nextOpen);
-	};
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -60,37 +40,13 @@ export function DateAndTimeRangePicker({
 				<Label htmlFor={dateId} className="px-1">
 					Datum
 				</Label>
-				<Popover modal open={open} onOpenChange={handleOpenChange}>
-					<PopoverTrigger asChild>
-						<Button
-							variant="outline"
-							id={dateId}
-							data-empty={!selectedDate}
-							className="w-full justify-between text-left font-normal data-[empty=true]:text-muted-foreground"
-						>
-							{selectedDate ? formatPickerDate(selectedDate) : 'Kies een datum'}
-							<LuChevronDown className="size-4 opacity-50" />
-						</Button>
-					</PopoverTrigger>
-					<PopoverContent
-						container={popoverContainer}
-						className="z-[100] w-auto p-0"
-						align="start"
-						onOpenAutoFocus={(event) => event.preventDefault()}
-					>
-						<Calendar
-							mode="single"
-							locale={nl}
-							selected={selectedDate}
-							defaultMonth={selectedDate}
-							onSelect={(date) => {
-								if (!date) return;
-								onDateKeyChange(getDateKey(date));
-								handleOpenChange(false);
-							}}
-						/>
-					</PopoverContent>
-				</Popover>
+				<DatePicker
+					id={dateId}
+					value={selectedDate}
+					onChange={(date) => onDateKeyChange(getDateKey(date))}
+					popoverContainer={popoverContainer}
+					onOpenChange={onDatePickerOpenChange}
+				/>
 			</div>
 
 			<div className="flex gap-4">
@@ -103,7 +59,7 @@ export function DateAndTimeRangePicker({
 						id={startTimeId}
 						value={startTime}
 						onChange={(event) => onStartTimeChange(event.target.value)}
-						className="cursor-pointer bg-background"
+						className="bg-background"
 					/>
 				</div>
 				<div className="flex flex-1 flex-col gap-2">
@@ -115,7 +71,7 @@ export function DateAndTimeRangePicker({
 						id={endTimeId}
 						value={endTime}
 						onChange={(event) => onEndTimeChange(event.target.value)}
-						className="cursor-pointer bg-background"
+						className="bg-background"
 					/>
 				</div>
 			</div>

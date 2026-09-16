@@ -9,6 +9,17 @@ export function slotInfoToSelection(slot: { start: Date; end: Date }): AgendaSlo
 	return { start: slot.start, end: slot.end };
 }
 
+/** RBC week-view all-day header slots span midnight through the next calendar day. */
+export function isAllDaySlotSelection(slot: { start: Date; end: Date }): boolean {
+	const { start, end } = slot;
+	if (start.getHours() !== 0 || start.getMinutes() !== 0 || start.getSeconds() !== 0) return false;
+	if (end.getHours() !== 0 || end.getMinutes() !== 0 || end.getSeconds() !== 0) return false;
+
+	const nextDay = new Date(start);
+	nextDay.setDate(nextDay.getDate() + 1);
+	return end.getTime() >= nextDay.getTime();
+}
+
 export function parseLocalDateAndTime(dateKey: string, time: string): Date | null {
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return null;
 

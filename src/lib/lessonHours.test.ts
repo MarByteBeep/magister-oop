@@ -140,7 +140,11 @@ describe('getLessonGridLinePercents', () => {
 describe('formatLessonHoursLabel', () => {
 	test('formats one or two lesson hours in Dutch', () => {
 		expect(formatLessonHoursLabel([3])).toBe('het 3e uur');
-		expect(formatLessonHoursLabel([3, 4])).toBe('het 3e en 4e uur');
-		expect(formatLessonHoursLabel([3, 4, 5])).toBe('het 3e, 4e en 5e uur');
+		expect(formatLessonHoursLabel([3, 4])).toBe('het 3e-4e uur');
+		expect(formatLessonHoursLabel([1, 2, 3, 4, 5, 6, 7, 8, 9])).toBe('het 1e-9e uur');
+	});
+
+	test('lists non-consecutive lesson hours separately', () => {
+		expect(formatLessonHoursLabel([1, 3, 5])).toBe('het 1e, 3e en 5e uur');
 	});
 });
