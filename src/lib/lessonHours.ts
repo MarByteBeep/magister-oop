@@ -7,6 +7,17 @@ export function findLessonIndexContainingTime(time: string): number {
 	return timeTable.findIndex((slot) => time >= slot.start && time < slot.end);
 }
 
+export function findLessonIndexForDateTime(date: Date): number {
+	return findLessonIndexContainingTime(formatTime(date));
+}
+
+export function getLessonHourDateRange(date: Date, lessonIndex: number): AgendaSlotSelection {
+	return {
+		start: hhmmToDate(date, timeTable[lessonIndex].start),
+		end: hhmmToDate(date, timeTable[lessonIndex].end),
+	};
+}
+
 export function findNearestLessonIndex(time: string): number {
 	const containing = findLessonIndexContainingTime(time);
 	if (containing >= 0) return containing;

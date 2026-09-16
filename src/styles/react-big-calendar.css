@@ -179,6 +179,16 @@
 
 .rbc-day-slot .rbc-events-container {
 	margin-right: 0;
+	/* Let hover and slot selection reach the time grid in empty areas. */
+	pointer-events: none;
+}
+
+.rbc-day-slot .rbc-event {
+	pointer-events: auto;
+}
+
+.rbc-day-slot .rbc-background-event {
+	pointer-events: none;
 }
 
 .rbc-time-content::-webkit-scrollbar,
@@ -196,21 +206,10 @@
 }
 
 /* ── slot selection (click + drag to create) ─────────────────── */
-.rbc-day-slot {
+.rbc-day-slot .rbc-time-slot.agenda-creatable-slot {
 	cursor: pointer;
 }
 
 .rbc-slot-selection {
 	display: none;
-}
-
-.rbc-day-slot .rbc-background-event.agenda-draft-event {
-	background: color-mix(in oklch, var(--primary) 28%, transparent);
-	border: 1px solid color-mix(in oklch, var(--primary) 55%, transparent);
-	border-radius: 8px;
-	color: var(--foreground);
-	font-size: 0.75rem;
-	font-weight: 500;
-	opacity: 1;
-	padding: 2px 6px;
 }

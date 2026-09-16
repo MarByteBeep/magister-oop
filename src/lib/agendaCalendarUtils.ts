@@ -11,10 +11,29 @@ export type CalendarEvent = {
 	end: Date;
 	resource?: AgendaEntry;
 	isDraft?: boolean;
+	isHoverSlot?: boolean;
 };
 
 export function isDraftCalendarEvent(event: CalendarEvent): boolean {
 	return event.isDraft === true;
+}
+
+export function isHoverSlotCalendarEvent(event: CalendarEvent): boolean {
+	return event.isHoverSlot === true;
+}
+
+export function isBackgroundOverlayCalendarEvent(event: CalendarEvent): boolean {
+	return isDraftCalendarEvent(event) || isHoverSlotCalendarEvent(event);
+}
+
+export function hoverLessonSlotToBackgroundEvent(selection: AgendaSlotSelection): CalendarEvent {
+	return {
+		id: 'hover-lesson-slot',
+		title: '',
+		start: selection.start,
+		end: selection.end,
+		isHoverSlot: true,
+	};
 }
 
 export function draftSelectionToBackgroundEvent(

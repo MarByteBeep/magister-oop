@@ -35,6 +35,7 @@ export default function Agenda({
 		handleSelectSlot,
 		slotSelectionEnabled,
 		dayPropGetter,
+		slotPropGetter,
 		eventPropGetter,
 		tooltipAccessor,
 		components,
@@ -66,6 +67,7 @@ export default function Agenda({
 				onSelectSlot={slotSelectionEnabled ? handleSelectSlot : undefined}
 				tooltipAccessor={tooltipAccessor}
 				dayPropGetter={dayPropGetter}
+				slotPropGetter={slotSelectionEnabled ? slotPropGetter : undefined}
 				eventPropGetter={eventPropGetter}
 				components={components}
 				formats={agendaCalendarFormats}
