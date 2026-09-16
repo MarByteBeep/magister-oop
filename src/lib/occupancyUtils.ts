@@ -1,6 +1,7 @@
 import { isLessonEntry } from '@/lib/agendaEntryUtils';
 import { agendaItemOverlapsLesson, getItemLocationCodes, getItemTimeRange, timeTable } from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
+import { findOverlappingLessonIndexRangeByTime } from '@/lib/lessonHours';
 import { formatLocation } from '@/lib/locationUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
@@ -11,16 +12,6 @@ export type OccupancyChartPoint = {
 	total: number;
 	breakTotal: number;
 };
-
-function getLessonHourIndices(startTime: string, endTime: string) {
-	let startIndex = timeTable.findIndex((slot) => startTime >= slot.start && startTime < slot.end);
-	let endIndex = timeTable.findIndex((slot) => endTime >= slot.start && endTime < slot.end);
-
-	if (startIndex < 0) startIndex = endIndex;
-	if (endIndex < 0) endIndex = startIndex;
-
-	return { startIndex, endIndex };
-}
 
 function incrementOccupancy(
 	occupancy: Record<string, Record<string, number>>,
@@ -39,10 +30,10 @@ function addAgendaItemToOccupancy(occupancy: Record<string, Record<string, numbe
 	endDate.setMinutes(endDate.getMinutes() - 1);
 	const endTime = formatTime(endDate);
 
-	const { startIndex, endIndex } = getLessonHourIndices(startTime, endTime);
-	if (startIndex < 0 || endIndex < 0) return;
+	const range = findOverlappingLessonIndexRangeByTime(startTime, endTime);
+	if (!range) return;
 
-	for (let i = startIndex; i <= endIndex; ++i) {
+	for (let i = range.from; i <= range.to; ++i) {
 		const lessonRange = `${timeTable[i].start}-${timeTable[i].end}`;
 		for (const location of item.locaties) {
 			const locationCode = formatLocation(location);

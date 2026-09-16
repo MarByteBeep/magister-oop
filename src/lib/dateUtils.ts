@@ -71,6 +71,23 @@ export function addDays(date: Date, dayOffset: number): Date {
 	return next;
 }
 
+/** Last school day when counting `schoolDayCount` weekdays from `date` (Mon–Fri), inclusive. */
+export function addSchoolDays(date: Date, schoolDayCount: number): Date {
+	const count = Math.max(schoolDayCount, 1);
+	const result = new Date(date);
+	if (count === 1) return result;
+
+	let remaining = count - 1;
+	while (remaining > 0) {
+		result.setDate(result.getDate() + 1);
+		const day = result.getDay();
+		if (day !== 0 && day !== 6) {
+			remaining--;
+		}
+	}
+	return result;
+}
+
 /** Combine a local date key and HH:mm time into an ISO UTC string. */
 export function toISOFromDateKeyAndTime(dateKey: string, time: string): string {
 	const [hours, minutes] = time.split(':').map(Number);

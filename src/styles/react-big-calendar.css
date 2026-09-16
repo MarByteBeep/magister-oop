@@ -194,3 +194,23 @@
 .rbc-toolbar {
 	gap: 0.5rem;
 }
+
+/* ── slot selection (click + drag to create) ─────────────────── */
+.rbc-day-slot {
+	cursor: pointer;
+}
+
+.rbc-slot-selection {
+	display: none;
+}
+
+.rbc-day-slot .rbc-background-event.agenda-draft-event {
+	background: color-mix(in oklch, var(--primary) 28%, transparent);
+	border: 1px solid color-mix(in oklch, var(--primary) 55%, transparent);
+	border-radius: 8px;
+	color: var(--foreground);
+	font-size: 0.75rem;
+	font-weight: 500;
+	opacity: 1;
+	padding: 2px 6px;
+}

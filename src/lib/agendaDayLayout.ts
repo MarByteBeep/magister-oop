@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react';
 import type { DayLayoutFunction } from 'react-big-calendar';
 // RBC ships layout helpers as CJS; used to pack lessons without overlay items.
 import noOverlap from 'react-big-calendar/lib/utils/layout-algorithms/no-overlap.js';
-import { type CalendarEvent, isSameCalendarDay } from '@/lib/agendaCalendarUtils';
+import { type CalendarEvent, isDraftCalendarEvent, isSameCalendarDay } from '@/lib/agendaCalendarUtils';
 import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import { isFullDayReturnMeasureEntry } from '@/lib/fullDayScheduleUtils';
 
@@ -61,15 +61,24 @@ export const agendaDayLayoutAlgorithm: DayLayoutFunction<CalendarEvent> = ({
 	const lessons: CalendarEvent[] = [];
 	const fullDayReturnMeasures: CalendarEvent[] = [];
 	const gutterOverlays: CalendarEvent[] = [];
+	const draftEvents: CalendarEvent[] = [];
 
 	for (const event of events) {
-		if (isReturnMeasureEntry(event.resource)) {
-			if (isFullDayReturnMeasureEntry(event.resource)) {
+		if (isDraftCalendarEvent(event)) {
+			draftEvents.push(event);
+			continue;
+		}
+
+		const resource = event.resource;
+		if (!resource) continue;
+
+		if (isReturnMeasureEntry(resource)) {
+			if (isFullDayReturnMeasureEntry(resource)) {
 				fullDayReturnMeasures.push(event);
 			} else {
 				gutterOverlays.push(event);
 			}
-		} else if (isAbsenceNoticeEntry(event.resource)) {
+		} else if (isAbsenceNoticeEntry(resource)) {
 			gutterOverlays.push(event);
 		} else {
 			lessons.push(event);
@@ -119,5 +128,18 @@ export const agendaDayLayoutAlgorithm: DayLayoutFunction<CalendarEvent> = ({
 		};
 	});
 
-	return [...styledFullDayMeasures, ...styledGutterOverlays, ...shiftedLessons];
+	const styledDraftEvents: StyledEvent[] = draftEvents.map((event) => {
+		const range = slotMetrics.getRange(accessors.start(event), accessors.end(event));
+		return {
+			event,
+			style: {
+				top: range.top,
+				height: range.height,
+				width: 100,
+				xOffset: 0,
+			},
+		};
+	});
+
+	return [...styledFullDayMeasures, ...styledGutterOverlays, ...shiftedLessons, ...styledDraftEvents];
 };

@@ -6,27 +6,31 @@ export function formatActionBadgeText(count: number): string {
 	return String(count);
 }
 
-function hasChromeActionApi(): boolean {
-	return typeof chrome !== 'undefined' && !!chrome.action?.setBadgeText;
-}
-
-function hasChromeRuntimeMessaging(): boolean {
-	return typeof chrome !== 'undefined' && !!chrome.runtime?.sendMessage;
+function extensionApi(): typeof chrome | undefined {
+	return globalThis.chrome;
 }
 
 export function syncActionBadge(count: number): void {
-	if (!hasChromeRuntimeMessaging()) return;
-
-	const text = formatActionBadgeText(count);
-	chrome.runtime.sendMessage({ type: 'syncActionBadge', text });
+	try {
+		const sendMessage = extensionApi()?.runtime?.sendMessage;
+		if (typeof sendMessage !== 'function') return;
+		sendMessage({ type: 'syncActionBadge', text: formatActionBadgeText(count) });
+	} catch {
+		// Extension APIs are unavailable outside the extension context.
+	}
 }
 
 export async function applyActionBadgeText(text: string): Promise<void> {
-	if (!hasChromeActionApi()) return;
+	try {
+		const action = extensionApi()?.action;
+		if (!action?.setBadgeText) return;
 
-	await chrome.action.setBadgeText({ text });
-	if (text) {
-		await chrome.action.setBadgeBackgroundColor({ color: destructiveColor });
-		await chrome.action.setBadgeTextColor({ color: destructiveForegroundColor });
+		await action.setBadgeText({ text });
+		if (text) {
+			await action.setBadgeBackgroundColor({ color: destructiveColor });
+			await action.setBadgeTextColor({ color: destructiveForegroundColor });
+		}
+	} catch {
+		// Extension APIs are unavailable outside the extension context.
 	}
 }

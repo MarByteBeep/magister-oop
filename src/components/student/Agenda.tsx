@@ -2,6 +2,7 @@
 
 import { Calendar, type View } from 'react-big-calendar';
 import { useAgendaCalendar } from '@/hooks/useAgendaCalendar';
+import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import { agendaCalendarFormats, agendaCalendarMessages, agendaLocalizer } from './agendaCalendarConfig';
 
@@ -11,21 +12,35 @@ export interface AgendaProps {
 	view: View;
 	activeEntry?: AgendaEntry | null;
 	onSelectEntry: (entry: AgendaEntry) => void;
+	onSelectSlot?: (selection: AgendaSlotSelection) => void;
+	draftSelection?: AgendaSlotSelection | null;
 }
 
-export default function Agenda({ entries, date, view, activeEntry, onSelectEntry }: AgendaProps) {
+export default function Agenda({
+	entries,
+	date,
+	view,
+	activeEntry,
+	onSelectEntry,
+	onSelectSlot,
+	draftSelection,
+}: AgendaProps) {
 	const {
 		events,
+		backgroundEvents,
 		min,
 		max,
 		handleSelectEvent,
+		handleSelecting,
+		handleSelectSlot,
+		slotSelectionEnabled,
 		dayPropGetter,
 		eventPropGetter,
 		tooltipAccessor,
 		components,
 		views,
 		dayLayoutAlgorithm,
-	} = useAgendaCalendar(entries, date, view, activeEntry, onSelectEntry);
+	} = useAgendaCalendar(entries, date, view, activeEntry, onSelectEntry, { draftSelection, onSelectSlot });
 
 	return (
 		<div className="h-full overflow-hidden">
@@ -38,14 +53,17 @@ export default function Agenda({ entries, date, view, activeEntry, onSelectEntry
 				view={view}
 				views={views}
 				toolbar={false}
-				selectable={false}
+				selectable={slotSelectionEnabled ? 'ignoreEvents' : false}
 				popup={false}
 				dayLayoutAlgorithm={dayLayoutAlgorithm}
-				step={60}
-				timeslots={1}
+				step={15}
+				timeslots={4}
 				min={min}
 				max={max}
+				backgroundEvents={backgroundEvents}
 				onSelectEvent={handleSelectEvent}
+				onSelecting={slotSelectionEnabled ? handleSelecting : undefined}
+				onSelectSlot={slotSelectionEnabled ? handleSelectSlot : undefined}
 				tooltipAccessor={tooltipAccessor}
 				dayPropGetter={dayPropGetter}
 				eventPropGetter={eventPropGetter}

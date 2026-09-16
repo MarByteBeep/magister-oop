@@ -1,0 +1,25 @@
+.rdp-root {
+	--rdp-accent-color: hsl(var(--primary));
+	--rdp-accent-background-color: hsl(var(--accent));
+	--rdp-day_button-height: 2rem;
+	--rdp-day_button-width: 2rem;
+	--rdp-day-height: 2rem;
+	--rdp-day-width: 2rem;
+	--rdp-day_button-border-radius: 0.375rem;
+	--rdp-selected-border: none;
+}
+
+.rdp-selected .rdp-day_button {
+	background-color: hsl(var(--primary));
+	color: hsl(var(--primary-foreground));
+}
+
+.rdp-today:not(.rdp-outside) .rdp-day_button {
+	background-color: hsl(var(--accent));
+	color: hsl(var(--accent-foreground));
+}
+
+.rdp-selected.rdp-today .rdp-day_button {
+	background-color: hsl(var(--primary));
+	color: hsl(var(--primary-foreground));
+}

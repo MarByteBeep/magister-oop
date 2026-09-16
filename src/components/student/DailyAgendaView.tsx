@@ -6,11 +6,13 @@ import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
 import { findActiveEntryPreferringLessons } from '@/lib/agendaEntryUtils';
 import { isAgendaDayLoaded, needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
+import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
 import { getDateKey, getNow } from '@/lib/dateUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import type { Student } from '@/magister/types';
 import Agenda from './Agenda';
 import AgendaItemModal from './AgendaItemModal';
+import NewAppointmentDialog from './NewAppointmentDialog';
 
 interface DailyAgendaViewProps {
 	studentId: number;
@@ -29,6 +31,7 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 	const [bootstrapAgenda, setBootstrapAgenda] = useState<AgendaEntry[] | undefined>(undefined);
 	const [isLoading, setIsLoading] = useState(false);
 	const [selectedEntry, setSelectedEntry] = useState<AgendaEntry | null>(null);
+	const [draftSelection, setDraftSelection] = useState<AgendaSlotSelection | null>(null);
 
 	useEffect(() => {
 		if (!student) {
@@ -81,19 +84,17 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 		);
 	}
 
-	if (!agendaEntries || agendaEntries.length === 0) {
-		return <p className="text-muted-foreground text-center py-4">Geen lessen gepland voor vandaag.</p>;
-	}
-
 	return (
 		<>
 			<div className="h-full pt-2 pr-2 pb-2 pl-2">
 				<Agenda
-					entries={agendaEntries}
+					entries={agendaEntries ?? []}
 					date={currentTime}
 					view="day"
 					activeEntry={activeEntry}
 					onSelectEntry={(entry) => setSelectedEntry(entry)}
+					onSelectSlot={setDraftSelection}
+					draftSelection={draftSelection}
 				/>
 			</div>
 
@@ -103,6 +104,14 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 					isOpen={selectedEntry !== null}
 					onClose={() => setSelectedEntry(null)}
 					onOpenStudent={onOpenStudent}
+				/>
+			)}
+
+			{draftSelection && (
+				<NewAppointmentDialog
+					selection={draftSelection}
+					isOpen={draftSelection !== null}
+					onClose={() => setDraftSelection(null)}
 				/>
 			)}
 		</>

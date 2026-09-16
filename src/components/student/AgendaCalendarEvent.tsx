@@ -1,8 +1,9 @@
 import type { EventProps } from 'react-big-calendar';
-import type { CalendarEvent } from '@/lib/agendaCalendarUtils';
+import { type CalendarEvent, isDraftCalendarEvent } from '@/lib/agendaCalendarUtils';
 import { isSameAgendaEntryOccurrence } from '@/lib/agendaEntryUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import AgendaEvent from './AgendaEvent';
+import DraftAgendaEvent from './DraftAgendaEvent';
 
 export interface AgendaCalendarEventProps extends EventProps<CalendarEvent> {
 	activeEntry?: AgendaEntry | null;
@@ -10,6 +11,10 @@ export interface AgendaCalendarEventProps extends EventProps<CalendarEvent> {
 }
 
 export default function AgendaCalendarEvent({ event, activeEntry, overlappingEventIds }: AgendaCalendarEventProps) {
+	if (isDraftCalendarEvent(event) || !event.resource) {
+		return <DraftAgendaEvent event={event} />;
+	}
+
 	return (
 		<AgendaEvent
 			entry={event.resource}
