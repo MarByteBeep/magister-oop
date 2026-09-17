@@ -149,3 +149,9 @@ export function getWeekDays(date: Date): Date[] {
 	}
 	return days;
 }
+
+/** Monday through Friday of the week containing `date`. */
+export function getWorkWeekRange(date: Date): { start: Date; end: Date } {
+	const start = getStartOfWeek(date);
+	return { start, end: addDays(start, 4) };
+}

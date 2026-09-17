@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { Student } from '@/magister/types';
-import { needsAgendaDayFetch } from './agendaLoadUtils';
+import { needsAgendaDayFetch, needsAgendaRangeFetch } from './agendaLoadUtils';
+import { parseDateKey } from './dateUtils';
 
 function createStudent(overrides: Partial<Student> = {}): Student {
 	return {
@@ -39,5 +40,34 @@ describe('needsAgendaDayFetch', () => {
 		});
 
 		expect(needsAgendaDayFetch(student, todayKey)).toBe(true);
+	});
+});
+
+describe('needsAgendaRangeFetch', () => {
+	const monday = parseDateKey('2026-09-01');
+	const friday = parseDateKey('2026-09-05');
+	const weekKeys = ['2026-09-01', '2026-09-02', '2026-09-03', '2026-09-04', '2026-09-05'];
+
+	test('returns false when every weekday is loaded', () => {
+		const student = createStudent({
+			agenda: Object.fromEntries(weekKeys.map((key) => [key, []])),
+			absenceNoticesLoadedFor: Object.fromEntries(weekKeys.map((key) => [key, true])),
+		});
+
+		expect(needsAgendaRangeFetch(student, monday, friday)).toBe(false);
+	});
+
+	test('returns true when one weekday is missing', () => {
+		const student = createStudent({
+			agenda: {
+				'2026-09-01': [],
+				'2026-09-02': [],
+				'2026-09-03': [],
+				'2026-09-04': [],
+			},
+			absenceNoticesLoadedFor: Object.fromEntries(weekKeys.map((key) => [key, true])),
+		});
+
+		expect(needsAgendaRangeFetch(student, monday, friday)).toBe(true);
 	});
 });

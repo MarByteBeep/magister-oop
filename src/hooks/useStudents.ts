@@ -4,8 +4,8 @@ import { useAgendaLoader } from '@/hooks/useAgendaLoader';
 import { useAutoLoadAgenda } from '@/hooks/useAutoLoadAgenda';
 import { useBulkLists } from '@/hooks/useBulkLists';
 import { findLessonEntryPreferringLessons, findNextLessonEntry } from '@/lib/agendaEntryUtils';
-import { needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
-import { getTodayKey } from '@/lib/dateUtils';
+import { needsAgendaRangeFetch } from '@/lib/agendaLoadUtils';
+import { getNow, getTodayKey, getWorkWeekRange } from '@/lib/dateUtils';
 import type { Student } from '@/magister/types';
 import { useCurrentTime } from './useCurrentTime';
 import { useLessonInfo } from './useLessonInfo';
@@ -87,11 +87,11 @@ export function useStudents() {
 	}, [students, currentTime]);
 
 	const studentsNeedingAgendaCount = useMemo(() => {
-		const todayKey = getTodayKey();
+		const { start, end } = getWorkWeekRange(getNow());
 		const filtered = students.filter((student) =>
 			selectedStudies.size ? student.studies.some((s) => selectedStudies.has(s)) : true,
 		);
-		return filtered.filter((s) => needsAgendaDayFetch(s, todayKey)).length;
+		return filtered.filter((s) => needsAgendaRangeFetch(s, start, end)).length;
 	}, [students, selectedStudies]);
 
 	return {

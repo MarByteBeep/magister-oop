@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
-import { getDateKey, getNow } from '@/lib/dateUtils';
+import { needsAgendaRangeFetch } from '@/lib/agendaLoadUtils';
+import { getNow, getWorkWeekRange } from '@/lib/dateUtils';
 import type { Student } from '@/magister/types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
 
@@ -28,13 +28,12 @@ export function useAutoLoadAgenda(
 						? student.studies.some((s) => selectedStudiesRef.current.has(s))
 						: true,
 				);
-				const now = getNow();
-				const todayKey = getDateKey(now);
-				const student = filtered.find((s) => needsAgendaDayFetch(s, todayKey));
+				const { start, end } = getWorkWeekRange(getNow());
+				const student = filtered.find((s) => needsAgendaRangeFetch(s, start, end));
 
 				if (student) {
-					loadAgendaRef.current(student.id, now, now).catch((err) => {
-						console.error(`Failed to auto-refresh agenda for student ${student.id}`, err);
+					loadAgendaRef.current(student.id, start, end).catch((err) => {
+						console.error(`Failed to auto-refresh week agenda for student ${student.id}`, err);
 					});
 				}
 			},

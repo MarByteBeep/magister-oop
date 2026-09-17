@@ -1,4 +1,4 @@
-import { getDateKey } from '@/lib/dateUtils';
+import { eachDateKey, getDateKey } from '@/lib/dateUtils';
 import type { Student } from '@/magister/types';
 
 export function isAgendaDayLoaded(student: Student, dateKey: string): boolean {
@@ -10,6 +10,11 @@ export function needsAgendaDayFetch(student: Student, dateKey: string): boolean 
 	if (!isAgendaDayLoaded(student, dateKey)) return true;
 	if (student.absenceNoticesLoadedFor?.[dateKey] !== true) return true;
 	return false;
+}
+
+/** Whether any day in the inclusive range still needs an agenda or absence-notice fetch. */
+export function needsAgendaRangeFetch(student: Student, start: Date, end: Date): boolean {
+	return eachDateKey(start, end).some((dateKey) => needsAgendaDayFetch(student, dateKey));
 }
 
 export function isAgendaRangeLoaded(student: Student, start: Date, end: Date): boolean {

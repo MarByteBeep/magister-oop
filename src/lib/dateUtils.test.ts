@@ -1,5 +1,13 @@
 import { describe, expect, test } from 'bun:test';
-import { eachMonthKey, getDateKey, getMonthKey, getMonthRange, parseDateKey, weekOffsetFromDate } from './dateUtils';
+import {
+	eachMonthKey,
+	getDateKey,
+	getMonthKey,
+	getMonthRange,
+	getWorkWeekRange,
+	parseDateKey,
+	weekOffsetFromDate,
+} from './dateUtils';
 
 describe('getMonthRange', () => {
 	test('spans the first through the last local day of the month', () => {
@@ -26,6 +34,15 @@ describe('eachMonthKey', () => {
 	test('returns a single month when the range stays inside it', () => {
 		expect(eachMonthKey(parseDateKey('2026-09-01'), parseDateKey('2026-09-30'))).toEqual(['2026-09']);
 		expect(getMonthKey(parseDateKey('2026-09-30'))).toBe('2026-09');
+	});
+});
+
+describe('getWorkWeekRange', () => {
+	test('returns Monday through Friday of the containing week', () => {
+		const { start, end } = getWorkWeekRange(parseDateKey('2026-09-16'));
+
+		expect(getDateKey(start)).toBe('2026-09-14');
+		expect(getDateKey(end)).toBe('2026-09-18');
 	});
 });
 

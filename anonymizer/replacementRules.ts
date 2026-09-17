@@ -110,6 +110,10 @@ const FIELD_RULES: FieldRule[] = [
 		apply: (value, rep) => mapString(rep, value as string, faker.person.lastName()),
 	},
 	{
+		matches: (key, value) => keyIncludes(key, 'mentor') && typeof value === 'string' && value.length > 0,
+		apply: (value, rep) => mapString(rep, value as string, faker.person.fullName()),
+	},
+	{
 		matches: (key, value) => keyIncludes(key, 'initials', 'initialen', 'voorletters') && typeof value === 'string',
 		apply: (value, rep) => mapString(rep, value as string, faker.string.alpha({ casing: 'upper', length: 2 })),
 	},
