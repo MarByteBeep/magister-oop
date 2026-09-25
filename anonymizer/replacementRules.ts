@@ -102,11 +102,15 @@ const FIELD_RULES: FieldRule[] = [
 		apply: (value, rep) => mapString(rep, value as string, faker.lorem.sentence()),
 	},
 	{
-		matches: (key, value) => keyIncludes(key, 'firstname', 'voornaam', 'roepnaam') && typeof value === 'string',
+		// Empty strings must stay empty: stringMap is applied to every string value, so mapping
+		// "" would rewrite blank fields across the whole payload.
+		matches: (key, value) =>
+			keyIncludes(key, 'firstname', 'voornaam', 'roepnaam') && typeof value === 'string' && value.length > 0,
 		apply: (value, rep) => mapString(rep, value as string, faker.person.firstName()),
 	},
 	{
-		matches: (key, value) => keyIncludes(key, 'lastname', 'achternaam') && typeof value === 'string',
+		matches: (key, value) =>
+			keyIncludes(key, 'lastname', 'achternaam') && typeof value === 'string' && value.length > 0,
 		apply: (value, rep) => mapString(rep, value as string, faker.person.lastName()),
 	},
 	{
@@ -114,7 +118,8 @@ const FIELD_RULES: FieldRule[] = [
 		apply: (value, rep) => mapString(rep, value as string, faker.person.fullName()),
 	},
 	{
-		matches: (key, value) => keyIncludes(key, 'initials', 'initialen', 'voorletters') && typeof value === 'string',
+		matches: (key, value) =>
+			keyIncludes(key, 'initials', 'initialen', 'voorletters') && typeof value === 'string' && value.length > 0,
 		apply: (value, rep) => mapString(rep, value as string, faker.string.alpha({ casing: 'upper', length: 2 })),
 	},
 	{

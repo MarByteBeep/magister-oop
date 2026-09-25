@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { LuRefreshCw } from 'react-icons/lu';
 import { asyncFetchStatus } from '@/components/AsyncFetchStatus';
-import RegistrationCategoryFilter, { ALL_CATEGORIES } from '@/components/registrations/RegistrationCategoryFilter';
+import RegistrationCategoryFilter from '@/components/registrations/RegistrationCategoryFilter';
 import RegistrationGroupList from '@/components/registrations/RegistrationGroupList';
 import { useRegistrationsContext } from '@/context/RegistrationsContext';
 import { useStudentsContext } from '@/context/StudentsContext';
@@ -13,6 +13,7 @@ import { useRegistrationCategories } from '@/hooks/useRegistrationCategories';
 import { useRegistrationsAgendaLoader } from '@/hooks/useRegistrationsAgendaLoader';
 import { useSelectedStudentFromId } from '@/hooks/useSelectedStudentFromId';
 import { getTodayKey } from '@/lib/dateUtils';
+import { ALL_REGISTRATION_CATEGORIES } from '@/lib/registrationCategories';
 import StudentModal from './StudentModal';
 import { Button } from './ui/button';
 
@@ -20,7 +21,7 @@ export default function Registrations() {
 	const { data, loading, refreshing, error, refresh } = useRegistrationsContext();
 	const { students, selectedStudies, loadAgendaForStudent } = useStudentsContext();
 	const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
-	const [category, setCategory] = useState<string>(ALL_CATEGORIES);
+	const [category, setCategory] = useState<string>(ALL_REGISTRATION_CATEGORIES);
 
 	const todayKey = getTodayKey();
 	const allowedStudentIds = useAllowedStudentIds(students, selectedStudies);

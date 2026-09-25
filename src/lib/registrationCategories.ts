@@ -1,3 +1,4 @@
+/** Sentinel value for "no category filter" (Select item + filter state). */
 export const ALL_REGISTRATION_CATEGORIES = 'all';
 
 export interface RegistrationCategoryOption {
