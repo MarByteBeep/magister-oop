@@ -2,7 +2,7 @@ import { absenceNoticeRangeEndMs } from '@/lib/absenceNoticeUtils';
 import { eachDateKey, getNow, parseDateKey, toISOFromDateKeyAndTime } from '@/lib/dateUtils';
 import { isFullDayReturnMeasureEntry } from '@/lib/fullDayScheduleUtils';
 import type { AbsenceNotice } from '@/magister/response/absence-notice.types';
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaItem, Participant } from '@/magister/response/agenda.types';
 import type {
 	AbsenceNoticeAgendaEntry,
 	AgendaEntry,
@@ -23,8 +23,8 @@ export function isAbsenceNoticeEntry(entry: AgendaEntry): entry is AbsenceNotice
 	return entry.kind === 'absence-notice';
 }
 
-export function lessonEntry(item: AgendaItem): LessonAgendaEntry {
-	return { kind: 'lesson', start: item.begin, end: item.einde, item };
+export function lessonEntry(item: AgendaItem<Participant> | AgendaItem): LessonAgendaEntry {
+	return { kind: 'lesson', start: item.begin, end: item.einde, item: item as AgendaItem };
 }
 
 export function returnMeasureEntry(measure: ScheduledReturnMeasure): ReturnMeasureAgendaEntry {
@@ -51,6 +51,14 @@ export function isSameAgendaEntryOccurrence(
 	b: AgendaEntry | null | undefined,
 ): boolean {
 	return a != null && b != null && getAgendaEntryKey(a) === getAgendaEntryKey(b);
+}
+
+export function agendaEntriesEqual(a: AgendaEntry[], b: AgendaEntry[]): boolean {
+	if (a.length !== b.length) return false;
+	return a.every((entry, index) => {
+		const other = b[index];
+		return other != null && getAgendaEntryKey(entry) === getAgendaEntryKey(other);
+	});
 }
 
 /** Visible school-day window; matches the first and last entries in `timeTable`. */
@@ -92,7 +100,7 @@ function sortAgendaEntries(entries: AgendaEntry[]): AgendaEntry[] {
 }
 
 export function buildAgendaEntries(
-	agendaItems: AgendaItem[],
+	agendaItems: Array<AgendaItem<Participant> | AgendaItem>,
 	returnMeasures: ScheduledReturnMeasure[],
 	absenceNotices: AbsenceNotice[],
 	rangeStart: Date,
@@ -180,12 +188,6 @@ export function findActiveEntryPreferringLessons(date: Date, entries: AgendaEntr
 	return null;
 }
 
-export function findNextLessonEntry(date: Date, entries: AgendaEntry[]): LessonAgendaEntry | null {
-	const futureEntries = entries.filter(isLessonEntry).filter((entry) => new Date(entry.start) > date);
-	futureEntries.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
-	return futureEntries[0] ?? null;
-}
-
 export function entryOverlapsLessonRange(entry: AgendaEntry, lessonStart: string, lessonEnd: string): boolean {
 	const itemStart = formatEntryTime(entry.start);
 	const itemEnd = formatEntryTime(entry.end);
@@ -199,16 +201,22 @@ function formatEntryTime(iso: string): string {
 	return `${hh}:${mm}`;
 }
 
+function parseLessonRange(lessonRange: string): { start: string; end: string } | null {
+	const [start, end] = lessonRange.split('-').map((part) => part.trim());
+	if (!start || !end) return null;
+	return { start, end };
+}
+
 export function findLessonEntryOverlappingLessonRange(
 	entries: AgendaEntry[],
 	lessonRange: string,
 ): LessonAgendaEntry | null {
-	const [lessonStart, lessonEnd] = lessonRange.split('-').map((s) => s.trim());
-	if (!lessonStart || !lessonEnd) return null;
+	const range = parseLessonRange(lessonRange);
+	if (!range) return null;
 
 	for (const entry of entries) {
 		if (!isLessonEntry(entry)) continue;
-		if (entryOverlapsLessonRange(entry, lessonStart, lessonEnd)) return entry;
+		if (entryOverlapsLessonRange(entry, range.start, range.end)) return entry;
 	}
 	return null;
 }
@@ -217,8 +225,9 @@ export function findStudentOverviewEntryOverlappingLessonRange(
 	entries: AgendaEntry[],
 	lessonRange: string,
 ): AgendaEntry | null {
-	const [lessonStart, lessonEnd] = lessonRange.split('-').map((s) => s.trim());
-	if (!lessonStart || !lessonEnd) return null;
+	const range = parseLessonRange(lessonRange);
+	if (!range) return null;
+	const { start: lessonStart, end: lessonEnd } = range;
 
 	for (const entry of entries) {
 		if (!isAbsenceNoticeEntry(entry)) continue;

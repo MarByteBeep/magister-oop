@@ -1,9 +1,7 @@
 'use client';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-/** Sentinel value for "no category filter". */
-export const ALL_CATEGORIES = 'all';
+import { ALL_REGISTRATION_CATEGORIES } from '@/lib/registrationCategories';
 
 export interface RegistrationCategory {
 	key: string;
@@ -26,7 +24,7 @@ export default function RegistrationCategoryFilter({ value, categories, onChange
 				<SelectValue />
 			</SelectTrigger>
 			<SelectContent>
-				<SelectItem value={ALL_CATEGORIES}>Alles ({total})</SelectItem>
+				<SelectItem value={ALL_REGISTRATION_CATEGORIES}>Alles ({total})</SelectItem>
 				{categories.map((category) => (
 					<SelectItem key={category.key} value={category.key}>
 						{category.label} ({category.count})

@@ -1,137 +1,160 @@
 import { type Dispatch, type SetStateAction, useCallback, useRef } from 'react';
 import { getAbsenceNoticesForDate, invalidateAbsenceNoticeCache } from '@/lib/absenceNoticeFetch';
+import { applyFetchResult, resetDays } from '@/lib/absenceNoticeLoadState';
 import { noticesForStudent, uniqueNotices } from '@/lib/absenceNoticeUtils';
-import { buildAgendaEntries, isAbsenceNoticeEntry } from '@/lib/agendaEntryUtils';
-import { markDateRangeLoaded } from '@/lib/agendaLoadUtils';
+import { buildAgendaEntries } from '@/lib/agendaEntryUtils';
+import { mergeFetchedAgendaForRange } from '@/lib/agendaLoadUtils';
 import { eachDateKey, eachMonthKey, getDateKey } from '@/lib/dateUtils';
 import { getReturnMeasuresForRange, invalidateReturnMeasureCache } from '@/lib/returnMeasureFetch';
 import { scheduledReturnMeasuresForStudent } from '@/lib/returnMeasureUtils';
+import { studentDataStore } from '@/lib/studentDataStore';
 import { deepEqual, groupBy } from '@/lib/utils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { AbsenceNotice } from '@/magister/response/absence-notice.types';
 import type { AgendaResponse } from '@/magister/response/agenda.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
+import type { StudentWrite } from '@/types/studentStore.types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
+
+const inflightAgendaLoads = new Map<string, ReturnType<LoadAgendaForStudentFn>>();
+
+function agendaLoadKey(studentId: number, startDateKey: string, endDateKey: string, refresh: boolean): string {
+	const base = `${studentId}:${startDateKey}:${endDateKey}`;
+	return refresh ? `${base}:refresh` : base;
+}
 
 async function fetchAbsenceNoticesForStudent(
 	studentUuid: string | undefined,
 	dateKeys: string[],
 	refreshCachedDates: boolean,
-): Promise<AbsenceNotice[]> {
-	if (!studentUuid) return [];
+): Promise<{ notices: AbsenceNotice[]; loadedDateKeys: string[]; failedDateKeys: string[] }> {
+	if (!studentUuid) {
+		return { notices: [], loadedDateKeys: dateKeys, failedDateKeys: [] };
+	}
 	if (refreshCachedDates) invalidateAbsenceNoticeCache(dateKeys);
 
-	const noticesByDate = await Promise.all(dateKeys.map((dateKey) => getAbsenceNoticesForDate(dateKey)));
-	return noticesForStudent(uniqueNotices(noticesByDate.flat()), studentUuid);
+	const results = await Promise.allSettled(dateKeys.map((dateKey) => getAbsenceNoticesForDate(dateKey)));
+	const noticesByDate: AbsenceNotice[][] = [];
+	const loadedDateKeys: string[] = [];
+	const failedDateKeys: string[] = [];
+
+	for (let index = 0; index < results.length; index++) {
+		const result = results[index];
+		if (result.status === 'fulfilled') {
+			noticesByDate.push(result.value);
+			loadedDateKeys.push(dateKeys[index]);
+			continue;
+		}
+		failedDateKeys.push(dateKeys[index]);
+	}
+
+	return {
+		notices: noticesForStudent(uniqueNotices(noticesByDate.flat()), studentUuid),
+		loadedDateKeys,
+		failedDateKeys,
+	};
 }
 
-export function useAgendaLoader(setStudents: Dispatch<SetStateAction<Student[]>>, students: Student[]) {
+export function useAgendaLoader(setStudents: Dispatch<SetStateAction<StudentWrite[]>>, students: Student[]) {
 	const studentsRef = useRef(students);
 	studentsRef.current = students;
 
 	return useCallback<LoadAgendaForStudentFn>(
-		async (studentId: number, startDate: Date, endDate: Date) => {
-			try {
-				const startDateKey = getDateKey(startDate);
-				const endDateKey = getDateKey(endDate);
-				const dateKeys = eachDateKey(startDate, endDate);
-				const student = studentsRef.current.find((item) => item.id === studentId);
-				const refreshCachedDates = dateKeys.every(
-					(dateKey) => student?.absenceNoticesLoadedFor?.[dateKey] === true,
-				);
-				// A repeat load is a manual sync, so the shared month cache must go back to the network too.
-				if (refreshCachedDates) invalidateReturnMeasureCache(eachMonthKey(startDate, endDate));
+		(studentId, startDate, endDate, options) => {
+			const startDateKey = getDateKey(startDate);
+			const endDateKey = getDateKey(endDate);
+			const refresh = options?.refresh === true;
+			const key = agendaLoadKey(studentId, startDateKey, endDateKey, refresh);
+			const pending = inflightAgendaLoads.get(key);
+			if (pending) return pending;
 
-				const [data, allReturnMeasures, absenceNotices] = await Promise.all([
-					getJson<AgendaResponse>(
-						endpoints.agenda(studentId, startDateKey, endDateKey),
-						'include',
-						'no-cache',
-					),
-					getReturnMeasuresForRange(startDate, endDate),
-					fetchAbsenceNoticesForStudent(student?.externeId, dateKeys, refreshCachedDates),
-				]);
-				const returnMeasures = scheduledReturnMeasuresForStudent(
-					allReturnMeasures,
-					studentId,
-					startDate,
-					endDate,
-				);
+			let loadPromise!: ReturnType<LoadAgendaForStudentFn>;
+			loadPromise = (async () => {
+				try {
+					const dateKeys = eachDateKey(startDate, endDate);
+					const student = studentsRef.current.find((item) => item.id === studentId);
+					if (refresh) invalidateReturnMeasureCache(eachMonthKey(startDate, endDate));
 
-				for (const item of data.items) {
-					item.deelnames = item.deelnames.filter((e) => e.type === 'medewerker' || e.type === 'groep');
+					const [data, allReturnMeasures, absenceNoticeResult] = await Promise.all([
+						getJson<AgendaResponse>(
+							endpoints.agenda(studentId, startDateKey, endDateKey),
+							'include',
+							'no-cache',
+						),
+						getReturnMeasuresForRange(startDate, endDate),
+						fetchAbsenceNoticesForStudent(student?.externeId, dateKeys, refresh),
+					]);
+					const returnMeasures = scheduledReturnMeasuresForStudent(
+						allReturnMeasures,
+						studentId,
+						startDate,
+						endDate,
+					);
 
-					for (const person of item.deelnames) {
-						person.links = undefined;
-					}
-				}
+					for (const item of data.items) {
+						item.deelnames = item.deelnames.filter((e) => e.type === 'medewerker' || e.type === 'groep');
 
-				const entries = buildAgendaEntries(data.items, returnMeasures, absenceNotices, startDate, endDate);
-
-				let agendaChanged = false;
-
-				const receivedAgendaItems = data.items.length > 0;
-				const receivedReturnMeasures = returnMeasures.length > 0;
-				const receivedAbsenceNotices = entries.some(isAbsenceNoticeEntry);
-				const canConfirmEmptyDays = !receivedAgendaItems && !receivedReturnMeasures && !receivedAbsenceNotices;
-
-				setStudents((prev) => {
-					const index = prev.findIndex((s) => s.id === studentId);
-					if (index === -1) return prev;
-
-					const student = prev[index];
-					const dailyItems = groupBy(entries, (entry) => getDateKey(new Date(entry.start)));
-					const dateRange = dateKeys;
-
-					const updatedAgenda = { ...student.agenda };
-					for (const [key, dayItems] of Object.entries(dailyItems)) {
-						updatedAgenda[key] = dayItems;
-					}
-					for (const dateKey of dateRange) {
-						if (dailyItems[dateKey] !== undefined) continue;
-						if (canConfirmEmptyDays) {
-							updatedAgenda[dateKey] = [];
-						} else if (student.agenda?.[dateKey] !== undefined) {
-							updatedAgenda[dateKey] = student.agenda[dateKey];
+						for (const person of item.deelnames) {
+							person.links = undefined;
 						}
 					}
 
-					const rangeFullyResolved = dateRange.every(
-						(dateKey) =>
-							dailyItems[dateKey] !== undefined ||
-							canConfirmEmptyDays ||
-							student.agenda?.[dateKey] !== undefined,
+					const entries = buildAgendaEntries(
+						data.items,
+						returnMeasures,
+						absenceNoticeResult.notices,
+						startDate,
+						endDate,
 					);
 
-					const absenceNoticesLoadedFor = rangeFullyResolved
-						? markDateRangeLoaded(student.absenceNoticesLoadedFor, startDate, endDate)
-						: student.absenceNoticesLoadedFor;
+					let agendaChanged = false;
 
-					const agendaUnchanged = deepEqual(student.agenda, updatedAgenda);
-					const absenceNoticesFlagUnchanged = deepEqual(
-						student.absenceNoticesLoadedFor,
-						absenceNoticesLoadedFor,
-					);
-					if (agendaUnchanged && absenceNoticesFlagUnchanged) return prev;
+					const dailyItems = groupBy(entries, (entry) => getDateKey(new Date(entry.start)));
 
-					agendaChanged = !agendaUnchanged;
+					setStudents((prev) => {
+						const index = prev.findIndex((s) => s.id === studentId);
+						if (index === -1) return prev;
 
-					const updatedStudent = {
-						...student,
-						agenda: updatedAgenda,
-						absenceNoticesLoadedFor,
-					};
-					const newStudents = [...prev];
-					newStudents[index] = updatedStudent;
+						const currentStudent = prev[index];
+						const currentAgenda = currentStudent.agenda;
+						const updatedAgenda = mergeFetchedAgendaForRange(currentAgenda, dailyItems, dateKeys);
+						const currentLoad = studentDataStore.getAbsenceNoticeLoad(studentId);
+						let absenceNoticeLoad = refresh ? resetDays(currentLoad, dateKeys) : currentLoad;
+						absenceNoticeLoad = applyFetchResult(
+							absenceNoticeLoad,
+							absenceNoticeResult.loadedDateKeys,
+							absenceNoticeResult.failedDateKeys,
+						);
 
-					return newStudents;
-				});
-				return { entries, changed: agendaChanged };
-			} catch (e) {
-				console.error('Failed to fetch agenda for student', studentId, e);
-				throw e;
-			}
+						const agendaUnchanged = deepEqual(currentAgenda, updatedAgenda);
+						const loadUnchanged = deepEqual(currentLoad, absenceNoticeLoad);
+						if (agendaUnchanged && loadUnchanged) return prev;
+
+						agendaChanged = !agendaUnchanged;
+
+						const updatedStudent = {
+							...currentStudent,
+							agenda: updatedAgenda,
+							absenceNoticeLoad,
+						};
+						const newStudents = [...prev];
+						newStudents[index] = updatedStudent;
+
+						return newStudents;
+					});
+					return { entries, changed: agendaChanged };
+				} catch (e) {
+					console.error('Failed to fetch agenda for student', studentId, e);
+					throw e;
+				} finally {
+					if (inflightAgendaLoads.get(key) === loadPromise) {
+						inflightAgendaLoads.delete(key);
+					}
+				}
+			})();
+			inflightAgendaLoads.set(key, loadPromise);
+			return loadPromise;
 		},
 		[setStudents],
 	);

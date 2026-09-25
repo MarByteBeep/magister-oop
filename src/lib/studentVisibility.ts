@@ -1,4 +1,4 @@
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 export type StudentVisibility = (studentId: number) => boolean;
 

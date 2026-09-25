@@ -5,7 +5,7 @@ import { LuClock, LuHeartPulse, LuUserX } from 'react-icons/lu';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStudentDetailsData } from '@/hooks/useStudentDetailsData';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import StudentAgendaCard from './StudentAgendaCard';
 import StudentParentsCard from './StudentParentsCard';
 import StudentProfileCard from './StudentProfileCard';

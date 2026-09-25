@@ -1,5 +1,5 @@
 import { getTodayKey } from '@/lib/dateUtils';
-import type { AgendaItem, AgendaResponse } from '@/magister/response/agenda.types';
+import type { AgendaItem, AgendaResponse, Participant } from '@/magister/response/agenda.types';
 import { getAllAgendaItems } from '../utils/helpers';
 
 function applyAgendaDate(isoTemplate: string, date: string): string {
@@ -9,7 +9,7 @@ function applyAgendaDate(isoTemplate: string, date: string): string {
 	return isoTemplate.replace(/^\d{4}-\d{2}-\d{2}/, date);
 }
 
-function cloneAgendaForDate(templates: AgendaItem[], date: string): AgendaItem[] {
+function cloneAgendaForDate(templates: AgendaItem<Participant>[], date: string): AgendaItem<Participant>[] {
 	return templates.map((item) => ({
 		...item,
 		begin: applyAgendaDate(item.begin, date),

@@ -1,5 +1,11 @@
 import { expect, setSystemTime, test } from 'bun:test';
-import { getAgendaOccurrenceKey, getCurrentLesson, getNextLesson, isSameAgendaOccurrence } from './agendaUtils';
+import {
+	getAgendaOccurrenceKey,
+	getBreakPeriods,
+	getCurrentLesson,
+	getNextLesson,
+	isSameAgendaOccurrence,
+} from './agendaUtils';
 
 // ------------------------------------------------------------
 // HELPER – mock the time
@@ -166,6 +172,13 @@ test('After 16:00 → after-school', () => {
 	const cur = getCurrentLesson();
 	expect(cur).toEqual({ status: 'after-school' });
 	expect(getNextLesson(cur)).toEqual({ status: 'after-school' });
+});
+
+test('getBreakPeriods returns timetable gaps between lesson hours', () => {
+	expect(getBreakPeriods()).toEqual([
+		{ start: '10:30', end: '10:50' },
+		{ start: '12:50', end: '13:20' },
+	]);
 });
 
 test('isSameAgendaOccurrence distinguishes shared ids by begin', () => {

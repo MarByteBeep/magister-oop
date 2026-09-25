@@ -1,6 +1,6 @@
 import { MailAddress } from '@/components/ui/mailaddress';
 import { PhoneNumber } from '@/components/ui/phonenumber';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import GenderIcon from './GenderIcon';
 
 interface StudentProfileBasicFieldsProps {

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { countStudentsForLessonRange, type OccupancyChartPoint } from '@/lib/occupancyUtils';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 export type { OccupancyChartPoint };
 

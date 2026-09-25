@@ -5,7 +5,7 @@ import StudentItem from '@/components/student/StudentItem';
 import { formatTime, parseOptionalDate } from '@/lib/dateUtils';
 import type { ReturnMeasureRow as Row } from '@/lib/returnMeasureOverview';
 import type { ReturnMeasureStudent } from '@/magister/response/return-measure.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 function formatTimeRange(row: Row): string | null {
 	const start = parseOptionalDate(row.start);

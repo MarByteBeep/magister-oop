@@ -64,11 +64,48 @@ export function parseOptionalDate(value?: string | null): Date | null {
 	return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/** Local clock time in `HH:mm` (e.g. Magister `beginTijd` / `eindTijd`). */
+export function isLocalTimeLabel(time: string): boolean {
+	if (!/^\d{2}:\d{2}$/.test(time)) return false;
+	const [hours, minutes] = time.split(':').map(Number);
+	return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+}
+
+/** Whole local calendar days from `today` through `target` (negative = past). */
+export function dayOffsetFromToday(target: Date, today: Date = getNow()): number {
+	const diffMs = parseDateKey(getDateKey(target)).getTime() - parseDateKey(getDateKey(today)).getTime();
+	return Math.round(diffMs / (24 * 60 * 60 * 1000));
+}
+
+/** Local calendar-day offset for an ISO instant relative to today; null when invalid. */
+export function dayOffsetFromIsoInstant(iso: string, today: Date = getNow()): number | null {
+	const date = parseOptionalDate(iso);
+	if (!date) return null;
+	return dayOffsetFromToday(date, today);
+}
+
 /** Copy of `date` shifted by `dayOffset` local calendar days. */
 export function addDays(date: Date, dayOffset: number): Date {
 	const next = new Date(date);
 	next.setDate(date.getDate() + dayOffset);
 	return next;
+}
+
+/** Last school day when counting `schoolDayCount` weekdays from `date` (Mon–Fri), inclusive. */
+export function addSchoolDays(date: Date, schoolDayCount: number): Date {
+	const count = Math.max(schoolDayCount, 1);
+	const result = new Date(date);
+	if (count === 1) return result;
+
+	let remaining = count - 1;
+	while (remaining > 0) {
+		result.setDate(result.getDate() + 1);
+		const day = result.getDay();
+		if (day !== 0 && day !== 6) {
+			remaining--;
+		}
+	}
+	return result;
 }
 
 /** Combine a local date key and HH:mm time into an ISO UTC string. */
@@ -131,4 +168,10 @@ export function getWeekDays(date: Date): Date[] {
 		days.push(day);
 	}
 	return days;
+}
+
+/** Monday through Friday of the week containing `date`. */
+export function getWorkWeekRange(date: Date): { start: Date; end: Date } {
+	const start = getStartOfWeek(date);
+	return { start, end: addDays(start, 4) };
 }

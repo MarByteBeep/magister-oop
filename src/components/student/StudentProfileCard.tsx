@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Address } from '@/magister/response/address.types';
 import type { StudentDetails } from '@/magister/response/student-details.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import StudentProfileDetails from './StudentProfileDetails';
 
 interface StudentProfileCardProps {

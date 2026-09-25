@@ -1,7 +1,7 @@
 import ClickAvatarPreview from '@/components/ClickAvatarPreview';
 import type { SortColumn, SortDirection } from '@/hooks/useStudentListFilters';
 import type { LessonInfo } from '@/lib/agendaUtils';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import LessonHourBadge from './LessonHourBadge';
 import AgendaItemDisplay from './student/AgendaItemDisplay';
 

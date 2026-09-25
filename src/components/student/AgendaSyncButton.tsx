@@ -6,29 +6,14 @@ import { LuRotateCw } from 'react-icons/lu';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useStudentsContext } from '@/context/StudentsContext';
+import { useLoadAgendaForStudent } from '@/hooks/useLoadAgendaForStudent';
+import { useStudentById } from '@/hooks/useStudentById';
+import { isAgendaRangeReady } from '@/lib/agendaLoadUtils';
 import { getDateKey } from '@/lib/dateUtils';
+import { studentDataStore } from '@/lib/studentDataStore';
 import { cn } from '@/lib/utils';
-import type { Student } from '@/magister/types';
 
 const MIN_SPINNER_MS = 320;
-
-function isAgendaLoadedForRange(
-	agenda: Student['agenda'],
-	absenceNoticesLoadedFor: Student['absenceNoticesLoadedFor'],
-	rangeStart: Date,
-	rangeEnd: Date,
-): boolean {
-	const currentDate = new Date(rangeStart);
-	while (currentDate <= rangeEnd) {
-		const key = getDateKey(currentDate);
-		if (agenda?.[key] === undefined || absenceNoticesLoadedFor?.[key] !== true) {
-			return false;
-		}
-		currentDate.setDate(currentDate.getDate() + 1);
-	}
-	return true;
-}
 
 export interface AgendaSyncButtonProps {
 	studentId: number;
@@ -48,11 +33,10 @@ export default function AgendaSyncButton({
 	tooltipLoading = 'Agenda wordt geladen…',
 }: AgendaSyncButtonProps) {
 	const [isSyncing, setIsSyncing] = useState(false);
-	const { students, loadAgendaForStudent } = useStudentsContext();
-
-	const student = students.find((s) => s.id === studentId);
+	const loadAgendaForStudent = useLoadAgendaForStudent();
+	const student = useStudentById(studentId);
 	const rangeLoaded = student
-		? isAgendaLoadedForRange(student.agenda, student.absenceNoticesLoadedFor, rangeStart, rangeEnd)
+		? isAgendaRangeReady(student.agenda, rangeStart, rangeEnd, studentDataStore.getAbsenceNoticeLoad(student.id))
 		: false;
 	const rangeKey = `${getDateKey(rangeStart)}_${getDateKey(rangeEnd)}`;
 
@@ -68,7 +52,7 @@ export default function AgendaSyncButton({
 			setIsSyncing(true);
 		});
 		try {
-			const { changed } = await loadAgendaForStudent(student.id, rangeStart, rangeEnd);
+			const { changed } = await loadAgendaForStudent(student.id, rangeStart, rangeEnd, { refresh: true });
 			if (changed) {
 				toast.success('Agenda gesynchroniseerd: gewijzigd rooster.');
 			} else {

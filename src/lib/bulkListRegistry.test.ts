@@ -1,12 +1,15 @@
 import { describe, expect, test } from 'bun:test';
 import type { AbsenceNotice } from '@/magister/response/absence-notice.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
+import type { StudentWrite } from '@/types/studentStore.types';
 import { applyAbsenceNoticesToStudents } from './absenceNoticeApply';
 import { absenceNoticeEntries, isAbsenceNoticeEntry, lessonEntry } from './agendaEntryUtils';
 import { createBulkListRegistry, defineBulkList } from './bulkListRegistry';
-import { parseDateKey, toISOFromDateKeyAndTime } from './dateUtils';
+import { addDays, getDateKey, getNow, getTodayKey, parseDateKey, toISOFromDateKeyAndTime } from './dateUtils';
+import { studentDataStore } from './studentDataStore';
 
-const dateKey = '2026-09-02';
+/** The registry only publishes snapshots for today's month, so the fixtures have to move with it. */
+const dateKey = getTodayKey();
 const externalId = '88fb9576-7670-4661-aed2-75a547cf319f';
 
 function notice(partial: Partial<AbsenceNotice> = {}): AbsenceNotice {
@@ -69,11 +72,12 @@ function student(overrides: Partial<Student> = {}): Student {
 	};
 }
 
-function studentWithAgenda(oldNotice: AbsenceNotice): Student {
-	const day = parseDateKey(dateKey);
-	return student({
+function studentWithAgendaOn(agendaDateKey: string, oldNotice: AbsenceNotice): StudentWrite {
+	const day = parseDateKey(agendaDateKey);
+	return {
+		...student(),
 		agenda: {
-			[dateKey]: [
+			[agendaDateKey]: [
 				lessonEntry({
 					id: 1,
 					heeftInhoud: false,
@@ -82,8 +86,8 @@ function studentWithAgenda(oldNotice: AbsenceNotice): Student {
 					subtype: 'nvt',
 					heeftBijlagen: false,
 					herhaalStatus: 'geen',
-					begin: toISOFromDateKeyAndTime(dateKey, '10:50'),
-					einde: toISOFromDateKeyAndTime(dateKey, '11:30'),
+					begin: toISOFromDateKeyAndTime(agendaDateKey, '10:50'),
+					einde: toISOFromDateKeyAndTime(agendaDateKey, '11:30'),
 					onderwerp: 'Nederlands',
 					type: 'les',
 					deelnames: [],
@@ -94,6 +98,22 @@ function studentWithAgenda(oldNotice: AbsenceNotice): Student {
 				...absenceNoticeEntries(oldNotice, day, day),
 			],
 		},
+	};
+}
+
+function studentWithAgenda(oldNotice: AbsenceNotice): StudentWrite {
+	return studentWithAgendaOn(dateKey, oldNotice);
+}
+
+function seedStudents(writes: StudentWrite[]): Student[] {
+	studentDataStore.clear();
+	studentDataStore.setStudents(writes);
+	return studentDataStore.getStudents();
+}
+
+function attachStoreUpdater(registry: ReturnType<typeof createBulkListRegistry>) {
+	registry.attachStudentUpdater((update) => {
+		studentDataStore.setStudents(update);
 	});
 }
 
@@ -106,7 +126,7 @@ describe('createBulkListRegistry', () => {
 			startDateTime: toISOFromDateKeyAndTime(dateKey, '08:30'),
 			endDateTime: toISOFromDateKeyAndTime(dateKey, '16:00'),
 		});
-		let students = [studentWithAgenda(notice())];
+		seedStudents([studentWithAgenda(notice())]);
 		const registry = createBulkListRegistry([
 			defineBulkList({
 				id: 'absence-notices',
@@ -114,19 +134,53 @@ describe('createBulkListRegistry', () => {
 				applyToStudents: applyAbsenceNoticesToStudents,
 			}),
 		]);
-		registry.attachStudentUpdater((update) => {
-			students = typeof update === 'function' ? update(students) : update;
-		});
+		attachStoreUpdater(registry);
 
 		await registry.refresh('absence-notices', dateKey, 'background');
-		const overlays = students[0].agenda?.[dateKey]?.filter(isAbsenceNoticeEntry) ?? [];
+		const overlays = studentDataStore.getStudents()[0]?.agenda?.[dateKey]?.filter(isAbsenceNoticeEntry) ?? [];
 		expect(overlays[0]?.notice.absenceNoticeId).toBe('fresh');
 		expect(registry.snapshot('absence-notices')?.data).toEqual([fresh]);
 	});
 
+	test('applies a refresh outside the snapshot month to students without republishing the snapshot', async () => {
+		const laterDateKey = getDateKey(addDays(getNow(), 40));
+		const current = notice({ absenceNoticeId: 'current' });
+		const later = notice({
+			absenceNoticeId: 'later',
+			startDateTime: toISOFromDateKeyAndTime(laterDateKey, '08:30'),
+			endDateTime: toISOFromDateKeyAndTime(laterDateKey, '16:00'),
+		});
+		seedStudents([
+			studentWithAgendaOn(
+				laterDateKey,
+				notice({
+					startDateTime: toISOFromDateKeyAndTime(laterDateKey, '09:20'),
+					endDateTime: toISOFromDateKeyAndTime(laterDateKey, '10:00'),
+				}),
+			),
+		]);
+		const registry = createBulkListRegistry([
+			defineBulkList({
+				id: 'absence-notices',
+				fetch: async (key) => (key === dateKey ? [current] : [later]),
+				applyToStudents: applyAbsenceNoticesToStudents,
+			}),
+		]);
+		attachStoreUpdater(registry);
+
+		await registry.refresh('absence-notices', dateKey, 'background');
+		await registry.refresh('absence-notices', laterDateKey, 'background');
+
+		expect(registry.snapshot('absence-notices')?.data).toEqual([current]);
+		expect(registry.snapshot('absence-notices')?.refreshing).toBe(false);
+		expect(
+			studentDataStore.getStudents()[0]?.agenda?.[laterDateKey]?.find(isAbsenceNoticeEntry)?.notice
+				.absenceNoticeId,
+		).toBe('later');
+	});
+
 	test('keeps agenda overlays when a refresh returns nothing', async () => {
-		const current = studentWithAgenda(notice());
-		let students = [current];
+		seedStudents([studentWithAgenda(notice())]);
 		const registry = createBulkListRegistry([
 			defineBulkList({
 				id: 'absence-notices',
@@ -134,14 +188,12 @@ describe('createBulkListRegistry', () => {
 				applyToStudents: applyAbsenceNoticesToStudents,
 			}),
 		]);
-		registry.attachStudentUpdater((update) => {
-			students = typeof update === 'function' ? update(students) : update;
-		});
+		attachStoreUpdater(registry);
 
 		await registry.refresh('absence-notices', dateKey, 'background');
-		expect(students[0].agenda?.[dateKey]?.find(isAbsenceNoticeEntry)?.notice.absenceNoticeId).toBe(
-			'af0cf7e7-b522-4ba9-9f65-6de88bd259d0',
-		);
+		expect(
+			studentDataStore.getStudents()[0]?.agenda?.[dateKey]?.find(isAbsenceNoticeEntry)?.notice.absenceNoticeId,
+		).toBe('af0cf7e7-b522-4ba9-9f65-6de88bd259d0');
 	});
 
 	test('dedupes concurrent refreshes for the same list and date across modes', async () => {
@@ -202,7 +254,7 @@ describe('createBulkListRegistry', () => {
 			startDateTime: toISOFromDateKeyAndTime(dateKey, '08:30'),
 			endDateTime: toISOFromDateKeyAndTime(dateKey, '16:00'),
 		});
-		let students = [studentWithAgenda(notice())];
+		seedStudents([studentWithAgenda(notice())]);
 		const registry = createBulkListRegistry([
 			defineBulkList({
 				id: 'absence-notices',
@@ -211,12 +263,12 @@ describe('createBulkListRegistry', () => {
 				publishSnapshot: false,
 			}),
 		]);
-		registry.attachStudentUpdater((update) => {
-			students = typeof update === 'function' ? update(students) : update;
-		});
+		attachStoreUpdater(registry);
 
 		await registry.refresh('absence-notices', dateKey, 'background');
-		expect(students[0].agenda?.[dateKey]?.find(isAbsenceNoticeEntry)?.notice.absenceNoticeId).toBe('fresh');
+		expect(
+			studentDataStore.getStudents()[0]?.agenda?.[dateKey]?.find(isAbsenceNoticeEntry)?.notice.absenceNoticeId,
+		).toBe('fresh');
 		expect(registry.snapshot('absence-notices')).toBe(null);
 		expect(registry.snapshot('typo-id')).toBe(null);
 		expect(() => registry.subscribe('absence-notices', () => {})).toThrow(/does not publish a snapshot/);

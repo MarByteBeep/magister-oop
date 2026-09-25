@@ -1,12 +1,25 @@
 import { useMemo } from 'react';
+import { findLessonEntryPreferringLessons } from '@/lib/agendaEntryUtils';
+import { getAgendaItemInfo } from '@/lib/agendaUtils';
+import { getDateKey } from '@/lib/dateUtils';
 import { normalizeString } from '@/lib/stringUtils';
-import type { AttendanceStaffMember } from '@/magister/response/agenda.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 export type SortColumn = 'name' | 'class' | 'lockerCode' | 'now' | 'next';
 export type SortDirection = 'asc' | 'desc';
 
-export function studentMatchesSearch(student: Student, searchTerm: string): boolean {
+function lessonSearchableText(student: Student, currentTime: Date): string {
+	const agendaForToday = student.agenda?.[getDateKey(currentTime)];
+	if (!agendaForToday) return '';
+
+	const entry = findLessonEntryPreferringLessons(currentTime, agendaForToday);
+	if (!entry) return '';
+
+	const { courseCodes, locations, teachersCodes } = getAgendaItemInfo(entry.item);
+	return normalizeString([courseCodes, locations, teachersCodes].filter(Boolean).join(' '));
+}
+
+export function studentMatchesSearch(student: Student, searchTerm: string, currentTime: Date): boolean {
 	const searchLowerNormalized = normalizeString(searchTerm);
 	const isLockerSearch = searchLowerNormalized.startsWith('k:');
 
@@ -22,29 +35,11 @@ export function studentMatchesSearch(student: Student, searchTerm: string): bool
 	const fullName = normalizeString(`${student.roepnaam} ${student.tussenvoegsel ?? ''} ${student.achternaam}`);
 	const classes = normalizeString(student.klassen.join(' '));
 	const locker = normalizeString(student.lockerCode || '');
-
-	let lessonSearchableText = '';
-	if (student.currentAgendaItem) {
-		const currentItem = student.currentAgendaItem;
-		const courses = currentItem.vakken.map((v) => v.code).join(' ');
-		const locations = currentItem.locaties
-			.map((l) => l.code ?? l.omschrijving)
-			.filter(Boolean)
-			.join(' ');
-		const teachers = currentItem.deelnames
-			.filter((p) => p.type === 'medewerker')
-			.map((p) => (p as AttendanceStaffMember).code)
-			.join(' ');
-
-		lessonSearchableText = normalizeString(`${courses} ${locations} ${teachers}`);
-	}
+	const lessonText = lessonSearchableText(student, currentTime);
 
 	return searchWords.every(
 		(word) =>
-			fullName.includes(word) ||
-			classes.includes(word) ||
-			locker.includes(word) ||
-			lessonSearchableText.includes(word),
+			fullName.includes(word) || classes.includes(word) || locker.includes(word) || lessonText.includes(word),
 	);
 }
 
@@ -72,6 +67,7 @@ export function useStudentListFilters(
 	searchTerm: string,
 	sortColumn: SortColumn,
 	sortDirection: SortDirection,
+	currentTime: Date,
 ) {
 	const uniqueStudies = useMemo(() => {
 		const studies = new Set(students.flatMap((s) => s.studies));
@@ -88,11 +84,11 @@ export function useStudentListFilters(
 
 	const sortedStudents = useMemo(() => {
 		const matched = searchTerm
-			? filteredStudents.filter((student) => studentMatchesSearch(student, searchTerm))
+			? filteredStudents.filter((student) => studentMatchesSearch(student, searchTerm, currentTime))
 			: filteredStudents;
 
 		return [...matched].sort((a, b) => compareStudents(a, b, sortColumn, sortDirection));
-	}, [filteredStudents, searchTerm, sortColumn, sortDirection]);
+	}, [filteredStudents, searchTerm, sortColumn, sortDirection, currentTime]);
 
 	return { uniqueStudies, filteredStudents, sortedStudents };
 }

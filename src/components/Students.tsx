@@ -5,11 +5,28 @@ import { SearchAndFiltersBar } from '@/components/SearchAndFiltersBar';
 import StudentsTable from '@/components/StudentsTable';
 import { useMagisterSession } from '@/context/MagisterSessionContext';
 import { useStudentsContext } from '@/context/StudentsContext';
+import { useCurrentTime } from '@/hooks/useCurrentTime';
 import { type SortColumn, type SortDirection, useStudentListFilters } from '@/hooks/useStudentListFilters';
-import type { Student } from '@/magister/types';
+import { studentsLoadingTooltip } from '@/lib/studentsLoadingTooltip';
+import type { Student } from '@/types/student.types';
 import StudentModal from './StudentModal';
 
 const STUDENTS_SEARCH_TERM_STORAGE_KEY = 'studentsSearchTerm';
+
+function useStudentsSortState() {
+	const [sortColumn, setSortColumn] = useState<SortColumn>('name');
+	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+	const handleSort = (column: SortColumn) => {
+		if (sortColumn === column) setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+		else {
+			setSortColumn(column);
+			setSortDirection('asc');
+		}
+	};
+
+	return { sortColumn, sortDirection, handleSort };
+}
 
 function Students() {
 	const {
@@ -23,9 +40,9 @@ function Students() {
 		nextLessonInfo,
 	} = useStudentsContext();
 	const session = useMagisterSession();
+	const currentTime = useCurrentTime();
 	const [searchTerm, setSearchTerm] = useState('');
-	const [sortColumn, setSortColumn] = useState<SortColumn>('name');
-	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+	const { sortColumn, sortDirection, handleSort } = useStudentsSortState();
 	const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 	const [activeQuickFilterId, setActiveQuickFilterId] = useState<string | null>(null);
 
@@ -35,15 +52,8 @@ function Students() {
 		searchTerm,
 		sortColumn,
 		sortDirection,
+		currentTime,
 	);
-
-	const handleSort = (column: SortColumn) => {
-		if (sortColumn === column) setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-		else {
-			setSortColumn(column);
-			setSortDirection('asc');
-		}
-	};
 
 	const handleStudyFilterChange = (study: string, checked: boolean) => {
 		setSelectedStudies((prev) => {
@@ -59,12 +69,7 @@ function Students() {
 		[uniqueStudies],
 	);
 
-	const loadingTooltip =
-		session === 'connecting'
-			? 'Wachten tot Magister is ingelogd...'
-			: studentsNeedingAgendaCount > 0
-				? `${studentsNeedingAgendaCount} leerlingen nog te laden`
-				: 'Laden...';
+	const loadingTooltip = studentsLoadingTooltip(session, studentsNeedingAgendaCount);
 
 	return (
 		<div className="w-full">

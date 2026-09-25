@@ -1,5 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react';
-import type { Student } from '@/magister/types';
+import { getMonthKey, getNow, parseDateKey } from '@/lib/dateUtils';
+import type { Student } from '@/types/student.types';
+import type { StudentWrite } from '@/types/studentStore.types';
 
 export type BulkListMode = 'initial' | 'background';
 
@@ -13,7 +15,7 @@ export type BulkListSnapshot<T = unknown> = {
 export type BulkListSource<T = unknown> = {
 	id: string;
 	fetch: (dateKey: string) => Promise<T | null>;
-	applyToStudents?: (students: Student[], data: T, dateKey: string) => Student[];
+	applyToStudents?: (students: Student[], data: T, dateKey: string) => StudentWrite[];
 	/** When false, refresh still runs and may apply to students, but snapshot()/subscribe are unavailable. */
 	publishSnapshot?: boolean;
 };
@@ -34,6 +36,14 @@ export function emptyBulkListSnapshot<T = unknown>(): BulkListSnapshot<T> {
 	return { data: null, loading: true, refreshing: false, error: null };
 }
 
+/**
+ * The snapshot always describes today's list, so a refresh for another month (e.g. the far end of a
+ * return measure span) may update students but must not replace the published payload.
+ */
+function isSnapshotMonth(dateKey: string): boolean {
+	return getMonthKey(parseDateKey(dateKey)) === getMonthKey(getNow());
+}
+
 export function createBulkListRegistry(sources: BulkListSource[]) {
 	const byId = new Map(sources.map((source) => [source.id, source]));
 	const snapshots = new Map<string, BulkListSnapshot>(
@@ -44,7 +54,7 @@ export function createBulkListRegistry(sources: BulkListSource[]) {
 	const listeners = new Map<string, Set<(snapshot: BulkListSnapshot) => void>>();
 	const inflight = new Map<string, Promise<unknown | null>>();
 	const inflightMode = new Map<string, BulkListMode>();
-	let setStudents: Dispatch<SetStateAction<Student[]>> | null = null;
+	let setStudents: Dispatch<SetStateAction<StudentWrite[]>> | null = null;
 
 	function snapshotFor(id: string): BulkListSnapshot | null {
 		return snapshots.get(id) ?? null;
@@ -99,7 +109,8 @@ export function createBulkListRegistry(sources: BulkListSource[]) {
 					});
 					return null;
 				}
-				patch(id, { data, loading: false, refreshing: false, error: null });
+				const settled: Partial<BulkListSnapshot> = { loading: false, refreshing: false, error: null };
+				patch(id, isSnapshotMonth(dateKey) ? { ...settled, data } : settled);
 				applyFetched(id, data, dateKey);
 				return data;
 			} catch (error) {
@@ -136,7 +147,7 @@ export function createBulkListRegistry(sources: BulkListSource[]) {
 				set.delete(listener);
 			};
 		},
-		attachStudentUpdater(updater: Dispatch<SetStateAction<Student[]>>) {
+		attachStudentUpdater(updater: Dispatch<SetStateAction<StudentWrite[]>>) {
 			setStudents = updater;
 			return () => {
 				if (setStudents === updater) setStudents = null;

@@ -1,4 +1,11 @@
-import { addDays, getDateKey, getNow, parseOptionalDate, toISOFromDateKeyAndTime } from '@/lib/dateUtils';
+import {
+	addDays,
+	addSchoolDays,
+	getDateKey,
+	getNow,
+	parseOptionalDate,
+	toISOFromDateKeyAndTime,
+} from '@/lib/dateUtils';
 import type { Measure, ReturnMeasureHandler, ReturnMeasureStudent } from '@/magister/response/return-measure.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
 import type { StudentBase } from '@/magister/response/student.types';
@@ -11,6 +18,8 @@ export type StoredReturnMeasureTemplate = {
 	measure: Measure | null;
 	startTime: string;
 	endTime: string;
+	/** Inclusive school-day span from the return start; defaults to 1 when omitted. */
+	dayCount?: number;
 	hasReported: boolean;
 	hasNotReported: boolean;
 	/** Local HH:mm on the measure's day, or null when it was never handled. */
@@ -79,31 +88,56 @@ export function expandReturnMeasureTemplates(
 	const studentDetails = toStudentDetails(student);
 
 	return templates.flatMap((template) => {
-		const dateKey = template.dayOffset == null ? null : getDateKey(addDays(getNow(), template.dayOffset));
-		if (dateKey != null && !isWithinRange(dateKey, beginParam, endParam)) return [];
+		if (template.dayOffset == null) {
+			return [buildReturnMeasureStudent(template, null, studentDetails, student.id, staffById, 0)];
+		}
 
-		const handler = template.handledById == null ? null : staffById.get(template.handledById);
-		const measure: ReturnMeasureStudent = {
-			id: template.id,
-			leerling: studentDetails,
-			maatregel: template.measure,
-			heeftGemeld: template.hasReported,
-			heeftNietGemeld: template.hasNotReported,
-			begin: dateKey == null ? null : toISOFromDateKeyAndTime(dateKey, template.startTime),
-			einde: dateKey == null ? null : toISOFromDateKeyAndTime(dateKey, template.endTime),
-			afgehandeldOp:
-				dateKey == null || template.handledTime == null
-					? null
-					: toISOFromDateKeyAndTime(dateKey, template.handledTime),
-			afgehandeldDoor: handler ? toHandler(handler) : null,
-			omschrijving: template.description,
-			links: {
-				self: { href: '/api/m6/leerlingen/terugkomers' },
-				terugkommaatregelen: { href: `/api/leerlingen/${student.id}/verantwoordingen/terugkommaatregelen` },
-				melden: { href: `/api/terugkommaatregelen/${template.id}/melding` },
-			},
-		};
+		const dayCount = Math.max(template.dayCount ?? 1, 1);
+		const startDate = addDays(getNow(), template.dayOffset);
+		const measures: ReturnMeasureStudent[] = [];
 
-		return [measure];
+		for (let dayIndex = 0; dayIndex < dayCount; dayIndex++) {
+			const day = addSchoolDays(startDate, dayIndex + 1);
+			const dateKey = getDateKey(day);
+			if (!isWithinRange(dateKey, beginParam, endParam)) continue;
+			measures.push(
+				buildReturnMeasureStudent(template, dateKey, studentDetails, student.id, staffById, dayIndex),
+			);
+		}
+
+		return measures;
 	});
+}
+
+function buildReturnMeasureStudent(
+	template: StoredReturnMeasureTemplate,
+	dateKey: string | null,
+	studentDetails: ReturnMeasureStudent['leerling'],
+	studentId: number,
+	staffById: Map<number, StaffMember>,
+	dayIndex: number,
+): ReturnMeasureStudent {
+	const handler = template.handledById == null ? null : staffById.get(template.handledById);
+	const id = dayIndex === 0 ? template.id : template.id * 100 + dayIndex;
+
+	return {
+		id,
+		leerling: studentDetails,
+		maatregel: template.measure,
+		heeftGemeld: template.hasReported,
+		heeftNietGemeld: template.hasNotReported,
+		begin: dateKey == null ? null : toISOFromDateKeyAndTime(dateKey, template.startTime),
+		einde: dateKey == null ? null : toISOFromDateKeyAndTime(dateKey, template.endTime),
+		afgehandeldOp:
+			dateKey == null || template.handledTime == null
+				? null
+				: toISOFromDateKeyAndTime(dateKey, template.handledTime),
+		afgehandeldDoor: handler ? toHandler(handler) : null,
+		omschrijving: template.description,
+		links: {
+			self: { href: '/api/m6/leerlingen/terugkomers' },
+			terugkommaatregelen: { href: `/api/leerlingen/${studentId}/verantwoordingen/terugkommaatregelen` },
+			melden: { href: `/api/terugkommaatregelen/${id}/melding` },
+		},
+	};
 }

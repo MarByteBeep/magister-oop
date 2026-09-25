@@ -3,7 +3,9 @@ import { returnMeasureEntry } from '@/lib/agendaEntryUtils';
 import {
 	configureFullDaySchedule,
 	getFullDayScheduleLabel,
+	getFullDayScheduleSelection,
 	isFullDayReturnMeasureEntry,
+	isFullDayScheduleSelection,
 	resetFullDayScheduleConfig,
 } from './fullDayScheduleUtils';
 import { scheduledReturnMeasure } from './returnMeasureFixtures';
@@ -32,4 +34,13 @@ test('configureFullDaySchedule allows school-specific times', () => {
 	);
 	expect(getFullDayScheduleLabel()).toBe('Vierkant rooster');
 	resetFullDayScheduleConfig();
+});
+
+test('isFullDayScheduleSelection matches configured school-day bounds', () => {
+	resetFullDayScheduleConfig();
+	const fullDay = getFullDayScheduleSelection(new Date('2026-09-16T12:00:00'));
+	expect(isFullDayScheduleSelection(fullDay)).toBe(true);
+	expect(
+		isFullDayScheduleSelection({ start: new Date('2026-09-16T08:30:00'), end: new Date('2026-09-16T16:00:00') }),
+	).toBe(false);
 });

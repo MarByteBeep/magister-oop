@@ -1,10 +1,10 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { GET as getDataVersion } from './api/data-version';
 import { GET as getStudentAddress } from './api/leerlingen/adresgegevens';
 import { GET as getStudentAgenda } from './api/leerlingen/afspraken';
 import { GET as getStudentParents } from './api/leerlingen/ouders';
 import { GET as getStudentDetails } from './api/leerlingen/personalia';
+import { POST as createReturnMeasure } from './api/leerlingen/verantwoordingen/terugkommaatregelen';
 import { GET as getSearchStudents } from './api/leerlingen/zoeken';
 import { GET as getReturnMeasures } from './api/m6/leerlingen/terugkomers';
 import { GET as getRegistrations } from './api/m6/verantwoordingen/ongeoorloofderegistraties';
@@ -27,8 +27,6 @@ api.get('/account', (c) =>
 		'Content-Type': 'application/json',
 	}),
 );
-api.get('/data-version', () => getDataVersion());
-
 // Static routes
 api.get('/leerlingen/zoeken', (c) => getSearchStudents(c.req.raw));
 api.get('/medewerkers/zoeken', (c) => getSearchStaff(c.req.raw));
@@ -57,6 +55,10 @@ api.get('/leerlingen/:id/personalia', (c) => {
 api.get('/leerlingen/:id/foto', (c) => {
 	const id = Number.parseInt(c.req.param('id'), 10);
 	return getPhoto(c.req.raw, id);
+});
+api.post('/leerlingen/:id/verantwoordingen/terugkommaatregelen', (c) => {
+	const id = Number.parseInt(c.req.param('id'), 10);
+	return createReturnMeasure(c.req.raw, id);
 });
 
 // Dynamic: ouders /:id /...

@@ -36,6 +36,51 @@ export function isCompleteSchoolTab(tab: Pick<chrome.tabs.Tab, 'url' | 'status'>
 	return tab.status === 'complete' && Boolean(tab.url && isSchoolSessionUrl(tab.url));
 }
 
+/** Runs in the Magister tab (MAIN world). Must be self-contained for script injection. */
+export async function checkSchoolSessionReadyInPage(): Promise<boolean> {
+	// Nested copy required: injected functions cannot import module helpers.
+	// fallow-ignore-next-line code-duplication
+	function parseOidcAccessToken(stored: string): string {
+		try {
+			return (JSON.parse(stored) as { access_token?: string }).access_token ?? '';
+		} catch {
+			return '';
+		}
+	}
+
+	function readOidcTokenFromStorage(storage: Storage): string {
+		for (let index = 0; index < storage.length; index++) {
+			const key = storage.key(index);
+			if (!key?.startsWith('oidc.user:')) continue;
+			const stored = storage.getItem(key);
+			if (!stored) continue;
+			const token = parseOidcAccessToken(stored);
+			if (token) return token;
+		}
+		return '';
+	}
+
+	function hasOidcToken(): boolean {
+		return Boolean(
+			readOidcTokenFromStorage(window.sessionStorage) || readOidcTokenFromStorage(window.localStorage),
+		);
+	}
+
+	if (!hasOidcToken()) return false;
+
+	try {
+		const res = await fetch('/api/account', {
+			credentials: 'include',
+			headers: { Accept: 'application/json' },
+		});
+		if (!res.ok) return false;
+		await res.json();
+		return true;
+	} catch {
+		return false;
+	}
+}
+
 /** True when the school SPA has an OIDC token and session cookies. */
 export async function isSchoolSessionReady(tabId: number): Promise<boolean> {
 	try {
@@ -45,38 +90,7 @@ export async function isSchoolSessionReady(tabId: number): Promise<boolean> {
 		const [injection] = await chrome.scripting.executeScript({
 			target: { tabId },
 			world: 'MAIN',
-			func: async () => {
-				const hasOidcToken = () => {
-					for (const storage of [window.sessionStorage, window.localStorage]) {
-						for (let index = 0; index < storage.length; index++) {
-							const key = storage.key(index);
-							if (!key?.startsWith('oidc.user:')) continue;
-							const stored = storage.getItem(key);
-							if (!stored) continue;
-							try {
-								if ((JSON.parse(stored) as { access_token?: string }).access_token) return true;
-							} catch {
-								// ignore malformed oidc entries
-							}
-						}
-					}
-					return false;
-				};
-
-				if (!hasOidcToken()) return false;
-
-				try {
-					const res = await fetch('/api/account', {
-						credentials: 'include',
-						headers: { Accept: 'application/json' },
-					});
-					if (!res.ok) return false;
-					await res.json();
-					return true;
-				} catch {
-					return false;
-				}
-			},
+			func: checkSchoolSessionReadyInPage,
 		});
 
 		return injection?.result === true;

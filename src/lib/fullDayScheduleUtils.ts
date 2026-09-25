@@ -1,3 +1,5 @@
+import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
+import { hhmmToDate } from '@/lib/bigCalendarUtils';
 import { formatTime } from '@/lib/dateUtils';
 import type { ReturnMeasureAgendaEntry } from '@/magister/response/agenda-entry.types';
 
@@ -39,6 +41,23 @@ export function isFullDayReturnMeasureEntry(entry: ReturnMeasureAgendaEntry): bo
 	return formatTime(new Date(entry.start)) === beginTime && formatTime(new Date(entry.end)) === endTime;
 }
 
+export function getFullDayScheduleSelection(date: Date): AgendaSlotSelection {
+	const { beginTime, endTime } = fullDayScheduleConfig;
+	return {
+		start: hhmmToDate(date, beginTime),
+		end: hhmmToDate(date, endTime),
+	};
+}
+
+export function isFullDayScheduleSelection(selection: { start: Date; end: Date }): boolean {
+	const { beginTime, endTime } = fullDayScheduleConfig;
+	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
+	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
+	return formatTime(rangeStart) === beginTime && formatTime(rangeEnd) === endTime;
+}
+
 export function getFullDayScheduleLabel(): string {
 	return fullDayScheduleConfig.label;
 }
+
+export const fullDayScheduleShortcutTooltip = 'Aanmaken vierkant rooster';

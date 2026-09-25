@@ -1,5 +1,8 @@
 import { getAgendaEntryKey, isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
-import { getAgendaItemInfo } from '@/lib/agendaUtils';
+import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
+import { getAgendaItemInfo, getBreakPeriods } from '@/lib/agendaUtils';
+import { hhmmToDate } from '@/lib/bigCalendarUtils';
+import { getDateKey, parseDateKey } from '@/lib/dateUtils';
 import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 
@@ -8,8 +11,66 @@ export type CalendarEvent = {
 	title: string;
 	start: Date;
 	end: Date;
-	resource: AgendaEntry;
+	resource?: AgendaEntry;
+	isDraft?: boolean;
+	isHoverSlot?: boolean;
+	isBreak?: boolean;
 };
+
+export function isDraftCalendarEvent(event: CalendarEvent): boolean {
+	return event.isDraft === true;
+}
+
+export function isHoverSlotCalendarEvent(event: CalendarEvent): boolean {
+	return event.isHoverSlot === true;
+}
+
+export function isBreakCalendarEvent(event: CalendarEvent): boolean {
+	return event.isBreak === true;
+}
+
+export function isBackgroundOverlayCalendarEvent(event: CalendarEvent): boolean {
+	return isDraftCalendarEvent(event) || isHoverSlotCalendarEvent(event);
+}
+
+export function breakPeriodsToCalendarEvents(dates: Date[]): CalendarEvent[] {
+	const periods = getBreakPeriods();
+
+	return dates.flatMap((day) => {
+		const dateKey = getDateKey(day);
+		const dayStart = parseDateKey(dateKey);
+		return periods.map((period) => ({
+			id: `break-${dateKey}-${period.start}`,
+			title: 'Pauze',
+			start: hhmmToDate(dayStart, period.start),
+			end: hhmmToDate(dayStart, period.end),
+			isBreak: true,
+		}));
+	});
+}
+
+export function hoverLessonSlotToBackgroundEvent(selection: AgendaSlotSelection): CalendarEvent {
+	return {
+		id: 'hover-lesson-slot',
+		title: '',
+		start: selection.start,
+		end: selection.end,
+		isHoverSlot: true,
+	};
+}
+
+export function draftSelectionToBackgroundEvent(
+	selection: AgendaSlotSelection,
+	options?: { title?: string },
+): CalendarEvent {
+	return {
+		id: 'draft-return-measure',
+		title: options?.title ?? 'Nieuwe terugkommaatregel',
+		start: selection.start,
+		end: selection.end,
+		isDraft: true,
+	};
+}
 
 export function isSameCalendarDay(a: Date, b: Date): boolean {
 	return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
@@ -39,7 +100,7 @@ export function agendaEntriesToCalendarEvents(entries: AgendaEntry[]): CalendarE
 /** Overlap packing for compact lesson UI; overlay entries are ignored. */
 export function getOverlappingEventIds(events: CalendarEvent[]): Set<string> {
 	const overlappingIds = new Set<string>();
-	const lessonEvents = events.filter((event) => isLessonEntry(event.resource));
+	const lessonEvents = events.filter((event) => event.resource && isLessonEntry(event.resource));
 
 	for (let i = 0; i < lessonEvents.length; i++) {
 		for (let j = i + 1; j < lessonEvents.length; j++) {

@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import { isLessonEntry, isReturnMeasureEntry, lessonEntry, returnMeasureEntry } from './agendaEntryUtils';
 import { toISOFromDateKeyAndTime } from './dateUtils';
 import { applyReturnMeasuresToStudents } from './returnMeasureApply';
@@ -73,6 +73,22 @@ test('drops overlays that disappeared from the bulk list', () => {
 	expect(updated.agenda?.[dateKey]).toEqual([]);
 });
 
+test('updates loaded days outside the refresh month when the bulk list includes them', () => {
+	const students = [
+		student({
+			agenda: {
+				[dateKey]: [lesson(dateKey)],
+				[otherMonthKey]: [returnMeasureEntry(measure(1, 7, otherMonthKey))],
+			},
+		}),
+	];
+
+	const [updated] = applyReturnMeasuresToStudents(students, [measure(2, 7, otherMonthKey)], dateKey);
+
+	expect(updated.agenda?.[dateKey]).toEqual([lesson(dateKey)]);
+	expect(updated.agenda?.[otherMonthKey]?.filter(isReturnMeasureEntry).map((entry) => entry.measure.id)).toEqual([2]);
+});
+
 test('leaves days outside the fetched month untouched', () => {
 	const otherMonth = [returnMeasureEntry(measure(1, 7, otherMonthKey))];
 	const students = [student({ agenda: { [otherMonthKey]: otherMonth } })];
@@ -80,11 +96,11 @@ test('leaves days outside the fetched month untouched', () => {
 	const result = applyReturnMeasuresToStudents(students, [], dateKey);
 
 	expect(result[0]).toBe(students[0]);
-	expect(result[0].agenda?.[otherMonthKey]).toBe(otherMonth);
+	expect(result[0].agenda?.[otherMonthKey]).toEqual(otherMonth);
 });
 
 test('ignores measures of other students and days that were never loaded', () => {
-	const students = [student({ agenda: {} }), student({ id: 8 })];
+	const students = [student({ agenda: {} }), student({ id: 8, externeId: 'ext-8' })];
 
 	const result = applyReturnMeasuresToStudents(students, [measure(3, 8, dateKey)], dateKey);
 

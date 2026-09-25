@@ -1,4 +1,4 @@
-import { getDateKey } from '@/lib/dateUtils';
+import { addSchoolDays, eachMonthKey, getDateKey, parseDateKey } from '@/lib/dateUtils';
 import type { ReturnMeasureStudent, ScheduledReturnMeasure } from '@/magister/response/return-measure.types';
 
 export type ReturnMeasureDisplay = {
@@ -70,4 +70,11 @@ export function groupScheduledReturnMeasures(
 	}
 
 	return byStudent;
+}
+
+/** Month keys touched by an inclusive school-day return span (for cache invalidation and bulk refresh). */
+export function returnMeasureSpanMonthKeys(startDateKey: string, dayCount: number): string[] {
+	const start = parseDateKey(startDateKey);
+	const end = addSchoolDays(start, Math.max(dayCount, 1));
+	return eachMonthKey(start, end);
 }

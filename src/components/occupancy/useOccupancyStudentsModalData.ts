@@ -4,7 +4,7 @@ import { agendaItemOverlapsLesson, getAgendaItemInfo, getItemLocationCodes } fro
 import { getStudentsForLessonRange } from '@/lib/occupancyUtils';
 import { sortAndGroupStudentsByClass } from '@/lib/utils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 export type OccupancyClassGroup = {
 	className: string;
@@ -29,7 +29,7 @@ function formatTeacherLabel(entry: AgendaEntry): string | undefined {
 function buildClassGroups(
 	students: Student[],
 	dateKey: string,
-	matchingAgendaItems: (agendaForDay: NonNullable<Student['agenda']>[string]) => AgendaEntry[],
+	matchingAgendaItems: (agendaForDay: AgendaEntry[]) => AgendaEntry[],
 	includeLessonInfo: boolean,
 ): OccupancyClassGroup[] {
 	const grouped = sortAndGroupStudentsByClass(students);
@@ -72,7 +72,7 @@ export function useOccupancyStudentsModalData(
 	);
 
 	const matchingAgendaItems = useCallback(
-		(agendaForDay: NonNullable<Student['agenda']>[string]) =>
+		(agendaForDay: AgendaEntry[]) =>
 			agendaForDay.filter(
 				(entry) =>
 					isLessonEntry(entry) &&

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { formatActionBadgeText } from './actionBadge';
+import { formatActionBadgeText, syncActionBadge } from './actionBadge';
 
 describe('formatActionBadgeText', () => {
 	test('returns empty string for zero or negative counts', () => {
@@ -16,5 +16,11 @@ describe('formatActionBadgeText', () => {
 	test('caps at 99+', () => {
 		expect(formatActionBadgeText(100)).toBe('99+');
 		expect(formatActionBadgeText(500)).toBe('99+');
+	});
+});
+
+describe('syncActionBadge', () => {
+	test('no-ops when chrome runtime messaging is unavailable', () => {
+		expect(() => syncActionBadge(3)).not.toThrow();
 	});
 });

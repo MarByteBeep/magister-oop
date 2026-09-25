@@ -6,7 +6,7 @@ import { DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentAgendaFocusContext } from '@/context/StudentAgendaFocusContext';
 import { getDateKey, parseDateKey } from '@/lib/dateUtils';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import Details from './Details';
 import WeeklyAgendaView from './WeeklyAgendaView';
 

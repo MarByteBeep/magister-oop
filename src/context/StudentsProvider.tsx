@@ -1,15 +1,46 @@
-// src/contexts/StudentsProvider.tsx
-
-import type { ReactNode } from 'react';
+import { type ReactNode, useMemo } from 'react';
 import { useStudents } from '@/hooks/useStudents';
-import { StudentsContext } from './StudentsContext';
+import { StudentsActionsContext, StudentsDataContext } from './StudentsContext';
 
 interface Props {
 	children: ReactNode;
 }
 
 export function StudentsProvider({ children }: Props) {
-	const state = useStudents();
+	const {
+		students,
+		loading,
+		studentsNeedingAgendaCount,
+		error,
+		refresh,
+		selectedStudies,
+		setSelectedStudies,
+		loadAgendaForStudent,
+		currentLessonInfo,
+		nextLessonInfo,
+	} = useStudents();
 
-	return <StudentsContext.Provider value={state}>{children}</StudentsContext.Provider>;
+	const actions = useMemo(
+		() => ({ loadAgendaForStudent, refresh, setSelectedStudies }),
+		[loadAgendaForStudent, refresh, setSelectedStudies],
+	);
+
+	const data = useMemo(
+		() => ({
+			students,
+			loading,
+			studentsNeedingAgendaCount,
+			error,
+			selectedStudies,
+			currentLessonInfo,
+			nextLessonInfo,
+		}),
+		[students, loading, studentsNeedingAgendaCount, error, selectedStudies, currentLessonInfo, nextLessonInfo],
+	);
+
+	return (
+		<StudentsActionsContext.Provider value={actions}>
+			<StudentsDataContext.Provider value={data}>{children}</StudentsDataContext.Provider>
+		</StudentsActionsContext.Provider>
+	);
 }

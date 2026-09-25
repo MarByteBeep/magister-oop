@@ -1,26 +1,22 @@
 import { isLessonEntry } from '@/lib/agendaEntryUtils';
-import { agendaItemOverlapsLesson, getItemLocationCodes, getItemTimeRange, timeTable } from '@/lib/agendaUtils';
+import {
+	agendaItemOverlapsLesson,
+	getItemLocationCodes,
+	getItemTimeRange,
+	getSelectableTimeTable,
+} from '@/lib/agendaUtils';
 import { formatTime } from '@/lib/dateUtils';
+import { findOverlappingLessonIndexRangeByTime } from '@/lib/lessonHours';
 import { formatLocation } from '@/lib/locationUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 export type OccupancyChartPoint = {
 	lessonRange: string;
 	total: number;
 	breakTotal: number;
 };
-
-function getLessonHourIndices(startTime: string, endTime: string) {
-	let startIndex = timeTable.findIndex((slot) => startTime >= slot.start && startTime < slot.end);
-	let endIndex = timeTable.findIndex((slot) => endTime >= slot.start && endTime < slot.end);
-
-	if (startIndex < 0) startIndex = endIndex;
-	if (endIndex < 0) endIndex = startIndex;
-
-	return { startIndex, endIndex };
-}
 
 function incrementOccupancy(
 	occupancy: Record<string, Record<string, number>>,
@@ -39,11 +35,12 @@ function addAgendaItemToOccupancy(occupancy: Record<string, Record<string, numbe
 	endDate.setMinutes(endDate.getMinutes() - 1);
 	const endTime = formatTime(endDate);
 
-	const { startIndex, endIndex } = getLessonHourIndices(startTime, endTime);
-	if (startIndex < 0 || endIndex < 0) return;
+	const range = findOverlappingLessonIndexRangeByTime(startTime, endTime);
+	if (!range) return;
 
-	for (let i = startIndex; i <= endIndex; ++i) {
-		const lessonRange = `${timeTable[i].start}-${timeTable[i].end}`;
+	const slots = getSelectableTimeTable();
+	for (let i = range.from; i <= range.to; ++i) {
+		const lessonRange = `${slots[i].start}-${slots[i].end}`;
 		for (const location of item.locaties) {
 			const locationCode = formatLocation(location);
 			if (locationCode) {
@@ -54,7 +51,7 @@ function addAgendaItemToOccupancy(occupancy: Record<string, Record<string, numbe
 }
 
 function sortOccupancyForLocation(locationOccupancy: Record<string, number>) {
-	for (const slot of timeTable) {
+	for (const slot of getSelectableTimeTable()) {
 		const lessonRange = `${slot.start}-${slot.end}`;
 		if (!locationOccupancy[lessonRange]) {
 			locationOccupancy[lessonRange] = 0;

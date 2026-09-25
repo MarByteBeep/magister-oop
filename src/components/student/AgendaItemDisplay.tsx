@@ -1,10 +1,12 @@
 'use client';
 
+import { memo } from 'react';
 import { LuRotateCw } from 'react-icons/lu';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Button } from '@/components/ui/button';
-import { useStudentsContext } from '@/context/StudentsContext';
 import { useAgendaItemDisplay } from '@/hooks/useAgendaItemDisplay';
+import { useLoadAgendaForStudent } from '@/hooks/useLoadAgendaForStudent';
+import { useStudentById } from '@/hooks/useStudentById';
 import AgendaItemDisplayContent from './AgendaItemDisplayContent';
 
 interface AgendaItemDisplayProps {
@@ -13,9 +15,9 @@ interface AgendaItemDisplayProps {
 	lessonRange?: string;
 }
 
-export default function AgendaItemDisplay({ studentId, type, lessonRange }: AgendaItemDisplayProps) {
-	const { students, loadAgendaForStudent } = useStudentsContext();
-	const student = students.find((s) => s.id === studentId);
+function AgendaItemDisplay({ studentId, type, lessonRange }: AgendaItemDisplayProps) {
+	const loadAgendaForStudent = useLoadAgendaForStudent();
+	const student = useStudentById(studentId);
 	const { agendaEntry, isLoadingAgenda, hasFetchedForToday, handleSyncClick } = useAgendaItemDisplay(
 		student,
 		type,
@@ -47,3 +49,5 @@ export default function AgendaItemDisplay({ studentId, type, lessonRange }: Agen
 		</div>
 	);
 }
+
+export default memo(AgendaItemDisplay);

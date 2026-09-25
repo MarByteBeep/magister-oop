@@ -1,6 +1,6 @@
 import type { Address } from '@/magister/response/address.types';
 import type { StudentDetails } from '@/magister/response/student-details.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import StudentProfileAddressFields from './StudentProfileAddressFields';
 import StudentProfileBasicFields from './StudentProfileBasicFields';
 import StudentProfilePersonalFields from './StudentProfilePersonalFields';

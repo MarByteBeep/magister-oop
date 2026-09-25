@@ -98,6 +98,24 @@
 	border-top: 1px solid var(--rbc-grid-half);
 }
 
+/* Lesson-hour grid: hide 15-minute lines, draw boundaries from timeTable instead */
+.agenda-lesson-grid .rbc-timeslot-group {
+	border-bottom: none;
+}
+
+.agenda-lesson-grid .rbc-day-slot .rbc-time-slot {
+	border-top: none;
+}
+
+.agenda-lesson-grid .rbc-day-slot::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	pointer-events: none;
+	background-image: var(--agenda-lesson-grid);
+}
+
 .rbc-day-bg + .rbc-day-bg,
 .rbc-time-content > * + * {
 	border-left: 1px solid var(--rbc-grid);
@@ -137,6 +155,9 @@
 	border: 0;
 	padding: 0;
 	box-shadow: none;
+	/* RBC defaults to 20px; short breaks (~17px) must not grow into the next slot. */
+	min-height: 0;
+	max-height: 100%;
 }
 
 .rbc-day-slot .rbc-event {
@@ -165,6 +186,7 @@
 
 .rbc-day-slot .rbc-event-content {
 	height: 100%;
+	min-height: 0;
 }
 
 .rbc-event:focus,
@@ -179,6 +201,21 @@
 
 .rbc-day-slot .rbc-events-container {
 	margin-right: 0;
+	/* Let hover and slot selection reach the time grid in empty areas. */
+	pointer-events: none;
+}
+
+.rbc-day-slot .rbc-event {
+	pointer-events: auto;
+}
+
+.rbc-day-slot .rbc-background-event {
+	pointer-events: none;
+}
+
+.rbc-day-slot .rbc-event.agenda-break-band,
+.rbc-day-slot .rbc-background-event.agenda-break-band {
+	z-index: 1;
 }
 
 .rbc-time-content::-webkit-scrollbar,
@@ -191,6 +228,51 @@
 	display: none;
 }
 
+/* Week view: empty all-day row is the vierkant-rooster day shortcut */
+.agenda-week-full-day-shortcut .rbc-allday-cell {
+	display: block;
+}
+
+.agenda-week-full-day-shortcut .rbc-allday-cell .rbc-row-content {
+	display: none;
+}
+
+.agenda-week-full-day-shortcut .rbc-allday-cell .rbc-row-bg {
+	min-height: 2rem;
+	cursor: pointer;
+}
+
+.agenda-week-full-day-shortcut .rbc-allday-cell .rbc-day-bg:hover {
+	background: color-mix(in oklch, var(--primary) 8%, transparent);
+}
+
+.agenda-week-full-day-shortcut .rbc-allday-cell .rbc-selected-cell {
+	background: color-mix(in oklch, var(--primary) 14%, transparent);
+}
+
+.agenda-full-day-header-button {
+	border: 0;
+	background: transparent;
+	padding: 0;
+	font: inherit;
+	font-weight: inherit;
+	color: inherit;
+	text-align: center;
+}
+
+.agenda-full-day-header-button:hover {
+	color: var(--primary);
+}
+
 .rbc-toolbar {
 	gap: 0.5rem;
+}
+
+/* ── slot selection (click + drag to create) ─────────────────── */
+.rbc-day-slot .rbc-time-slot.agenda-creatable-slot {
+	cursor: pointer;
+}
+
+.rbc-slot-selection {
+	display: none;
 }

@@ -1,20 +1,19 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useState } from 'react';
 import { LuRefreshCw } from 'react-icons/lu';
-import RegistrationCategoryFilter, {
-	ALL_CATEGORIES,
-	type RegistrationCategory,
-} from '@/components/registrations/RegistrationCategoryFilter';
+import { asyncFetchStatus } from '@/components/AsyncFetchStatus';
+import RegistrationCategoryFilter from '@/components/registrations/RegistrationCategoryFilter';
 import RegistrationGroupList from '@/components/registrations/RegistrationGroupList';
 import { useRegistrationsContext } from '@/context/RegistrationsContext';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useAllowedStudentIds } from '@/hooks/useAllowedStudentIds';
 import { useGroupedRegistrations } from '@/hooks/useGroupedRegistrations';
+import { useRegistrationCategories } from '@/hooks/useRegistrationCategories';
 import { useRegistrationsAgendaLoader } from '@/hooks/useRegistrationsAgendaLoader';
+import { useSelectedStudentFromId } from '@/hooks/useSelectedStudentFromId';
 import { getTodayKey } from '@/lib/dateUtils';
-import type { Student } from '@/magister/types';
-import LoadingSpinner from './LoadingSpinner';
+import { ALL_REGISTRATION_CATEGORIES } from '@/lib/registrationCategories';
 import StudentModal from './StudentModal';
 import { Button } from './ui/button';
 
@@ -22,61 +21,24 @@ export default function Registrations() {
 	const { data, loading, refreshing, error, refresh } = useRegistrationsContext();
 	const { students, selectedStudies, loadAgendaForStudent } = useStudentsContext();
 	const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
-	const [category, setCategory] = useState<string>(ALL_CATEGORIES);
+	const [category, setCategory] = useState<string>(ALL_REGISTRATION_CATEGORIES);
 
 	const todayKey = getTodayKey();
 	const allowedStudentIds = useAllowedStudentIds(students, selectedStudies);
 
 	useRegistrationsAgendaLoader(data, students, allowedStudentIds, todayKey, loadAgendaForStudent);
 
-	const selectedStudentRef = useRef<Student | undefined>(undefined);
-	const selectedStudent: Student | undefined = useMemo(() => {
-		if (selectedStudentId == null) {
-			selectedStudentRef.current = undefined;
-			return undefined;
-		}
-		const found = students.find((s) => s.id === selectedStudentId);
-		if (!selectedStudentRef.current || selectedStudentRef.current.id !== selectedStudentId) {
-			selectedStudentRef.current = found;
-		}
-		return selectedStudentRef.current;
-	}, [selectedStudentId, students]);
-
+	const selectedStudent = useSelectedStudentFromId(students, selectedStudentId);
 	const grouped = useGroupedRegistrations(data, students, selectedStudies);
+	const { categories, activeCategory, visibleReasons } = useRegistrationCategories(grouped, category);
 
-	const categories: RegistrationCategory[] = useMemo(
-		() =>
-			grouped.orderedReasons.map(({ key, label }) => ({
-				key,
-				label,
-				count: grouped.byReason.get(key)?.length ?? 0,
-			})),
-		[grouped],
-	);
-
-	// A category can disappear when the data refreshes, so fall back to showing everything.
-	const activeCategory = categories.some((c) => c.key === category) ? category : ALL_CATEGORIES;
-	const visibleReasons =
-		activeCategory === ALL_CATEGORIES
-			? grouped.orderedReasons
-			: grouped.orderedReasons.filter((reason) => reason.key === activeCategory);
-
-	if (loading) {
-		return (
-			<div className="py-10">
-				<LoadingSpinner />
-			</div>
-		);
-	}
-
-	if (error) {
-		return (
-			<div className="flex flex-col items-center gap-2 py-10">
-				<p className="text-sm text-destructive">Fout bij laden registraties: {error}</p>
-				<Button onClick={refresh}>Opnieuw proberen</Button>
-			</div>
-		);
-	}
+	const fetchStatus = asyncFetchStatus({
+		loading,
+		error,
+		errorMessage: 'Fout bij laden registraties',
+		onRetry: refresh,
+	});
+	if (fetchStatus) return fetchStatus;
 
 	if (!data) {
 		return <p className="text-sm text-muted-foreground">Geen data.</p>;
