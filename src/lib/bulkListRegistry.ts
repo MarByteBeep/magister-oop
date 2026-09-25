@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from 'react';
+import { getMonthKey, getNow, parseDateKey } from '@/lib/dateUtils';
 import type { Student } from '@/types/student.types';
 import type { StudentWrite } from '@/types/studentStore.types';
 
@@ -33,6 +34,14 @@ export function defineBulkList<T>(source: BulkListSource<T>): BulkListSource {
 
 export function emptyBulkListSnapshot<T = unknown>(): BulkListSnapshot<T> {
 	return { data: null, loading: true, refreshing: false, error: null };
+}
+
+/**
+ * The snapshot always describes today's list, so a refresh for another month (e.g. the far end of a
+ * return measure span) may update students but must not replace the published payload.
+ */
+function isSnapshotMonth(dateKey: string): boolean {
+	return getMonthKey(parseDateKey(dateKey)) === getMonthKey(getNow());
 }
 
 export function createBulkListRegistry(sources: BulkListSource[]) {
@@ -100,7 +109,8 @@ export function createBulkListRegistry(sources: BulkListSource[]) {
 					});
 					return null;
 				}
-				patch(id, { data, loading: false, refreshing: false, error: null });
+				const settled: Partial<BulkListSnapshot> = { loading: false, refreshing: false, error: null };
+				patch(id, isSnapshotMonth(dateKey) ? { ...settled, data } : settled);
 				applyFetched(id, data, dateKey);
 				return data;
 			} catch (error) {

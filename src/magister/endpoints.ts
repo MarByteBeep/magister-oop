@@ -32,4 +32,5 @@ export const endpoints = {
 	parentAddress: (id: number) => `/api/ouders/${id}/adresgegevens`,
 	unreadLog: (top: number, skip: number) => `/api/lvs/logboekformulieren/ongelezen?top=${top}&skip=${skip}`,
 	createAccountability: (appointmentId: number) => `/api/medewerkers/afspraken/${appointmentId}/verantwoordingen`,
+	createReturnMeasure: (studentId: number) => `/api/leerlingen/${studentId}/verantwoordingen/terugkommaatregelen`,
 };

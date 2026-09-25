@@ -103,9 +103,29 @@ describe('injected script functions', () => {
 				'https://school.magister.net/api/test',
 				{ value: 1 },
 				'include',
+				'session expired',
 			);
 
 			expect(result).toEqual({ ok: true, status: 201 });
+		} finally {
+			globalThis.fetch = originalFetch;
+		}
+	});
+
+	test('postJsonInMagisterTab treats non-2xx as failure', async () => {
+		const originalFetch = globalThis.fetch;
+		globalThis.fetch = mockFetch(new Response(null, { status: 500 }));
+
+		try {
+			const result = await invokeAsInjectedScript(
+				postJsonInMagisterTab,
+				'https://school.magister.net/api/test',
+				{},
+				'include',
+				'session expired',
+			);
+
+			expect(result).toEqual({ ok: false, error: 'HTTP error 500' });
 		} finally {
 			globalThis.fetch = originalFetch;
 		}

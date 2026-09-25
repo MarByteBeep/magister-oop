@@ -120,6 +120,7 @@ export default function WeeklyAgendaView({ studentId, onOpenStudent, focusDate }
 
 			{draftSelection && (
 				<NewAppointmentDialog
+					studentId={studentId}
 					selection={draftSelection}
 					isOpen={draftSelection !== null}
 					onClose={() => setDraftSelection(null)}

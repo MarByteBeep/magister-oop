@@ -1,7 +1,8 @@
 import { jsonCacheGet, jsonCacheSet, loadJsonCache } from '@/lib/cache';
 import { fetchBlobInMagisterTab } from '@/magister/fetchBlobInMagisterTab';
 import { fetchJsonInMagisterTab } from '@/magister/fetchInMagisterTab';
-import { postJsonInMagisterTab } from '@/magister/postJsonInMagisterTab';
+import { type PostResult, postJsonInMagisterTab, postResponseToResult } from '@/magister/postJsonInMagisterTab';
+import { MAGISTER_SESSION_EXPIRED_MESSAGE, schoolApiHttpErrorMessage } from '@/magister/schoolApiHttpError';
 import { findSchoolSessionTab, isSchoolSessionUrl } from '@/popup-utils/tabs';
 
 type CredentialsOption = 'include' | 'omit' | 'same-origin';
@@ -37,11 +38,9 @@ export async function getBlob(url: string): Promise<Blob> {
 	return blob;
 }
 
-type PostResult = { ok: true; status: number } | { ok: false; error: string };
-
 /**
- * POST JSON data to an endpoint
- * Returns the response status code for checking
+ * POST JSON data to an endpoint.
+ * `ok: true` means HTTP 2xx; non-success status codes become `ok: false` with an error message.
  */
 export async function postJson(
 	url: string,
@@ -61,10 +60,15 @@ async function postJsonImpl(url: string, body: unknown, credentials: Credentials
 				body: JSON.stringify(body),
 			});
 
-			return { ok: true, status: res.status };
+			return postResponseToResult(res);
 		}
 
-		const result = await executeInActiveMagisterTab(postJsonInMagisterTab, [url, body, credentials]);
+		const result = await executeInActiveMagisterTab(postJsonInMagisterTab, [
+			url,
+			body,
+			credentials,
+			MAGISTER_SESSION_EXPIRED_MESSAGE,
+		]);
 
 		return result;
 	} catch (err) {
@@ -140,20 +144,10 @@ function isMissingTabError<T>(result: T | ScriptError): result is ScriptError {
 	);
 }
 
-/** Shown when Magister returns 404 (session cookies invalid or expired). */
-const MAGISTER_SESSION_EXPIRED_MESSAGE =
-	'De Magister-sessie is ongeldig of verlopen. ' +
-	'Log opnieuw in op Magister in een browsertab en open daarna deze extensie opnieuw.';
-
 /** Shown when the Magister tab holds no OIDC access token for the platform APIs. */
 const MAGISTER_TOKEN_MISSING_MESSAGE =
 	'Geen Magister-token gevonden in de geopende Magister-tab. ' +
 	'Ververs de Magister-tab en open daarna deze extensie opnieuw.';
-
-function schoolApiHttpErrorMessage(status: number): string {
-	if (status === 404) return MAGISTER_SESSION_EXPIRED_MESSAGE;
-	return `HTTP error ${status}`;
-}
 
 await loadJsonCache();
 

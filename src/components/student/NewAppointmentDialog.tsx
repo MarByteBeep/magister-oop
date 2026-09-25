@@ -10,9 +10,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAutoFocus } from '@/hooks/useAutofocus';
 import { type AgendaSlotSelection, buildAgendaSlotSelection, selectionToFormValues } from '@/lib/agendaSlotSelection';
+import { submitReturnMeasure } from '@/lib/returnMeasureCreate';
 import { formatReturnMeasureSummary } from '@/lib/returnMeasureSummary';
 
 interface NewAppointmentDialogProps {
+	studentId: number;
 	selection: AgendaSlotSelection;
 	isOpen: boolean;
 	onClose: () => void;
@@ -102,10 +104,11 @@ function ReturnMeasureForm({
 	);
 }
 
-export default function NewAppointmentDialog({ selection, isOpen, onClose }: NewAppointmentDialogProps) {
+export default function NewAppointmentDialog({ studentId, selection, isOpen, onClose }: NewAppointmentDialogProps) {
 	const descriptionRef = useAutoFocus<HTMLTextAreaElement>(isOpen);
 	const [dialogContainer, setDialogContainer] = useState<HTMLDivElement | null>(null);
 	const [datePickerOpen, setDatePickerOpen] = useState(false);
+	const [isSaving, setIsSaving] = useState(false);
 	const [description, setDescription] = useState('');
 	const [dayCount, setDayCount] = useState('1');
 	const [returnDateKey, setReturnDateKey] = useState('');
@@ -143,6 +146,20 @@ export default function NewAppointmentDialog({ selection, isOpen, onClose }: New
 		returnMeasureSelection !== null &&
 		Number.isFinite(parsedDayCount) &&
 		parsedDayCount >= 1;
+
+	const handleSave = async () => {
+		if (!canSave || isSaving) return;
+		setIsSaving(true);
+		const ok = await submitReturnMeasure(studentId, {
+			dateKey: returnDateKey,
+			startTime: returnStartTime,
+			endTime: returnEndTime,
+			description,
+			dayCount: parsedDayCount,
+		});
+		setIsSaving(false);
+		if (ok) handleOpenChange(false);
+	};
 
 	return (
 		<Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -183,7 +200,7 @@ export default function NewAppointmentDialog({ selection, isOpen, onClose }: New
 					<Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
 						Annuleren
 					</Button>
-					<Button type="button" disabled={!canSave}>
+					<Button type="button" disabled={!canSave || isSaving} onClick={() => void handleSave()}>
 						Opslaan
 					</Button>
 				</DialogFooter>

@@ -73,6 +73,22 @@ test('drops overlays that disappeared from the bulk list', () => {
 	expect(updated.agenda?.[dateKey]).toEqual([]);
 });
 
+test('updates loaded days outside the refresh month when the bulk list includes them', () => {
+	const students = [
+		student({
+			agenda: {
+				[dateKey]: [lesson(dateKey)],
+				[otherMonthKey]: [returnMeasureEntry(measure(1, 7, otherMonthKey))],
+			},
+		}),
+	];
+
+	const [updated] = applyReturnMeasuresToStudents(students, [measure(2, 7, otherMonthKey)], dateKey);
+
+	expect(updated.agenda?.[dateKey]).toEqual([lesson(dateKey)]);
+	expect(updated.agenda?.[otherMonthKey]?.filter(isReturnMeasureEntry).map((entry) => entry.measure.id)).toEqual([2]);
+});
+
 test('leaves days outside the fetched month untouched', () => {
 	const otherMonth = [returnMeasureEntry(measure(1, 7, otherMonthKey))];
 	const students = [student({ agenda: { [otherMonthKey]: otherMonth } })];

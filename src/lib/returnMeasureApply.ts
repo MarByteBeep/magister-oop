@@ -7,8 +7,8 @@ import type { Student } from '@/types/student.types';
 import type { StudentWrite } from '@/types/studentStore.types';
 
 /**
- * Replace return measure overlays on every loaded agenda day inside the fetched month.
- * `dateKey` is the day the bulk list was refreshed for; the payload covers its whole month.
+ * Replace return measure overlays on loaded agenda days in the refreshed month, plus any day
+ * present in the bulk payload (e.g. a later month after a cross-month school-day span).
  */
 export function applyReturnMeasuresToStudents(
 	students: Student[],
@@ -27,7 +27,7 @@ export function applyReturnMeasuresToStudents(
 		let updatedAgenda: StudentWrite['agenda'] | null = null;
 
 		for (const [key, dayEntries] of Object.entries(agenda)) {
-			if (!key.startsWith(monthKey)) continue;
+			if (!key.startsWith(monthKey) && !byDate.has(key)) continue;
 
 			const updatedDay = replaceReturnMeasureEntries(dayEntries, byDate.get(key) ?? []);
 			if (deepEqual(dayEntries, updatedDay)) continue;

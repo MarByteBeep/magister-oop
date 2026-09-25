@@ -1,4 +1,4 @@
-import { formatTime, getDateKey, parseDateKey } from '@/lib/dateUtils';
+import { formatTime, getDateKey, isLocalTimeLabel, parseDateKey } from '@/lib/dateUtils';
 
 export type AgendaSlotSelection = {
 	start: Date;
@@ -21,10 +21,9 @@ export function isAllDaySlotSelection(slot: { start: Date; end: Date }): boolean
 }
 
 export function parseLocalDateAndTime(dateKey: string, time: string): Date | null {
-	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return null;
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || !isLocalTimeLabel(time)) return null;
 
 	const [hours, minutes] = time.split(':').map(Number);
-	if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return null;
 
 	const date = parseDateKey(dateKey);
 	date.setHours(hours, minutes, 0, 0);

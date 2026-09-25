@@ -113,6 +113,7 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 
 			{draftSelection && (
 				<NewAppointmentDialog
+					studentId={studentId}
 					selection={draftSelection}
 					isOpen={draftSelection !== null}
 					onClose={() => setDraftSelection(null)}

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import agendaData from '@data/agenda.json' with { type: 'json' };
 import lockers from '@data/lockers.json' with { type: 'json' };
@@ -36,6 +36,16 @@ export function getReturnMeasureTemplates(): Record<number, StoredReturnMeasureT
 		number,
 		StoredReturnMeasureTemplate[]
 	>;
+}
+
+export function appendReturnMeasureTemplate(studentId: number, template: StoredReturnMeasureTemplate): void {
+	const data = getReturnMeasureTemplates();
+	const existing = data[studentId] ?? [];
+	writeFileSync(
+		RETURN_MEASURES_FILE_PATH,
+		JSON.stringify({ ...data, [studentId]: [...existing, template] }, null, 2),
+		'utf-8',
+	);
 }
 
 export function getAbsenceNoticeTemplates(): Record<string, StoredAbsenceNoticeTemplate[]> {

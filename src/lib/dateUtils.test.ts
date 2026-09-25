@@ -1,10 +1,13 @@
 import { describe, expect, test } from 'bun:test';
 import {
+	dayOffsetFromIsoInstant,
+	dayOffsetFromToday,
 	eachMonthKey,
 	getDateKey,
 	getMonthKey,
 	getMonthRange,
 	getWorkWeekRange,
+	isLocalTimeLabel,
 	parseDateKey,
 	weekOffsetFromDate,
 } from './dateUtils';
@@ -57,5 +60,37 @@ describe('weekOffsetFromDate', () => {
 		const now = parseDateKey('2026-09-09');
 		expect(weekOffsetFromDate(parseDateKey('2026-09-14'), now)).toBe(1);
 		expect(weekOffsetFromDate(parseDateKey('2026-09-02'), now)).toBe(-1);
+	});
+});
+
+describe('isLocalTimeLabel', () => {
+	test('accepts valid HH:mm values', () => {
+		expect(isLocalTimeLabel('08:00')).toBe(true);
+		expect(isLocalTimeLabel('14:40')).toBe(true);
+	});
+
+	test('rejects malformed or out-of-range times', () => {
+		expect(isLocalTimeLabel('8:00')).toBe(false);
+		expect(isLocalTimeLabel('25:00')).toBe(false);
+		expect(isLocalTimeLabel('12:60')).toBe(false);
+	});
+});
+
+describe('dayOffsetFromToday', () => {
+	test('counts whole local calendar days relative to a reference day', () => {
+		const today = parseDateKey('2026-09-16');
+		expect(dayOffsetFromToday(parseDateKey('2026-09-18'), today)).toBe(2);
+		expect(dayOffsetFromToday(parseDateKey('2026-09-14'), today)).toBe(-2);
+	});
+});
+
+describe('dayOffsetFromIsoInstant', () => {
+	test('maps a return-on ISO instant to a day offset', () => {
+		const today = parseDateKey('2026-09-16');
+		expect(dayOffsetFromIsoInstant('2026-09-18T10:00:00.000Z', today)).toBe(2);
+	});
+
+	test('returns null for invalid instants', () => {
+		expect(dayOffsetFromIsoInstant('not-a-date')).toBeNull();
 	});
 });
