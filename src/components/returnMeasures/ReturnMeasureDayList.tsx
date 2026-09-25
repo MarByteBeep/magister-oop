@@ -7,7 +7,7 @@ import { formatDayLabel } from '@/lib/dateLabels';
 import { parseDateKey } from '@/lib/dateUtils';
 import type { ReturnMeasureDayGroup } from '@/lib/returnMeasureOverview';
 import type { ReturnMeasureStudent } from '@/magister/response/return-measure.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 interface ReturnMeasureDayListProps {
 	groups: ReturnMeasureDayGroup[];

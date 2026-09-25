@@ -1,39 +1,22 @@
-import { createElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { EventProps, SlotInfo, View } from 'react-big-calendar';
+import { createElement, useCallback, useMemo } from 'react';
+import type { EventProps, View } from 'react-big-calendar';
 import AgendaCalendarEvent from '@/components/student/AgendaCalendarEvent';
 import AgendaCalendarHeader from '@/components/student/AgendaCalendarHeader';
 import AgendaFullDayShortcutCellWrapper from '@/components/student/AgendaFullDayShortcutCellWrapper';
 import { firstLessonTime, lastLessonTime } from '@/components/student/agendaCalendarConfig';
 import {
-	agendaEntriesToCalendarEvents,
-	breakPeriodsToCalendarEvents,
-	type CalendarEvent,
-	draftSelectionToBackgroundEvent,
-	getOverlappingEventIds,
-	hoverLessonSlotToBackgroundEvent,
-	isSameCalendarDay,
-} from '@/lib/agendaCalendarUtils';
+	calendarDayPropGetter,
+	calendarEventPropGetter,
+	calendarTooltipAccessor,
+	createCalendarSlotPropGetter,
+} from '@/hooks/agendaCalendarPropGetters';
+import { useAgendaCalendarEvents } from '@/hooks/useAgendaCalendarEvents';
+import { useAgendaCalendarSelection } from '@/hooks/useAgendaCalendarSelection';
+import { useStableAgendaEntry } from '@/hooks/useStableAgendaEntries';
+import type { CalendarEvent } from '@/lib/agendaCalendarUtils';
 import { agendaDayLayoutAlgorithm } from '@/lib/agendaDayLayout';
-import { isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
-import { isAllDaySlotSelection, slotInfoToSelection } from '@/lib/agendaSlotSelection';
 import { hhmmToDate } from '@/lib/bigCalendarUtils';
-import { getDateKey, getWeekDays, parseDateKey } from '@/lib/dateUtils';
-import {
-	getFullDayScheduleLabel,
-	getFullDayScheduleSelection,
-	isFullDayReturnMeasureEntry,
-	isFullDayScheduleSelection,
-} from '@/lib/fullDayScheduleUtils';
-import {
-	findLessonIndexForDateTime,
-	findOverlappingLessonIndexRangeByDate,
-	formatLessonHoursCompact,
-	getLessonHourDateRange,
-	getOverlappingLessonHoursForSelection,
-	snapSelectionToLessonHours,
-} from '@/lib/lessonHours';
-import { cn } from '@/lib/utils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 
 export function useAgendaCalendar(
@@ -48,58 +31,30 @@ export function useAgendaCalendar(
 	},
 ) {
 	const { draftSelection, onSelectSlot } = options ?? {};
-	const [selectingPreview, setSelectingPreview] = useState<AgendaSlotSelection | null>(null);
-	const [hoveredLessonSlot, setHoveredLessonSlot] = useState<{ dateKey: string; lessonIndex: number } | null>(null);
-	const isSelectingRef = useRef(false);
-	const selectionCompletedRef = useRef(false);
-	const clearHoverTimeoutRef = useRef<number | undefined>(undefined);
-	const events = useMemo(() => agendaEntriesToCalendarEvents(entries), [entries]);
+	const {
+		selectingPreview,
+		hoveredLessonSlot,
+		setHoveredLessonSlot,
+		clearHoverTimeoutRef,
+		handleSelecting,
+		handleSelectFullDay,
+		handleSelectSlot,
+	} = useAgendaCalendarSelection(onSelectSlot);
+
 	const activePreview = draftSelection ?? selectingPreview;
-	const occupiedLessonHours = useMemo(() => {
-		const occupied = new Set<string>();
 
-		for (const entry of entries) {
-			if (!isLessonEntry(entry)) continue;
-
-			const entryStart = new Date(entry.start);
-			const range = findOverlappingLessonIndexRangeByDate(entryStart, new Date(entry.end));
-			if (!range) continue;
-
-			const dateKey = getDateKey(entryStart);
-			for (let index = range.from; index <= range.to; index++) {
-				occupied.add(`${dateKey}:${index}`);
-			}
-		}
-
-		return occupied;
-	}, [entries]);
-	const visibleDates = useMemo(() => (view === 'work_week' ? getWeekDays(date) : [date]), [date, view]);
-	const breakEvents = useMemo(() => breakPeriodsToCalendarEvents(visibleDates), [visibleDates]);
-	const overlayEvents = useMemo(() => {
-		if (activePreview) {
-			const isFullDay = isFullDayScheduleSelection(activePreview);
-			const lessonHours = getOverlappingLessonHoursForSelection(activePreview);
-			const lessonLabel = formatLessonHoursCompact(lessonHours);
-			return [
-				draftSelectionToBackgroundEvent(activePreview, {
-					title: isFullDay ? getFullDayScheduleLabel() : (lessonLabel ?? 'Nieuwe terugkommaatregel'),
-				}),
-			];
-		}
-
-		if (!hoveredLessonSlot || !onSelectSlot) return [];
-
-		const hoverDate = parseDateKey(hoveredLessonSlot.dateKey);
-		return [hoverLessonSlotToBackgroundEvent(getLessonHourDateRange(hoverDate, hoveredLessonSlot.lessonIndex))];
-	}, [activePreview, hoveredLessonSlot, onSelectSlot]);
-	const calendarEvents = useMemo(
-		() => [...events, ...breakEvents, ...overlayEvents],
-		[breakEvents, events, overlayEvents],
+	const { calendarEvents, occupiedLessonHours, overlappingEventIds } = useAgendaCalendarEvents(
+		entries,
+		date,
+		view,
+		activePreview,
+		hoveredLessonSlot,
+		onSelectSlot,
 	);
-	const backgroundEvents: CalendarEvent[] = [];
-	const overlappingEventIds = useMemo(() => getOverlappingEventIds(calendarEvents), [calendarEvents]);
-	const min = useMemo(() => hhmmToDate(date, firstLessonTime), [date]);
-	const max = useMemo(() => hhmmToDate(date, lastLessonTime), [date]);
+
+	const dateTimestamp = date.getTime();
+	const min = useMemo(() => hhmmToDate(new Date(dateTimestamp), firstLessonTime), [dateTimestamp]);
+	const max = useMemo(() => hhmmToDate(new Date(dateTimestamp), lastLessonTime), [dateTimestamp]);
 
 	const handleSelectEvent = useCallback(
 		(ev: CalendarEvent) => {
@@ -108,138 +63,21 @@ export function useAgendaCalendar(
 		},
 		[onSelectEntry],
 	);
-	const handleSelecting = useCallback((range: { start: Date; end: Date }): boolean | undefined => {
-		isSelectingRef.current = true;
-		selectionCompletedRef.current = false;
-		setHoveredLessonSlot(null);
-		setSelectingPreview(snapSelectionToLessonHours(range));
-		return undefined;
-	}, []);
 
-	const handleSelectFullDay = useCallback(
-		(day: Date) => {
-			if (!onSelectSlot) return;
-			setSelectingPreview(null);
-			setHoveredLessonSlot(null);
-			onSelectSlot(getFullDayScheduleSelection(day));
-		},
-		[onSelectSlot],
+	const slotPropGetter = useMemo(
+		() =>
+			createCalendarSlotPropGetter(
+				occupiedLessonHours,
+				activePreview,
+				onSelectSlot,
+				setHoveredLessonSlot,
+				clearHoverTimeoutRef,
+			),
+		[occupiedLessonHours, activePreview, onSelectSlot, setHoveredLessonSlot, clearHoverTimeoutRef],
 	);
-
-	const handleSelectSlot = useCallback(
-		(slotInfo: SlotInfo) => {
-			if (!onSelectSlot) return;
-			isSelectingRef.current = false;
-			selectionCompletedRef.current = true;
-			setSelectingPreview(null);
-			setHoveredLessonSlot(null);
-			const snapped = isAllDaySlotSelection(slotInfo)
-				? getFullDayScheduleSelection(slotInfo.start)
-				: snapSelectionToLessonHours(slotInfoToSelection(slotInfo));
-			if (!snapped) return;
-			onSelectSlot(snapped);
-		},
-		[onSelectSlot],
-	);
-
-	useEffect(() => {
-		if (!onSelectSlot) return;
-
-		const handlePointerUp = () => {
-			if (!isSelectingRef.current) return;
-			isSelectingRef.current = false;
-			queueMicrotask(() => {
-				if (!selectionCompletedRef.current) {
-					setSelectingPreview(null);
-				}
-				selectionCompletedRef.current = false;
-			});
-		};
-
-		window.addEventListener('pointerup', handlePointerUp);
-		return () => window.removeEventListener('pointerup', handlePointerUp);
-	}, [onSelectSlot]);
-	const dayPropGetter = useCallback(
-		(d: Date) => ({ className: cn(isSameCalendarDay(d, new Date()) && 'agenda-today-column') }),
-		[],
-	);
-	const slotPropGetter = useCallback(
-		(slotDate: Date) => {
-			if (!onSelectSlot || activePreview) return {};
-
-			const lessonIndex = findLessonIndexForDateTime(slotDate);
-			if (lessonIndex < 0) return {};
-
-			const dateKey = getDateKey(slotDate);
-			const slotKey = `${dateKey}:${lessonIndex}`;
-			if (occupiedLessonHours.has(slotKey)) return {};
-
-			return {
-				className: 'agenda-creatable-slot',
-				onMouseEnter: () => {
-					window.clearTimeout(clearHoverTimeoutRef.current);
-					setHoveredLessonSlot({ dateKey, lessonIndex });
-				},
-				onMouseLeave: () => {
-					window.clearTimeout(clearHoverTimeoutRef.current);
-					clearHoverTimeoutRef.current = window.setTimeout(() => {
-						setHoveredLessonSlot(null);
-					}, 40);
-				},
-			};
-		},
-		[activePreview, occupiedLessonHours, onSelectSlot],
-	);
-	const tooltipAccessor = useCallback(() => '', []);
-	const eventPropGetter = useCallback((event: CalendarEvent) => {
-		if (event.isBreak) {
-			return {
-				className: 'agenda-break-band',
-				style: { zIndex: 1, pointerEvents: 'none' as const },
-			};
-		}
-		if (event.isHoverSlot) {
-			return {
-				className: 'agenda-hover-slot',
-				style: { zIndex: 2, pointerEvents: 'none' as const },
-			};
-		}
-		if (event.isDraft) {
-			const isFullDayDraft = isFullDayScheduleSelection(event);
-			return {
-				className: cn('agenda-draft-event', isFullDayDraft && 'agenda-draft-full-day-event'),
-				style: { zIndex: isFullDayDraft ? 1 : 3, pointerEvents: 'none' as const },
-			};
-		}
-		const resource = event.resource;
-		if (!resource) {
-			return { className: 'agenda-lesson-event', style: { zIndex: 2 } };
-		}
-		if (isReturnMeasureEntry(resource)) {
-			if (isFullDayReturnMeasureEntry(resource)) {
-				return {
-					className: 'agenda-return-measure-event',
-					style: { zIndex: 1 },
-				};
-			}
-			return {
-				className: 'agenda-return-measure-gutter-event',
-				style: { zIndex: 2 },
-			};
-		}
-		if (isAbsenceNoticeEntry(resource)) {
-			return {
-				className: 'agenda-absence-notice-event',
-				style: { zIndex: 2 },
-			};
-		}
-		return {
-			className: 'agenda-lesson-event',
-			style: { zIndex: 2 },
-		};
-	}, []);
 
 	const weekFullDayShortcut = view === 'work_week' && onSelectSlot !== undefined;
+	const stableActiveEntry = useStableAgendaEntry(activeEntry);
 
 	const components = useMemo(
 		() => ({
@@ -250,26 +88,26 @@ export function useAgendaCalendar(
 				}),
 			dateCellWrapper: weekFullDayShortcut ? AgendaFullDayShortcutCellWrapper : undefined,
 			event: (props: EventProps<CalendarEvent>) =>
-				createElement(AgendaCalendarEvent, { ...props, activeEntry, overlappingEventIds }),
+				createElement(AgendaCalendarEvent, { ...props, activeEntry: stableActiveEntry, overlappingEventIds }),
 		}),
-		[activeEntry, handleSelectFullDay, overlappingEventIds, weekFullDayShortcut],
+		[stableActiveEntry, handleSelectFullDay, overlappingEventIds, weekFullDayShortcut],
 	);
 
 	const views: View[] = view === 'work_week' ? ['work_week'] : ['day'];
 
 	return {
 		events: calendarEvents,
-		backgroundEvents,
+		backgroundEvents: [] as CalendarEvent[],
 		min,
 		max,
 		handleSelectEvent,
 		handleSelecting,
 		handleSelectSlot,
 		slotSelectionEnabled: onSelectSlot !== undefined,
-		dayPropGetter,
+		dayPropGetter: calendarDayPropGetter,
 		slotPropGetter,
-		eventPropGetter,
-		tooltipAccessor,
+		eventPropGetter: calendarEventPropGetter,
+		tooltipAccessor: calendarTooltipAccessor,
 		components,
 		views,
 		dayLayoutAlgorithm: agendaDayLayoutAlgorithm,

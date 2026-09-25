@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { Address } from '@/magister/response/address.types';
 import type { StudentDetails } from '@/magister/response/student-details.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import { loadAllStudentDetails } from './studentDetailsFetchers';
 import type { ParentContact } from './studentDetailsTypes';
 

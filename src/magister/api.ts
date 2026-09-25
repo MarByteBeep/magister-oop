@@ -1,4 +1,7 @@
 import { jsonCacheGet, jsonCacheSet, loadJsonCache } from '@/lib/cache';
+import { fetchBlobInMagisterTab } from '@/magister/fetchBlobInMagisterTab';
+import { fetchJsonInMagisterTab } from '@/magister/fetchInMagisterTab';
+import { postJsonInMagisterTab } from '@/magister/postJsonInMagisterTab';
 import { findSchoolSessionTab, isSchoolSessionUrl } from '@/popup-utils/tabs';
 
 type CredentialsOption = 'include' | 'omit' | 'same-origin';
@@ -61,27 +64,7 @@ async function postJsonImpl(url: string, body: unknown, credentials: Credentials
 			return { ok: true, status: res.status };
 		}
 
-		const result = await executeInActiveMagisterTab(
-			async (
-				fetchUrl: string,
-				requestBody: unknown,
-				requestCredentials: CredentialsOption,
-			): Promise<PostResult> => {
-				try {
-					const res = await fetch(fetchUrl, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						credentials: requestCredentials,
-						body: JSON.stringify(requestBody),
-					});
-
-					return { ok: true, status: res.status };
-				} catch (err) {
-					return { ok: false, error: (err as Error).message };
-				}
-			},
-			[url, body, credentials],
-		);
+		const result = await executeInActiveMagisterTab(postJsonInMagisterTab, [url, body, credentials]);
 
 		return result;
 	} catch (err) {
@@ -205,61 +188,13 @@ async function getJsonImpl<T>(
 			return { ok: true, data };
 		}
 
-		const result = await executeInActiveMagisterTab(
-			async (
-				fetchUrl: string,
-				credentials: CredentialsOption,
-				authMode: AuthOption,
-				sessionExpiredMessage: string,
-				tokenMissingMessage: string,
-			): Promise<FetchResult<T>> => {
-				try {
-					const headers: Record<string, string> = {};
-
-					if (authMode === 'bearer') {
-						// oidc-client stores the signed-in user under `oidc.user:{authority}:{client_id}`.
-						let accessToken = '';
-						for (const storage of [window.sessionStorage, window.localStorage]) {
-							for (let index = 0; index < storage.length && !accessToken; index++) {
-								const key = storage.key(index);
-								if (!key?.startsWith('oidc.user:')) continue;
-								const stored = storage.getItem(key);
-								if (!stored) continue;
-								try {
-									accessToken = (JSON.parse(stored) as { access_token?: string }).access_token ?? '';
-								} catch {
-									accessToken = '';
-								}
-							}
-							if (accessToken) break;
-						}
-
-						if (!accessToken) return { ok: false, error: tokenMissingMessage };
-
-						headers.Accept = 'application/json';
-						headers.Authorization = `Bearer ${accessToken}`;
-					}
-
-					const res = await fetch(fetchUrl, {
-						method: 'GET',
-						credentials,
-						headers,
-					});
-
-					if (!res.ok) {
-						const expired =
-							authMode === 'bearer' ? res.status === 401 || res.status === 403 : res.status === 404;
-						return { ok: false, error: expired ? sessionExpiredMessage : `HTTP error ${res.status}` };
-					}
-
-					const data = (await res.json()) as T;
-					return { ok: true, data };
-				} catch (err) {
-					return { ok: false, error: (err as Error).message };
-				}
-			},
-			[url, credentials, auth, MAGISTER_SESSION_EXPIRED_MESSAGE, MAGISTER_TOKEN_MISSING_MESSAGE],
-		);
+		const result = await executeInActiveMagisterTab(fetchJsonInMagisterTab<T>, [
+			url,
+			credentials,
+			auth,
+			MAGISTER_SESSION_EXPIRED_MESSAGE,
+			MAGISTER_TOKEN_MISSING_MESSAGE,
+		]);
 
 		if (result.ok && cache !== 'no-cache') {
 			await jsonCacheSet(url, result.data);
@@ -290,35 +225,7 @@ async function getBlobImpl(url: string): Promise<FetchBlobResult> {
 			};
 		}
 
-		return executeInActiveMagisterTab(
-			async (fetchUrl: string, sessionExpiredMessage: string): Promise<FetchBlobResult> => {
-				try {
-					const res = await fetch(fetchUrl, {
-						method: 'GET',
-						credentials: 'include',
-					});
-
-					if (!res.ok) {
-						const error = res.status === 404 ? sessionExpiredMessage : `HTTP error ${res.status}`;
-						return { ok: false, error };
-					}
-
-					const blob = await res.blob();
-					const buffer = await blob.arrayBuffer();
-
-					return {
-						ok: true,
-						blob: {
-							buffer,
-							type: blob.type,
-						},
-					};
-				} catch (err) {
-					return { ok: false, error: (err as Error).message };
-				}
-			},
-			[url, MAGISTER_SESSION_EXPIRED_MESSAGE],
-		);
+		return executeInActiveMagisterTab(fetchBlobInMagisterTab, [url, MAGISTER_SESSION_EXPIRED_MESSAGE]);
 	} catch (err) {
 		return { ok: false, error: (err as Error).message };
 	}

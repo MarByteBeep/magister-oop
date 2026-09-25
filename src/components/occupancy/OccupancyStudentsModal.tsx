@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import StudentDetailDialog from '@/components/student/StudentDetailDialog';
-import StudentItem from '@/components/student/StudentItem';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useStudentsContext } from '@/context/StudentsContext';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
+import OccupancyStudentsModalContent from './OccupancyStudentsModalContent';
 import type { OccupancyClassGroup } from './useOccupancyStudentsModalData';
 import { useOccupancyStudentsModalData } from './useOccupancyStudentsModalData';
 
@@ -24,53 +24,6 @@ type OccupancyViewMode = 'lesson' | 'break';
 
 const occupancyToggleItemClass =
 	'flex-1 transition-none data-[state=on]:border-transparent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:shadow-sm';
-
-const MAX_LABEL_LENGTH = 40;
-
-function capLabel(text: string): string {
-	return text.length > MAX_LABEL_LENGTH ? `${text.slice(0, MAX_LABEL_LENGTH - 1)}…` : text;
-}
-
-function formatClassGroupTitle(group: OccupancyClassGroup, cap = false): string {
-	const parts = [`Klas: ${group.className}`];
-	if (group.subject) parts.push(cap ? capLabel(group.subject) : group.subject);
-	if (group.teacher) parts.push(cap ? capLabel(group.teacher) : group.teacher);
-	return parts.join(', ');
-}
-
-function StudentsByClass({
-	classGroups,
-	onStudentClick,
-}: {
-	classGroups: OccupancyClassGroup[];
-	onStudentClick: (student: Student) => void;
-}) {
-	return (
-		<div className="space-y-4">
-			{classGroups.map((group) => {
-				const title = formatClassGroupTitle(group, true);
-				const fullTitle = formatClassGroupTitle(group);
-
-				return (
-					<div key={group.className} className="border rounded-md p-3 bg-card">
-						<h4 className="font-semibold text-lg mb-2 text-foreground truncate" title={fullTitle}>
-							{title}
-						</h4>
-						<div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-							{group.students.map((student) => (
-								<StudentItem
-									key={student.id}
-									student={student}
-									onClick={() => onStudentClick(student)}
-								/>
-							))}
-						</div>
-					</div>
-				);
-			})}
-		</div>
-	);
-}
 
 function getModalTitle(lessonRange: string, locations: string[], showBreakStudents: boolean) {
 	if (!showBreakStudents && locations.length === 1) {
@@ -140,23 +93,15 @@ export default function OccupancyStudentsModal({
 					)}
 
 					<ScrollArea className="flex-1 pr-4">
-						{isEmpty ? (
-							<p className="text-muted-foreground text-center py-4">
-								Geen leerlingen gevonden voor dit lesuur.
-							</p>
-						) : showBreakStudents ? (
-							activeStudentCount > 0 ? (
-								<StudentsByClass classGroups={activeClassGroups} onStudentClick={setSelectedStudent} />
-							) : (
-								<p className="text-muted-foreground text-center py-4">
-									{viewMode === 'lesson'
-										? 'Geen leerlingen met les in dit lesblok.'
-										: 'Geen leerlingen met tussenuur in dit lesblok.'}
-								</p>
-							)
-						) : (
-							<StudentsByClass classGroups={studentsWithLesson} onStudentClick={setSelectedStudent} />
-						)}
+						<OccupancyStudentsModalContent
+							isEmpty={isEmpty}
+							showBreakStudents={showBreakStudents}
+							viewMode={viewMode}
+							activeStudentCount={activeStudentCount}
+							activeClassGroups={activeClassGroups}
+							studentsWithLesson={studentsWithLesson}
+							onStudentClick={setSelectedStudent}
+						/>
 					</ScrollArea>
 				</DialogContent>
 			</Dialog>

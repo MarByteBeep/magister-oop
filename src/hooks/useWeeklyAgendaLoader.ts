@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { isAgendaRangeLoaded, needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
 import { getDateKey, getStartOfWeek } from '@/lib/dateUtils';
-import type { Student } from '@/magister/types';
+import { studentDataStore } from '@/lib/studentDataStore';
+import type { Student } from '@/types/student.types';
 
 export function useWeeklyAgendaLoader(
 	studentId: number,
@@ -35,10 +36,12 @@ export function useWeeklyAgendaLoader(
 		const friday = new Date(monday);
 		friday.setDate(monday.getDate() + 4);
 
+		const studentAgenda = currentStudent.agenda;
+		const absenceNoticeLoad = studentDataStore.getAbsenceNoticeLoad(currentStudent.id);
 		const rangeNeedsFetch = Array.from({ length: 5 }, (_, index) => {
 			const day = new Date(monday);
 			day.setDate(monday.getDate() + index);
-			return needsAgendaDayFetch(currentStudent, getDateKey(day));
+			return needsAgendaDayFetch(studentAgenda, getDateKey(day), absenceNoticeLoad);
 		}).some(Boolean);
 
 		const rangeComplete = !rangeNeedsFetch;
@@ -49,7 +52,7 @@ export function useWeeklyAgendaLoader(
 		}
 
 		hasLoadedRef.current.add(loadKey);
-		setIsLoading(!isAgendaRangeLoaded(currentStudent, monday, friday));
+		setIsLoading(!isAgendaRangeLoaded(studentAgenda, monday, friday));
 
 		loadAgendaRef
 			.current(currentStudent.id, monday, friday)

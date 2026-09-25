@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { getDateKey, getNow } from '@/lib/dateUtils';
+import { agendaEntriesForDate } from '@/lib/agendaLoadUtils';
+import { getDateKey, getNow, getWorkWeekRange } from '@/lib/dateUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
 
 export function useTardyModalAgenda(
@@ -33,9 +34,10 @@ export function useTardyModalAgenda(
 			}
 		} else {
 			setIsLoading(true);
-			loadAgendaForStudent(studentId, today, today)
+			const { start, end } = getWorkWeekRange(today);
+			loadAgendaForStudent(studentId, start, end)
 				.then(({ entries }) => {
-					if (!cancelled) setAgendaEntries(entries);
+					if (!cancelled) setAgendaEntries(agendaEntriesForDate(entries, todayKey));
 				})
 				.catch((err) => {
 					if (!cancelled) {

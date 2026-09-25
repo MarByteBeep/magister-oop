@@ -1,6 +1,6 @@
 import { LuUsers } from 'react-icons/lu';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import StudentItem from './StudentItem';
 
 interface AgendaItemStudentsListProps {

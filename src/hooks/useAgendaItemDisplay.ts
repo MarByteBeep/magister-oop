@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { findStudentOverviewEntry, findStudentOverviewEntryOverlappingLessonRange } from '@/lib/agendaEntryUtils';
-import { isAgendaDayLoaded } from '@/lib/agendaLoadUtils';
-import { getDateKey, getNow } from '@/lib/dateUtils';
+import { agendaEntriesForDate, isAgendaDayLoaded } from '@/lib/agendaLoadUtils';
+import { getDateKey, getNow, getWorkWeekRange } from '@/lib/dateUtils';
+import { deepEqual } from '@/lib/utils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
 
 export function useAgendaItemDisplay(
@@ -30,14 +31,17 @@ export function useAgendaItemDisplay(
 
 		const todayKey = getDateKey(getNow());
 
-		if (isAgendaDayLoaded(student, todayKey)) {
-			setAgendaEntry(findRelevantAgendaEntry(student.agenda?.[todayKey] ?? [], getNow()));
+		const agenda = student.agenda;
+		const agendaForToday = agenda?.[todayKey];
+		if (isAgendaDayLoaded(agenda, todayKey)) {
+			const nextEntry = findRelevantAgendaEntry(agendaForToday ?? [], getNow());
+			setAgendaEntry((prev) => (prev && nextEntry && deepEqual(prev, nextEntry) ? prev : nextEntry));
 			setHasFetchedForToday(true);
 		} else {
 			setAgendaEntry(null);
 			setHasFetchedForToday(false);
 		}
-	}, [student?.agenda, student, findRelevantAgendaEntry]);
+	}, [student, findRelevantAgendaEntry]);
 
 	const handleSyncClick = async (e: React.MouseEvent) => {
 		e.stopPropagation();
@@ -46,8 +50,9 @@ export function useAgendaItemDisplay(
 		setIsLoadingAgenda(true);
 		try {
 			const now = getNow();
-			const { entries } = await loadAgendaForStudent(student.id, now, now);
-			setAgendaEntry(findRelevantAgendaEntry(entries, now));
+			const { start, end } = getWorkWeekRange(now);
+			const { entries } = await loadAgendaForStudent(student.id, start, end);
+			setAgendaEntry(findRelevantAgendaEntry(agendaEntriesForDate(entries, getDateKey(now)), now));
 			setHasFetchedForToday(true);
 		} catch (error) {
 			console.error('Failed to load agenda:', error);

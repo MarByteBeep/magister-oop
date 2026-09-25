@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import StudentDetailContent, { type StudentDetailTab } from './StudentDetailContent';
 
 interface StudentDetailDialogProps {

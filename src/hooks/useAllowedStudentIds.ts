@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 export function useAllowedStudentIds(students: Student[], selectedStudies: Set<string>) {
 	return useMemo(() => {

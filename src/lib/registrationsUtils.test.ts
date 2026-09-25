@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import { buildFilterPairs, buildRegistrationRows, countAbsentRegistrations } from './registrationsUtils';
 import { createStudentVisibility } from './studentVisibility';
 

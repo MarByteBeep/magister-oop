@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { AbsenceNotice } from '@/magister/response/absence-notice.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import { applyAbsenceNoticesToStudents } from './absenceNoticeApply';
 import { absenceNoticeEntries, isAbsenceNoticeEntry, lessonEntry } from './agendaEntryUtils';
 import { parseDateKey, toISOFromDateKeyAndTime } from './dateUtils';
@@ -68,6 +68,10 @@ function student(overrides: Partial<Student> = {}): Student {
 	};
 }
 
+function studentWithAgenda(agenda: Student['agenda']): Student[] {
+	return [{ ...student(), agenda }];
+}
+
 function lessonForDay() {
 	return lessonEntry({
 		id: 1,
@@ -92,10 +96,8 @@ describe('applyAbsenceNoticesToStudents', () => {
 	test('replaces overlays for students that already have an agenda day', () => {
 		const oldNotice = notice();
 		const day = parseDateKey(dateKey);
-		const current = student({
-			agenda: {
-				[dateKey]: [lessonForDay(), ...absenceNoticeEntries(oldNotice, day, day)],
-			},
+		const students = studentWithAgenda({
+			[dateKey]: [lessonForDay(), ...absenceNoticeEntries(oldNotice, day, day)],
 		});
 		const fresh = notice({
 			absenceNoticeId: 'fresh',
@@ -105,7 +107,7 @@ describe('applyAbsenceNoticesToStudents', () => {
 			endDateTime: toISOFromDateKeyAndTime(dateKey, '16:00'),
 		});
 
-		const next = applyAbsenceNoticesToStudents([current], [fresh], dateKey);
+		const next = applyAbsenceNoticesToStudents(students, [fresh], dateKey);
 		const overlays = next[0].agenda?.[dateKey]?.filter(isAbsenceNoticeEntry) ?? [];
 		expect(overlays).toHaveLength(1);
 		expect(overlays[0].notice.absenceNoticeId).toBe('fresh');
@@ -113,8 +115,7 @@ describe('applyAbsenceNoticesToStudents', () => {
 	});
 
 	test('leaves students without that agenda day untouched', () => {
-		const current = student({ agenda: {} });
-		const students = [current];
+		const students = studentWithAgenda({});
 		expect(applyAbsenceNoticesToStudents(students, [notice()], dateKey)).toBe(students);
 	});
 });

@@ -1,7 +1,7 @@
 'use client';
 
 import { groupRegistrationRowsByStudent, type RegistrationRow } from '@/lib/registrationsUtils';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import { Badge } from '../ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import RegistrationGroupRow from './RegistrationGroupRow';

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { getTodayKey } from '@/lib/dateUtils';
 import { getOccupancyForDay } from '@/lib/occupancyUtils';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 export function useOccupancyData(students: Student[]) {
 	const todayKey = getTodayKey();

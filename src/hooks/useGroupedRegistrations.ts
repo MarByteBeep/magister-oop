@@ -8,7 +8,7 @@ import {
 } from '@/lib/registrationsUtils';
 import { createStudentVisibility } from '@/lib/studentVisibility';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 export function useGroupedRegistrations(
 	data: RegistrationsResponse | null,

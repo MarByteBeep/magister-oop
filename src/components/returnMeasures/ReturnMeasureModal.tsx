@@ -14,7 +14,7 @@ import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
 import { formatPersonName } from '@/lib/stringUtils';
 import { cn } from '@/lib/utils';
 import type { ReturnMeasureStudent } from '@/magister/response/return-measure.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 interface ReturnMeasureModalProps {
 	measure: ReturnMeasureStudent;

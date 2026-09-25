@@ -11,7 +11,7 @@ import { useTardyModalAgenda } from '@/hooks/useTardyModalAgenda';
 import { findLessonEntry, getAgendaEntryKey, isLessonEntry, isSameAgendaEntryOccurrence } from '@/lib/agendaEntryUtils';
 import { submitTardyAccountability } from '@/lib/tardyUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import TardyAgendaItem from './TardyAgendaItem';
 import TardyConfirmationModal from './TardyConfirmationModal';
 

@@ -3,7 +3,8 @@ import { getMonthKey, parseDateKey } from '@/lib/dateUtils';
 import { groupScheduledReturnMeasures } from '@/lib/returnMeasureUtils';
 import { deepEqual } from '@/lib/utils';
 import type { ReturnMeasureStudent, ScheduledReturnMeasure } from '@/magister/response/return-measure.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
+import type { StudentWrite } from '@/types/studentStore.types';
 
 /**
  * Replace return measure overlays on every loaded agenda day inside the fetched month.
@@ -13,7 +14,7 @@ export function applyReturnMeasuresToStudents(
 	students: Student[],
 	measures: ReturnMeasureStudent[],
 	dateKey: string,
-): Student[] {
+): StudentWrite[] {
 	const monthKey = getMonthKey(parseDateKey(dateKey));
 	const byStudent = groupScheduledReturnMeasures(measures);
 
@@ -23,7 +24,7 @@ export function applyReturnMeasuresToStudents(
 		if (!agenda) return student;
 
 		const byDate = byStudent.get(student.id) ?? new Map<string, ScheduledReturnMeasure[]>();
-		let updatedAgenda: Student['agenda'] | null = null;
+		let updatedAgenda: StudentWrite['agenda'] | null = null;
 
 		for (const [key, dayEntries] of Object.entries(agenda)) {
 			if (!key.startsWith(monthKey)) continue;

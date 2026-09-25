@@ -1,6 +1,11 @@
 import { faker } from '@faker-js/faker';
 import { timeTable } from '@/lib/agendaUtils';
-import type { AgendaItem, AttendanceStaffMember, AttendanceStudent } from '@/magister/response/agenda.types';
+import type {
+	AgendaItem,
+	AttendanceStaffMember,
+	AttendanceStudent,
+	Participant,
+} from '@/magister/response/agenda.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
 import type { StudentBase } from '@/magister/response/student.types';
 import { pickRandom } from '../api/utils/random';
@@ -29,7 +34,7 @@ function toUtcISO(timeString: string) {
 	return `{date}T${utcTime}`;
 }
 
-function generateBaseAgendaItem(classCode: string, teacher: StaffMember, hour: number): AgendaItem {
+function generateBaseAgendaItem(classCode: string, teacher: StaffMember, hour: number): AgendaItem<Participant> {
 	const slot = timeTable[hour - 1];
 	const course = pickRandom(courses);
 	const location = pickRandom(['d01', 'd02', 'd03', 'd04', 'd05', 'd06', '654', '243']);
@@ -125,14 +130,18 @@ function createStudentParticipant(student: StudentBase): AttendanceStudent {
 	};
 }
 
-function addStudentToAgenda(student: StudentBase, baseItem: AgendaItem, studentAgenda: AgendaItem[]): void {
-	const itemForStudent: AgendaItem = JSON.parse(JSON.stringify(baseItem));
+function addStudentToAgenda(
+	student: StudentBase,
+	baseItem: AgendaItem<Participant>,
+	studentAgenda: AgendaItem<Participant>[],
+): void {
+	const itemForStudent: AgendaItem<Participant> = JSON.parse(JSON.stringify(baseItem));
 	itemForStudent.deelnames.push(createStudentParticipant(student));
 	studentAgenda.push(itemForStudent);
 }
 
-function buildClassSchedule(classCode: string, classTeacher: StaffMember): AgendaItem[] {
-	const classSchedule: AgendaItem[] = [];
+function buildClassSchedule(classCode: string, classTeacher: StaffMember): AgendaItem<Participant>[] {
+	const classSchedule: AgendaItem<Participant>[] = [];
 	const numLessonsForClass = faker.number.int({ min: 4, max: 8 });
 	const usedHours = new Set<number>();
 
@@ -153,7 +162,7 @@ function assignClassAgendas(
 	allStudents: StudentBase[],
 	focusClasses: string[],
 	activeTeachers: StaffMember[],
-	allStudentsAgenda: Record<number, AgendaItem[]>,
+	allStudentsAgenda: Record<number, AgendaItem<Participant>[]>,
 	studentsWithGeneratedAgenda: Set<number>,
 	focusClassStudentIds: Set<number>,
 ) {
@@ -171,7 +180,7 @@ function assignClassAgendas(
 		const classSchedule = buildClassSchedule(classCode, classTeacher);
 
 		for (const student of studentsInClass) {
-			const studentAgenda: AgendaItem[] = [];
+			const studentAgenda: AgendaItem<Participant>[] = [];
 			for (const baseItem of classSchedule) {
 				addStudentToAgenda(student, baseItem, studentAgenda);
 			}
@@ -186,7 +195,7 @@ function assignClassAgendas(
 function assignIndividualAgendas(
 	allStudents: StudentBase[],
 	activeTeachers: StaffMember[],
-	allStudentsAgenda: Record<number, AgendaItem[]>,
+	allStudentsAgenda: Record<number, AgendaItem<Participant>[]>,
 	studentsWithGeneratedAgenda: Set<number>,
 ) {
 	for (const student of allStudents) {
@@ -194,7 +203,7 @@ function assignIndividualAgendas(
 
 		faker.seed(student.id);
 		const numLessons = faker.number.int({ min: 4, max: 10 });
-		const studentAgenda: AgendaItem[] = [];
+		const studentAgenda: AgendaItem<Participant>[] = [];
 		const usedHours = new Set<number>();
 
 		for (let i = 0; i < numLessons; i++) {
@@ -219,8 +228,8 @@ function assignIndividualAgendas(
 export function generateAgendaData(
 	allStudents: StudentBase[],
 	allStaffMembers: StaffMember[],
-): { agenda: Record<number, AgendaItem[]>; focusClassStudentIds: Set<number> } {
-	const allStudentsAgenda: Record<number, AgendaItem[]> = {};
+): { agenda: Record<number, AgendaItem<Participant>[]>; focusClassStudentIds: Set<number> } {
+	const allStudentsAgenda: Record<number, AgendaItem<Participant>[]> = {};
 	const focusClassStudentIds = new Set<number>();
 	const numActiveTeachers = Math.floor(allStaffMembers.length * 0.3);
 	const activeTeachers = faker.helpers.shuffle([...allStaffMembers]).slice(0, numActiveTeachers);

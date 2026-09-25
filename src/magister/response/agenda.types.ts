@@ -8,7 +8,9 @@ export type AttendanceGroup = {
 	id: number;
 	type: 'groep';
 	links: {
-		self: { href: string };
+		self: {
+			href: string;
+		};
 	};
 };
 
@@ -21,9 +23,16 @@ export type AttendanceStaffMember = {
 	id: number;
 	type: 'medewerker';
 	links: {
-		self: { href: string };
+		self: {
+			href: string;
+		};
 	};
 };
+
+/** Staff/group in agenda entries; links are stripped after store normalization. */
+export type AgendaGroup = Omit<AttendanceGroup, 'links'>;
+export type AgendaStaffMember = Omit<AttendanceStaffMember, 'links'>;
+export type AgendaParticipant = AgendaGroup | AgendaStaffMember;
 
 export type AttendanceStudent = {
 	stamklas: string | null;
@@ -53,7 +62,7 @@ export type AgendaItemLocation = {
 
 export type AgendaItemRepeatStatus = 'geen' | 'gewijzigd' | 'herhaling';
 
-export type AgendaItem = {
+export type AgendaItem<TDeelname extends Participant | AgendaParticipant = AgendaParticipant> = {
 	id: number;
 	heeftInhoud: boolean;
 	heeftAantekening: boolean;
@@ -68,7 +77,7 @@ export type AgendaItem = {
 	type: string;
 	opmerking?: string | null;
 	isPrive?: boolean;
-	deelnames: Participant[];
+	deelnames: TDeelname[];
 	fetched?: string;
 	vakken: AgendaItemCourse[];
 	locaties: AgendaItemLocation[];
@@ -76,7 +85,7 @@ export type AgendaItem = {
 };
 
 export type AgendaResponse = {
-	items: AgendaItem[];
+	items: AgendaItem<Participant>[];
 	totalCount: number;
 	links: Record<string, { href: string } | null>;
 };

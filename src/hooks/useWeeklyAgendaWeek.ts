@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { formatWeekRange } from '@/lib/dateLabels';
 import { getDateKey, getNow, getStartOfWeek, getWeekDays } from '@/lib/dateUtils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 export function useWeeklyAgendaWeek(weekOffset: number, student: Student | undefined) {
 	const selectedWeekDate = useMemo(() => {
@@ -27,10 +27,10 @@ export function useWeeklyAgendaWeek(weekOffset: number, student: Student | undef
 	const weekAgenda = useMemo(() => {
 		const agenda: Record<string, AgendaEntry[]> = {};
 		for (const day of weekDays) {
-			agenda[getDateKey(day)] = student?.agenda?.[getDateKey(day)] || [];
+			agenda[getDateKey(day)] = student?.agenda?.[getDateKey(day)] ?? [];
 		}
 		return agenda;
-	}, [student?.agenda, weekDays]);
+	}, [student, weekDays]);
 
 	const calendarItems = useMemo(
 		() => weekDays.flatMap((day) => weekAgenda[getDateKey(day)] || []),

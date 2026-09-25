@@ -28,8 +28,8 @@ export async function getAbsenceNoticesForDate(dateKey: string): Promise<Absence
 			if (inflight.get(dateKey) === request) cache.set(dateKey, items);
 			return items;
 		} catch (error) {
-			console.warn('Failed to fetch absence notices for', dateKey, error);
-			return [];
+			console.error('Failed to fetch absence notices for', dateKey, error);
+			throw error;
 		} finally {
 			if (inflight.get(dateKey) === request) inflight.delete(dateKey);
 		}

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
-import { getNow } from '@/lib/dateUtils';
+import { getNow, getWorkWeekRange } from '@/lib/dateUtils';
 import { createLimiter } from '@/lib/limiter';
+import { studentDataStore } from '@/lib/studentDataStore';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
 
 export function useRegistrationsAgendaLoader(
@@ -25,7 +26,9 @@ export function useRegistrationsAgendaLoader(
 			const student = studentMap.get(item.id);
 			if (!student) continue;
 			if (!allowedStudentIds.has(student.id)) continue;
-			if (!needsAgendaDayFetch(student, todayKey)) continue;
+			if (!needsAgendaDayFetch(student.agenda, todayKey, studentDataStore.getAbsenceNoticeLoad(student.id))) {
+				continue;
+			}
 			if (agendaLoadedForStudentIds.has(student.id)) continue;
 			ids.add(student.id);
 		}
@@ -33,7 +36,7 @@ export function useRegistrationsAgendaLoader(
 		if (ids.size === 0) return;
 
 		let cancelled = false;
-		const now = getNow();
+		const { start, end } = getWorkWeekRange(getNow());
 
 		void (async () => {
 			await Promise.allSettled(
@@ -41,7 +44,7 @@ export function useRegistrationsAgendaLoader(
 					agendaLimiter(async () => {
 						if (cancelled) return;
 						try {
-							await loadAgendaForStudent(id, now, now);
+							await loadAgendaForStudent(id, start, end);
 						} finally {
 							setAgendaLoadedForStudentIds((prev) => {
 								const next = new Set(prev);

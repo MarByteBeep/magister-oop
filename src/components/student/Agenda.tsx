@@ -1,8 +1,9 @@
 'use client';
 
-import { type CSSProperties, useMemo } from 'react';
+import { type CSSProperties, memo, useMemo } from 'react';
 import { Calendar, type View } from 'react-big-calendar';
 import { useAgendaCalendar } from '@/hooks/useAgendaCalendar';
+import { agendaEntriesEqual, isSameAgendaEntryOccurrence } from '@/lib/agendaEntryUtils';
 import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
 import { buildLessonGridGradient, getLessonGridLinePercents } from '@/lib/lessonHours';
 import { cn } from '@/lib/utils';
@@ -19,15 +20,16 @@ export interface AgendaProps {
 	draftSelection?: AgendaSlotSelection | null;
 }
 
-export default function Agenda({
-	entries,
-	date,
-	view,
-	activeEntry,
-	onSelectEntry,
-	onSelectSlot,
-	draftSelection,
-}: AgendaProps) {
+function agendaPropsEqual(prev: AgendaProps, next: AgendaProps): boolean {
+	if (prev.view !== next.view || prev.draftSelection !== next.draftSelection) return false;
+	if (prev.onSelectSlot !== next.onSelectSlot || prev.onSelectEntry !== next.onSelectEntry) return false;
+	if (prev.date.getTime() !== next.date.getTime()) return false;
+	if (!agendaEntriesEqual(prev.entries, next.entries)) return false;
+	if (prev.activeEntry === next.activeEntry) return true;
+	return isSameAgendaEntryOccurrence(prev.activeEntry, next.activeEntry);
+}
+
+function Agenda({ entries, date, view, activeEntry, onSelectEntry, onSelectSlot, draftSelection }: AgendaProps) {
 	const {
 		events,
 		backgroundEvents,
@@ -92,3 +94,5 @@ export default function Agenda({
 		</div>
 	);
 }
+
+export default memo(Agenda, agendaPropsEqual);

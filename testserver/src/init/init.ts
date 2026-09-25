@@ -18,8 +18,6 @@ const LOCKERS_FILE_PATH = join(DATA_DIR, 'lockers.json');
 const AGENDA_FILE_PATH = join(DATA_DIR, 'agenda.json');
 const RETURN_MEASURES_FILE_PATH = join(DATA_DIR, 'return-measures.json');
 const ABSENCE_NOTICES_FILE_PATH = join(DATA_DIR, 'absence-notices.json');
-const DATA_VERSION_FILE_PATH = join(DATA_DIR, 'data-version.json');
-
 const totalStudents = 400;
 const totalStaffMembers = 100;
 const totalLockers = totalStudents - 30;
@@ -58,10 +56,6 @@ async function init() {
 	if (existsSync(ABSENCE_NOTICES_FILE_PATH)) {
 		rmSync(ABSENCE_NOTICES_FILE_PATH);
 		console.log(`Removed ${ABSENCE_NOTICES_FILE_PATH}`);
-	}
-	if (existsSync(DATA_VERSION_FILE_PATH)) {
-		rmSync(DATA_VERSION_FILE_PATH);
-		console.log(`Removed ${DATA_VERSION_FILE_PATH}`);
 	}
 	if (existsSync(ALL_PHOTOS_DIR)) {
 		rmSync(ALL_PHOTOS_DIR, { recursive: true, force: true });
@@ -156,9 +150,6 @@ async function init() {
 	console.log(`Generated ${lockers.length} lockers and saved to ${LOCKERS_FILE_PATH}`);
 	console.log(`Assigned ${assignedStudentIds.size} students to lockers.`);
 	console.log(`Generated ${totalLockers - assignedStudentIds.size} lockers without rental periods.`);
-
-	writeFileSync(DATA_VERSION_FILE_PATH, JSON.stringify({ version: Date.now().toString() }, null, 2), 'utf-8');
-	console.log(`Wrote data version to ${DATA_VERSION_FILE_PATH}`);
 }
 
 init().catch(console.error);

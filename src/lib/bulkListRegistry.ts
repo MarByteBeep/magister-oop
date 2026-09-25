@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from 'react';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
+import type { StudentWrite } from '@/types/studentStore.types';
 
 export type BulkListMode = 'initial' | 'background';
 
@@ -13,7 +14,7 @@ export type BulkListSnapshot<T = unknown> = {
 export type BulkListSource<T = unknown> = {
 	id: string;
 	fetch: (dateKey: string) => Promise<T | null>;
-	applyToStudents?: (students: Student[], data: T, dateKey: string) => Student[];
+	applyToStudents?: (students: Student[], data: T, dateKey: string) => StudentWrite[];
 	/** When false, refresh still runs and may apply to students, but snapshot()/subscribe are unavailable. */
 	publishSnapshot?: boolean;
 };
@@ -44,7 +45,7 @@ export function createBulkListRegistry(sources: BulkListSource[]) {
 	const listeners = new Map<string, Set<(snapshot: BulkListSnapshot) => void>>();
 	const inflight = new Map<string, Promise<unknown | null>>();
 	const inflightMode = new Map<string, BulkListMode>();
-	let setStudents: Dispatch<SetStateAction<Student[]>> | null = null;
+	let setStudents: Dispatch<SetStateAction<StudentWrite[]>> | null = null;
 
 	function snapshotFor(id: string): BulkListSnapshot | null {
 		return snapshots.get(id) ?? null;
@@ -136,7 +137,7 @@ export function createBulkListRegistry(sources: BulkListSource[]) {
 				set.delete(listener);
 			};
 		},
-		attachStudentUpdater(updater: Dispatch<SetStateAction<Student[]>>) {
+		attachStudentUpdater(updater: Dispatch<SetStateAction<StudentWrite[]>>) {
 			setStudents = updater;
 			return () => {
 				if (setStudents === updater) setStudents = null;

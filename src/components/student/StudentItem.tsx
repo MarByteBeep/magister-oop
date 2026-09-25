@@ -1,10 +1,10 @@
 'use client';
 
 import type { MouseEvent } from 'react';
-import LazyAvatar from '@/components/LazyAvatar';
-import { formatPersonName, getInitials } from '@/lib/stringUtils';
+import StudentItemContent from '@/components/student/StudentItemContent';
+import { formatPersonName } from '@/lib/stringUtils';
 import { cn } from '@/lib/utils';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 interface StudentItemProps {
 	student?: Student;
@@ -18,6 +18,17 @@ interface StudentItemProps {
 	className?: string;
 }
 
+function resolveStudentItemDisplay(
+	student: Student | undefined,
+	name: string | undefined,
+	photoUrl: string | undefined,
+): { displayName: string; photo: string | undefined } {
+	const displayName =
+		name ?? (student ? formatPersonName(student.roepnaam, student.tussenvoegsel, student.achternaam) : '');
+	const photo = photoUrl ?? student?.links.foto?.href;
+	return { displayName, photo };
+}
+
 export default function StudentItem({
 	student,
 	name,
@@ -29,9 +40,7 @@ export default function StudentItem({
 	variant = 'card',
 	className,
 }: StudentItemProps) {
-	const displayName =
-		name ?? (student ? formatPersonName(student.roepnaam, student.tussenvoegsel, student.achternaam) : '');
-	const photo = photoUrl ?? student?.links.foto?.href;
+	const { displayName, photo } = resolveStudentItemDisplay(student, name, photoUrl);
 	const isButton = Boolean(onClick) && !disabled;
 	const classes = cn(
 		'flex items-center gap-3 text-left',
@@ -43,21 +52,7 @@ export default function StudentItem({
 	);
 
 	const content = (
-		<>
-			<LazyAvatar
-				src={photo || undefined}
-				alt={displayName}
-				initials={getInitials(displayName)}
-				className="h-10 w-10 shrink-0"
-			/>
-			<div className="flex min-w-0 flex-col">
-				<span className="truncate font-medium text-foreground">
-					{displayName}
-					{classLabel ? <span className="font-normal text-muted-foreground"> ({classLabel})</span> : null}
-				</span>
-				{description ? <span className="truncate text-xs text-muted-foreground">{description}</span> : null}
-			</div>
-		</>
+		<StudentItemContent displayName={displayName} photo={photo} classLabel={classLabel} description={description} />
 	);
 
 	if (!isButton) {

@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { GET as getDataVersion } from './api/data-version';
 import { GET as getStudentAddress } from './api/leerlingen/adresgegevens';
 import { GET as getStudentAgenda } from './api/leerlingen/afspraken';
 import { GET as getStudentParents } from './api/leerlingen/ouders';
@@ -27,8 +26,6 @@ api.get('/account', (c) =>
 		'Content-Type': 'application/json',
 	}),
 );
-api.get('/data-version', () => getDataVersion());
-
 // Static routes
 api.get('/leerlingen/zoeken', (c) => getSearchStudents(c.req.raw));
 api.get('/medewerkers/zoeken', (c) => getSearchStaff(c.req.raw));

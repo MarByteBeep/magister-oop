@@ -2,14 +2,8 @@ import type { CSSProperties } from 'react';
 import type { DayLayoutFunction } from 'react-big-calendar';
 // RBC ships layout helpers as CJS; used to pack lessons without overlay items.
 import noOverlap from 'react-big-calendar/lib/utils/layout-algorithms/no-overlap.js';
-import {
-	type CalendarEvent,
-	isBackgroundOverlayCalendarEvent,
-	isBreakCalendarEvent,
-	isSameCalendarDay,
-} from '@/lib/agendaCalendarUtils';
-import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
-import { isFullDayReturnMeasureEntry, isFullDayScheduleSelection } from '@/lib/fullDayScheduleUtils';
+import { type CalendarEvent, isSameCalendarDay } from '@/lib/agendaCalendarUtils';
+import { partitionAgendaEvents } from '@/lib/agendaDayLayoutPartition';
 
 type LayoutStyle = CSSProperties & {
 	top: number;
@@ -132,43 +126,8 @@ export const agendaDayLayoutAlgorithm: DayLayoutFunction<CalendarEvent> = ({
 	slotMetrics,
 	accessors,
 }) => {
-	const lessons: CalendarEvent[] = [];
-	const fullDayReturnMeasures: CalendarEvent[] = [];
-	const gutterOverlays: CalendarEvent[] = [];
-	const partialDraftEvents: CalendarEvent[] = [];
-	const fullDayDraftEvents: CalendarEvent[] = [];
-	const breakEvents: CalendarEvent[] = [];
-
-	for (const event of events) {
-		if (isBackgroundOverlayCalendarEvent(event)) {
-			if (event.isDraft && isFullDayScheduleSelection(event)) {
-				fullDayDraftEvents.push(event);
-			} else {
-				partialDraftEvents.push(event);
-			}
-			continue;
-		}
-
-		if (isBreakCalendarEvent(event)) {
-			breakEvents.push(event);
-			continue;
-		}
-
-		const resource = event.resource;
-		if (!resource) continue;
-
-		if (isReturnMeasureEntry(resource)) {
-			if (isFullDayReturnMeasureEntry(resource)) {
-				fullDayReturnMeasures.push(event);
-			} else {
-				gutterOverlays.push(event);
-			}
-		} else if (isAbsenceNoticeEntry(resource)) {
-			gutterOverlays.push(event);
-		} else {
-			lessons.push(event);
-		}
-	}
+	const { lessons, fullDayReturnMeasures, gutterOverlays, partialDraftEvents, fullDayDraftEvents, breakEvents } =
+		partitionAgendaEvents(events);
 
 	const pack = (items: CalendarEvent[]) =>
 		noOverlap({

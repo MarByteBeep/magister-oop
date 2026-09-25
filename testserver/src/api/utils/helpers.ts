@@ -4,7 +4,7 @@ import agendaData from '@data/agenda.json' with { type: 'json' };
 import lockers from '@data/lockers.json' with { type: 'json' };
 import staffMembers from '@data/staff-members.json' with { type: 'json' };
 import students from '@data/students.json' with { type: 'json' };
-import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { AgendaItem, Participant } from '@/magister/response/agenda.types';
 import type { Locker } from '@/magister/response/locker.types';
 import type { StaffMember } from '@/magister/response/staffmember.types';
 import type { StudentBase } from '@/magister/response/student.types';
@@ -23,16 +23,8 @@ export function getAllLockers(): Locker[] {
 	return lockers.lockersDetails;
 }
 
-export function getAllAgendaItems(): Record<number, AgendaItem[]> {
-	return agendaData as Record<number, AgendaItem[]>;
-}
-
-const DATA_VERSION_FILE_PATH = join(import.meta.dirname, '../../../data/data-version.json');
-
-export function getDataVersion(): string {
-	if (!existsSync(DATA_VERSION_FILE_PATH)) return '0';
-	const parsed = JSON.parse(readFileSync(DATA_VERSION_FILE_PATH, 'utf-8')) as { version?: string };
-	return parsed.version ?? '0';
+export function getAllAgendaItems(): Record<number, AgendaItem<Participant>[]> {
+	return agendaData as Record<number, AgendaItem<Participant>[]>;
 }
 
 const RETURN_MEASURES_FILE_PATH = join(import.meta.dirname, '../../../data/return-measures.json');

@@ -2,7 +2,7 @@ import { type Dispatch, type SetStateAction, useCallback, useEffect, useState } 
 import type { BulkListMode, BulkListSnapshot } from '@/lib/bulkListRegistry';
 import { bulkListRegistry } from '@/lib/bulkListSources';
 import { getTodayKey } from '@/lib/dateUtils';
-import type { Student } from '@/magister/types';
+import type { Student } from '@/types/student.types';
 
 const REFRESH_INTERVAL_MS = 60_000;
 

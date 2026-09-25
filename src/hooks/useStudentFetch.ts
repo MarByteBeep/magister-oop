@@ -1,10 +1,11 @@
 import { type Dispatch, type SetStateAction, useCallback } from 'react';
+import { clearStudentStore } from '@/hooks/useStudentStore';
+import { mergeStudent } from '@/lib/mergeStudent';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { LockersResponse } from '@/magister/response/locker.types';
 import type { StudentsResponse } from '@/magister/response/student.types';
-import type { Student } from '@/magister/types';
-import { mergeStudent } from './useStudentStorageSync';
+import type { Student } from '@/types/student.types';
 
 export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>) {
 	const fetchLockers = useCallback(async () => {
@@ -25,7 +26,7 @@ export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>
 		let nextUrl: string | null = endpoints.searchStudents(50, 0);
 
 		while (nextUrl) {
-			const data: StudentsResponse = await getJson<StudentsResponse>(nextUrl);
+			const data: StudentsResponse = await getJson<StudentsResponse>(nextUrl, 'include', 'no-cache');
 			setStudents((prev) => {
 				const merged = [...prev];
 				for (const s of data.items) {
@@ -40,9 +41,9 @@ export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>
 	}, [setStudents]);
 
 	const refresh = useCallback(async () => {
-		setStudents([]);
+		await clearStudentStore();
 		await Promise.all([fetchStudentsPaginated(), fetchLockers()]);
-	}, [setStudents, fetchStudentsPaginated, fetchLockers]);
+	}, [fetchStudentsPaginated, fetchLockers]);
 
 	return { fetchLockers, fetchStudentsPaginated, refresh };
 }

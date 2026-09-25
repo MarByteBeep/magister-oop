@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agendaEntryUtils';
 import { absenceTextClasses, returnMeasureTextClasses } from '@/lib/agendaKindStyles';
 import { getAgendaItemInfo } from '@/lib/agendaUtils';
 import { getFullDayScheduleLabel, isFullDayReturnMeasureEntry } from '@/lib/fullDayScheduleUtils';
 import { getReturnMeasureDisplay } from '@/lib/returnMeasureUtils';
-import { cn } from '@/lib/utils';
+import { cn, deepEqual } from '@/lib/utils';
 import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
 import AgendaTooltipContent from './AgendaTooltipContent';
 
@@ -15,7 +16,7 @@ interface AgendaItemDisplayContentProps {
 /** Two lines before ellipsis; overrides the `whitespace-nowrap` the table cell sets. */
 const clampedLabelClasses = 'block font-medium line-clamp-2 whitespace-normal break-words leading-tight';
 
-export default function AgendaItemDisplayContent({ entry }: AgendaItemDisplayContentProps) {
+function AgendaItemDisplayContent({ entry }: AgendaItemDisplayContentProps) {
 	const isReturnMeasure = isReturnMeasureEntry(entry);
 	const isAbsenceNotice = isAbsenceNoticeEntry(entry);
 	const isFullDayReturnMeasure = isReturnMeasure && isFullDayReturnMeasureEntry(entry);
@@ -66,3 +67,6 @@ export default function AgendaItemDisplayContent({ entry }: AgendaItemDisplayCon
 		</div>
 	);
 }
+
+// Custom comparator: only `entry` exists today — extend when adding props.
+export default memo(AgendaItemDisplayContent, (prev, next) => deepEqual(prev.entry, next.entry));

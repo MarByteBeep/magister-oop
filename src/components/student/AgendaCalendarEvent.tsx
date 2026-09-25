@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { EventProps } from 'react-big-calendar';
 import { type CalendarEvent, isBreakCalendarEvent, isDraftCalendarEvent } from '@/lib/agendaCalendarUtils';
 import { isSameAgendaEntryOccurrence } from '@/lib/agendaEntryUtils';
@@ -12,7 +13,7 @@ export interface AgendaCalendarEventProps extends EventProps<CalendarEvent> {
 	overlappingEventIds: Set<string>;
 }
 
-export default function AgendaCalendarEvent({ event, activeEntry, overlappingEventIds }: AgendaCalendarEventProps) {
+function AgendaCalendarEvent({ event, activeEntry, overlappingEventIds }: AgendaCalendarEventProps) {
 	if (isBreakCalendarEvent(event)) {
 		return <AgendaBreakBand start={event.start} end={event.end} />;
 	}
@@ -35,3 +36,11 @@ export default function AgendaCalendarEvent({ event, activeEntry, overlappingEve
 		/>
 	);
 }
+
+export default memo(
+	AgendaCalendarEvent,
+	(prev, next) =>
+		prev.event === next.event &&
+		prev.activeEntry === next.activeEntry &&
+		prev.overlappingEventIds === next.overlappingEventIds,
+);
