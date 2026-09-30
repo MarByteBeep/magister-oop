@@ -4,6 +4,8 @@
 
 - Terugkomers: **Gemeld** / **Niet gemeld**
 - Bug fix: login focust niet op **verlopen Magister-tab**
+- Agenda: **Afwezigheid** aanmaken — reden, toelichting, intern
+- Agenda: **Afwezigheid verwijderen**
 
 ## 1.2.0 — 2026-09-25
 

@@ -9,6 +9,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils';
 
 const MIN_SPINNER_MS = 320;
+const DEFAULT_ERROR_TOAST = 'Synchroniseren mislukt';
 
 type SyncButtonBase = {
 	/** Accessible name; also the default tooltip. */
@@ -24,7 +25,8 @@ type SyncButtonBase = {
 type SyncButtonPlain = SyncButtonBase & {
 	kind: 'plain';
 	toast: string;
-	onSync: () => Promise<void>;
+	errorToast?: string;
+	onSync: () => Promise<boolean>;
 };
 
 type SyncButtonDiff = SyncButtonBase & {
@@ -34,6 +36,37 @@ type SyncButtonDiff = SyncButtonBase & {
 };
 
 export type SyncButtonProps = SyncButtonPlain | SyncButtonDiff;
+
+function plainErrorToast(props: SyncButtonPlain): string {
+	return props.errorToast ?? DEFAULT_ERROR_TOAST;
+}
+
+async function runSync(props: SyncButtonProps): Promise<void> {
+	if (props.kind === 'plain') {
+		const ok = await props.onSync();
+		if (ok) toast.message(props.toast);
+		else toast.error(plainErrorToast(props));
+		return;
+	}
+
+	const { changed } = await props.onSync();
+	if (changed) toast.success(props.toast.changed);
+	else toast.message(props.toast.unchanged);
+}
+
+function reportSyncFailure(props: SyncButtonProps, err: unknown): void {
+	console.error('Sync failed:', err);
+	const title = props.kind === 'plain' ? plainErrorToast(props) : DEFAULT_ERROR_TOAST;
+	toast.error(title, {
+		description: err instanceof Error ? err.message : 'Onbekende fout',
+	});
+}
+
+async function waitOutMinSpinner(startedAt: number): Promise<void> {
+	const elapsed = performance.now() - startedAt;
+	if (elapsed >= MIN_SPINNER_MS) return;
+	await new Promise((resolve) => setTimeout(resolve, MIN_SPINNER_MS - elapsed));
+}
 
 /**
  * Icon button for user-triggered refresh. Toast copy is required so every
@@ -51,21 +84,11 @@ export default function SyncButton(props: SyncButtonProps) {
 			setPending(true);
 		});
 		try {
-			if (props.kind === 'plain') {
-				await props.onSync();
-				toast.message(props.toast);
-			} else {
-				const { changed } = await props.onSync();
-				if (changed) toast.success(props.toast.changed);
-				else toast.message(props.toast.unchanged);
-			}
+			await runSync(props);
 		} catch (err) {
-			console.error('Sync failed:', err);
+			reportSyncFailure(props, err);
 		} finally {
-			const elapsed = performance.now() - startedAt;
-			if (elapsed < MIN_SPINNER_MS) {
-				await new Promise((resolve) => setTimeout(resolve, MIN_SPINNER_MS - elapsed));
-			}
+			await waitOutMinSpinner(startedAt);
 			setPending(false);
 		}
 	}

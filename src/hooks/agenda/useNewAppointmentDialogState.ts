@@ -15,6 +15,7 @@ export function useNewAppointmentDialogState(
 	onClose: () => void,
 ) {
 	const [datePickerOpen, setDatePickerOpen] = useState(false);
+	const [reasonComboboxOpen, setReasonComboboxOpen] = useState(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [mode, setMode] = useState<CreateMode>('absence');
 	const [description, setDescription] = useState('');
@@ -64,6 +65,7 @@ export function useNewAppointmentDialogState(
 		setComment('');
 		setInternalComment('');
 		setDatePickerOpen(false);
+		setReasonComboboxOpen(false);
 	};
 
 	const handleOpenChange = (open: boolean) => {
@@ -99,6 +101,8 @@ export function useNewAppointmentDialogState(
 	return {
 		datePickerOpen,
 		setDatePickerOpen,
+		reasonComboboxOpen,
+		setReasonComboboxOpen,
 		isSaving,
 		mode,
 		setMode,

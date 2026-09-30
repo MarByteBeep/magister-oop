@@ -7,7 +7,7 @@ export interface RegistrationsState {
 	refreshing: boolean;
 	error: string | null;
 	registrationCount: number;
-	refresh: () => Promise<void>;
+	refresh: () => Promise<boolean>;
 }
 
 export const RegistrationsContext = createContext<RegistrationsState | undefined>(undefined);

@@ -39,8 +39,9 @@ export function useBulkList<T>(id: string) {
 	useEffect(() => bulkListRegistry.subscribe(id, (next) => setSnapshot(next as BulkListSnapshot<T>)), [id]);
 
 	const refresh = useCallback(async () => {
-		const mode: BulkListMode = snapshot.data != null ? 'background' : 'initial';
-		await bulkListRegistry.refresh(id, getTodayKey(), mode);
+		const mode: BulkListMode = snapshot.data === null ? 'initial' : 'background';
+		const result = await bulkListRegistry.refresh(id, getTodayKey(), mode);
+		return result !== null;
 	}, [id, snapshot.data]);
 
 	return {

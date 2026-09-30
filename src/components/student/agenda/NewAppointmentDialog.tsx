@@ -58,6 +58,9 @@ export default function NewAppointmentDialog({
 						event.preventDefault();
 					}
 				}}
+				onEscapeKeyDown={(event) => {
+					if (state.datePickerOpen || state.reasonComboboxOpen) event.preventDefault();
+				}}
 			>
 				<DialogHeader>
 					<DialogTitle>Nieuwe melding</DialogTitle>
@@ -103,6 +106,7 @@ export default function NewAppointmentDialog({
 							reasonRef={reasonRef}
 							popoverContainer={dialogContainer}
 							onDatePickerOpenChange={state.setDatePickerOpen}
+							onReasonComboboxOpenChange={state.setReasonComboboxOpen}
 						/>
 					</div>
 					<div

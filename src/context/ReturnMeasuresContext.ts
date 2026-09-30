@@ -8,7 +8,7 @@ export interface ReturnMeasuresState {
 	error: string | null;
 	/** Measures planned for today that have not been handled yet. */
 	openTodayCount: number;
-	refresh: () => Promise<void>;
+	refresh: () => Promise<boolean>;
 }
 
 export const ReturnMeasuresContext = createContext<ReturnMeasuresState | undefined>(undefined);

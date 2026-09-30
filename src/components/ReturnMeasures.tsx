@@ -57,6 +57,7 @@ export default function ReturnMeasures() {
 					label="Ververs terugkomers"
 					busy={refreshing}
 					toast="Terugkomers gesynchroniseerd"
+					errorToast="Terugkomers synchroniseren mislukt"
 					onSync={refresh}
 				/>
 			</div>

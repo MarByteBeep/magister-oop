@@ -57,12 +57,13 @@ function ComboboxContent({
 	}) {
 	return (
 		<ComboboxPrimitive.Portal container={container ?? undefined}>
+			{/* pointer-events-auto: Radix modal sets body to pointer-events-none; body portals must opt back in. */}
 			<ComboboxPrimitive.Positioner
 				side={side}
 				sideOffset={sideOffset}
 				align={align}
 				alignOffset={alignOffset}
-				className="isolate z-[100]"
+				className="pointer-events-auto isolate z-[100]"
 			>
 				<ComboboxPrimitive.Popup
 					data-slot="combobox-content"

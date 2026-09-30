@@ -1,6 +1,6 @@
 'use client';
 
-import { type RefObject, useMemo, useState } from 'react';
+import { type RefObject, useEffect, useMemo, useRef, useState } from 'react';
 import {
 	Combobox,
 	ComboboxContent,
@@ -23,7 +23,7 @@ interface NewAppointmentAbsenceReasonFieldProps {
 	selectedType: AttendanceType | undefined;
 	onSelect: (type: AttendanceType | null) => void;
 	reasonRef: RefObject<HTMLInputElement | null>;
-	popoverContainer?: HTMLElement | null;
+	onOpenChange?: (open: boolean) => void;
 }
 
 export default function NewAppointmentAbsenceReasonField({
@@ -31,13 +31,24 @@ export default function NewAppointmentAbsenceReasonField({
 	selectedType,
 	onSelect,
 	reasonRef,
-	popoverContainer,
+	onOpenChange,
 }: NewAppointmentAbsenceReasonFieldProps) {
-	const [reasonQuery, setReasonQuery] = useState('');
+	const selectedTypeRef = useRef(selectedType);
+	selectedTypeRef.current = selectedType;
+
+	const [inputValue, setInputValue] = useState(() => (selectedType ? attendanceTypeLabel(selectedType) : ''));
 	const filteredAttendanceTypes = useMemo(
-		() => filterAttendanceTypes(attendanceTypes, reasonQuery),
-		[attendanceTypes, reasonQuery],
+		() => filterAttendanceTypes(attendanceTypes, inputValue),
+		[attendanceTypes, inputValue],
 	);
+
+	useEffect(() => {
+		setInputValue(selectedType ? attendanceTypeLabel(selectedType) : '');
+	}, [selectedType]);
+
+	const clearForSearch = () => {
+		if (selectedTypeRef.current) setInputValue('');
+	};
 
 	return (
 		<Field>
@@ -46,8 +57,21 @@ export default function NewAppointmentAbsenceReasonField({
 				items={attendanceTypes}
 				filteredItems={filteredAttendanceTypes}
 				value={selectedType ?? null}
-				onValueChange={onSelect}
-				onInputValueChange={setReasonQuery}
+				inputValue={inputValue}
+				onValueChange={(type) => {
+					selectedTypeRef.current = type ?? undefined;
+					onSelect(type);
+				}}
+				onInputValueChange={setInputValue}
+				onOpenChange={(open) => {
+					onOpenChange?.(open);
+					if (open) {
+						clearForSearch();
+						return;
+					}
+					const current = selectedTypeRef.current;
+					setInputValue(current ? attendanceTypeLabel(current) : '');
+				}}
 				itemToStringLabel={attendanceTypeLabel}
 				isItemEqualToValue={(a, b) => a.code === b.code}
 				autoHighlight
@@ -57,8 +81,9 @@ export default function NewAppointmentAbsenceReasonField({
 					id="absence-reason"
 					aria-label="Reden"
 					placeholder="Selecteer of zoek een reden"
+					onFocus={clearForSearch}
 				/>
-				<ComboboxContent container={popoverContainer}>
+				<ComboboxContent>
 					<ComboboxEmpty>Geen reden gevonden.</ComboboxEmpty>
 					<ComboboxList>
 						{(type) => (

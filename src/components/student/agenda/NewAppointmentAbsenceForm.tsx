@@ -27,6 +27,7 @@ interface NewAppointmentAbsenceFormProps {
 	reasonRef: RefObject<HTMLInputElement | null>;
 	popoverContainer?: HTMLElement | null;
 	onDatePickerOpenChange?: (open: boolean) => void;
+	onReasonComboboxOpenChange?: (open: boolean) => void;
 }
 
 export default function NewAppointmentAbsenceForm({
@@ -46,6 +47,7 @@ export default function NewAppointmentAbsenceForm({
 	reasonRef,
 	popoverContainer,
 	onDatePickerOpenChange,
+	onReasonComboboxOpenChange,
 }: NewAppointmentAbsenceFormProps) {
 	const commentRef = useRef<HTMLTextAreaElement>(null);
 	const selectedType = getAttendanceType(attendanceTypeCode);
@@ -80,7 +82,7 @@ export default function NewAppointmentAbsenceForm({
 				selectedType={selectedType}
 				onSelect={handleReasonSelect}
 				reasonRef={reasonRef}
-				popoverContainer={popoverContainer}
+				onOpenChange={onReasonComboboxOpenChange}
 			/>
 
 			<Field>

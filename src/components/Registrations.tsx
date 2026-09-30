@@ -52,6 +52,7 @@ export default function Registrations() {
 					label="Ververs registraties"
 					busy={refreshing}
 					toast="Registraties gesynchroniseerd"
+					errorToast="Registraties synchroniseren mislukt"
 					onSync={refresh}
 				/>
 			</div>
