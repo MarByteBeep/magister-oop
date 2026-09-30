@@ -48,6 +48,10 @@ export function appendReturnMeasureTemplate(studentId: number, template: StoredR
 	);
 }
 
+export function writeReturnMeasureTemplates(data: Record<number, StoredReturnMeasureTemplate[]>): void {
+	writeFileSync(RETURN_MEASURES_FILE_PATH, JSON.stringify(data, null, 2), 'utf-8');
+}
+
 export function getAbsenceNoticeTemplates(): Record<string, StoredAbsenceNoticeTemplate[]> {
 	if (!existsSync(ABSENCE_NOTICES_FILE_PATH)) return {};
 	return JSON.parse(readFileSync(ABSENCE_NOTICES_FILE_PATH, 'utf-8')) as Record<

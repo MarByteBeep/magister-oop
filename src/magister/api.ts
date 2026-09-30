@@ -1,8 +1,13 @@
 import { jsonCacheGet, jsonCacheSet, loadJsonCache } from '@/lib/shared/cache';
 import { fetchBlobInMagisterTab } from '@/magister/fetchBlobInMagisterTab';
 import { fetchJsonInMagisterTab } from '@/magister/fetchInMagisterTab';
-import { type PostResult, postJsonInMagisterTab, postResponseToResult } from '@/magister/postJsonInMagisterTab';
 import { MAGISTER_SESSION_EXPIRED_MESSAGE, schoolApiHttpErrorMessage } from '@/magister/schoolApiHttpError';
+import {
+	type SendJsonMethod,
+	type SendJsonResult,
+	sendJsonInMagisterTab,
+	sendJsonResponseToResult,
+} from '@/magister/sendJsonInMagisterTab';
 import { findSchoolSessionTab, isSchoolSessionUrl } from '@/popup-utils/tabs';
 
 type CredentialsOption = 'include' | 'omit' | 'same-origin';
@@ -46,25 +51,43 @@ export async function postJson(
 	url: string,
 	body: unknown,
 	credentials: CredentialsOption = 'include',
-): Promise<PostResult> {
-	return postJsonImpl(url, body, credentials);
+): Promise<SendJsonResult> {
+	return sendJson(url, 'POST', body, credentials);
 }
 
-async function postJsonImpl(url: string, body: unknown, credentials: CredentialsOption): Promise<PostResult> {
+/**
+ * PUT JSON data to an endpoint.
+ * `ok: true` means HTTP 2xx; non-success status codes become `ok: false` with an error message.
+ */
+export async function putJson(
+	url: string,
+	body: unknown,
+	credentials: CredentialsOption = 'include',
+): Promise<SendJsonResult> {
+	return sendJson(url, 'PUT', body, credentials);
+}
+
+async function sendJson(
+	url: string,
+	method: SendJsonMethod,
+	body: unknown,
+	credentials: CredentialsOption,
+): Promise<SendJsonResult> {
 	try {
 		if (import.meta.env.DEV) {
-			console.log(`[DEV] POST json`, url);
+			console.log(`[DEV] ${method} json`, url);
 			const res = await fetch(url, {
-				method: 'POST',
+				method,
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(body),
 			});
 
-			return postResponseToResult(res);
+			return sendJsonResponseToResult(res);
 		}
 
-		const result = await executeInActiveMagisterTab(postJsonInMagisterTab, [
+		const result = await executeInActiveMagisterTab(sendJsonInMagisterTab, [
 			url,
+			method,
 			body,
 			credentials,
 			MAGISTER_SESSION_EXPIRED_MESSAGE,

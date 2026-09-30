@@ -33,4 +33,5 @@ export const endpoints = {
 	unreadLog: (top: number, skip: number) => `/api/lvs/logboekformulieren/ongelezen?top=${top}&skip=${skip}`,
 	createAccountability: (appointmentId: number) => `/api/medewerkers/afspraken/${appointmentId}/verantwoordingen`,
 	createReturnMeasure: (studentId: number) => `/api/leerlingen/${studentId}/verantwoordingen/terugkommaatregelen`,
+	returnMeasureReport: (measureId: number) => `/api/terugkommaatregelen/${measureId}/melding`,
 };

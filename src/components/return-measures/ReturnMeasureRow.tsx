@@ -1,5 +1,6 @@
 'use client';
 
+import ReturnMeasureReportActions from '@/components/return-measures/ReturnMeasureReportActions';
 import ReturnMeasureStatusBadges from '@/components/return-measures/ReturnMeasureStatusBadges';
 import StudentItem from '@/components/student/StudentItem';
 import type { ReturnMeasureRow as Row } from '@/lib/return-measure/overview';
@@ -26,13 +27,13 @@ export default function ReturnMeasureRow({ row, student, onSelectMeasure }: Retu
 		[timeRange, row.primaryLabel, row.secondaryLabel].filter(Boolean).join(' · ') || 'Terugkommaatregel';
 
 	return (
-		<button
-			type="button"
-			className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-md border bg-muted/50 p-2 text-left hover:bg-muted"
-			onClick={() => onSelectMeasure(row.measure)}
-			aria-label={`Toon terugkommaatregel voor ${row.studentName}`}
-		>
-			<div className="min-w-0 flex-1">
+		<div className="flex w-full items-center justify-between gap-3 rounded-md border bg-muted/50 p-2">
+			<button
+				type="button"
+				className="min-w-0 flex-1 cursor-pointer rounded-md text-left hover:bg-muted"
+				onClick={() => onSelectMeasure(row.measure)}
+				aria-label={`Toon terugkommaatregel voor ${row.studentName}`}
+			>
 				<StudentItem
 					student={student}
 					name={row.studentName}
@@ -42,8 +43,11 @@ export default function ReturnMeasureRow({ row, student, onSelectMeasure }: Retu
 					variant="plain"
 					className="w-full max-w-full"
 				/>
+			</button>
+			<div className="flex items-center gap-2 shrink-0">
+				<ReturnMeasureReportActions measure={row.measure} studentName={row.studentName} />
+				<ReturnMeasureStatusBadges reportStatus={row.reportStatus} planning={row.planning} />
 			</div>
-			<ReturnMeasureStatusBadges reportStatus={row.reportStatus} planning={row.planning} />
-		</button>
+		</div>
 	);
 }

@@ -14,6 +14,7 @@ import { GET as getParentAddress } from './api/ouders/adresgegevens';
 import { GET as getParentContactDetails } from './api/ouders/contactgegevens';
 import { GET as getParentChildren } from './api/ouders/kinderen';
 import { GET as getPhoto } from './api/photos/handler';
+import { PUT as putReturnMeasureReport } from './api/terugkommaatregelen/melding';
 import { GET as getLockersDetails } from './api/v1/lockers/details';
 import { GET as getAbsenceNoticesToday } from './api/v2/absence-notices/today';
 
@@ -85,6 +86,12 @@ api.get('/medewerkers/:id/foto', (c) => {
 api.post('/medewerkers/afspraken/:id/verantwoordingen', (c) => {
 	const id = Number.parseInt(c.req.param('id'), 10);
 	return createAccountability(c.req.raw, id);
+});
+
+// Nested: terugkommaatregelen/:id/melding
+api.put('/terugkommaatregelen/:id/melding', (c) => {
+	const id = Number.parseInt(c.req.param('id'), 10);
+	return putReturnMeasureReport(c.req.raw, id);
 });
 
 api.notFound((c) => c.json({ error: 'Not Found' }, 404));

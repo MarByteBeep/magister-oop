@@ -1,7 +1,7 @@
 import { describe, expect, mock, test } from 'bun:test';
 import { fetchBlobInMagisterTab } from '@/magister/fetchBlobInMagisterTab';
 import { fetchJsonInMagisterTab } from '@/magister/fetchInMagisterTab';
-import { postJsonInMagisterTab } from '@/magister/postJsonInMagisterTab';
+import { sendJsonInMagisterTab } from '@/magister/sendJsonInMagisterTab';
 import { checkSchoolSessionReadyInPage } from '@/popup-utils/tabs';
 
 /** Mimics chrome.scripting.executeScript: only the function source travels to the page. */
@@ -93,14 +93,15 @@ describe('injected script functions', () => {
 		}
 	});
 
-	test('postJsonInMagisterTab runs without module-scope references', async () => {
+	test('sendJsonInMagisterTab runs without module-scope references', async () => {
 		const originalFetch = globalThis.fetch;
 		globalThis.fetch = mockFetch(new Response(null, { status: 201 }));
 
 		try {
 			const result = await invokeAsInjectedScript(
-				postJsonInMagisterTab,
+				sendJsonInMagisterTab,
 				'https://school.magister.net/api/test',
+				'POST',
 				{ value: 1 },
 				'include',
 				'session expired',
@@ -112,14 +113,15 @@ describe('injected script functions', () => {
 		}
 	});
 
-	test('postJsonInMagisterTab treats non-2xx as failure', async () => {
+	test('sendJsonInMagisterTab treats non-2xx as failure', async () => {
 		const originalFetch = globalThis.fetch;
 		globalThis.fetch = mockFetch(new Response(null, { status: 500 }));
 
 		try {
 			const result = await invokeAsInjectedScript(
-				postJsonInMagisterTab,
+				sendJsonInMagisterTab,
 				'https://school.magister.net/api/test',
+				'PUT',
 				{},
 				'include',
 				'session expired',
