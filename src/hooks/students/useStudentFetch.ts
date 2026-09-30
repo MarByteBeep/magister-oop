@@ -1,5 +1,5 @@
 import { type Dispatch, type SetStateAction, useCallback } from 'react';
-import { clearStudentStore } from '@/hooks/useStudentStore';
+import { clearStudentStore } from '@/hooks/students/useStudentStore';
 import { mergeStudent } from '@/lib/students/mergeStudent';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';

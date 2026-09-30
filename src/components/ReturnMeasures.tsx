@@ -9,7 +9,7 @@ import ReturnMeasuresDialogs from '@/components/return-measures/ReturnMeasuresDi
 import type { StudentDetailTab } from '@/components/student/profile/StudentDetailContent';
 import { useReturnMeasuresContext } from '@/context/ReturnMeasuresContext';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { useReturnMeasureOverviewData } from '@/hooks/useReturnMeasureOverviewData';
+import { useReturnMeasureOverviewData } from '@/hooks/return-measure/useReturnMeasureOverviewData';
 import type { ReturnMeasurePeriod, ReturnMeasureStatusFilter } from '@/lib/return-measure/overview';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import { Button } from './ui/button';

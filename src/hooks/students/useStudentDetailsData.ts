@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { loadAllStudentDetails } from '@/hooks/studentDetailsFetchers';
-import type { ParentContact } from '@/hooks/studentDetailsTypes';
+import { loadAllStudentDetails } from '@/hooks/students/studentDetailsFetchers';
+import type { ParentContact } from '@/hooks/students/studentDetailsTypes';
 import type { Address } from '@/magister/response/address.types';
 import type { StudentDetails } from '@/magister/response/studentDetails.types';
 import type { Student } from '@/types/student.types';
 
-export type { ParentContact } from '@/hooks/studentDetailsTypes';
+export type { ParentContact } from '@/hooks/students/studentDetailsTypes';
 
 export function useStudentDetailsData(student?: Student) {
 	const [personalDetails, setPersonalDetails] = useState<StudentDetails | undefined>(undefined);

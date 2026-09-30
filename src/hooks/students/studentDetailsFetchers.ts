@@ -1,4 +1,4 @@
-import type { ParentContact, StudentDetailsData } from '@/hooks/studentDetailsTypes';
+import type { ParentContact, StudentDetailsData } from '@/hooks/students/studentDetailsTypes';
 import { getOrCreateBlobUrl } from '@/lib/shared/blobUtils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';

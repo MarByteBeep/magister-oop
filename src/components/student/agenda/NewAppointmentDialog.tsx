@@ -8,7 +8,7 @@ import { Field } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useAutoFocus } from '@/hooks/useAutofocus';
+import { useAutoFocus } from '@/hooks/shared/useAutofocus';
 import { type AgendaSlotSelection, buildAgendaSlotSelection, selectionToFormValues } from '@/lib/agenda/slotSelection';
 import { submitReturnMeasure } from '@/lib/return-measure/create';
 import { formatReturnMeasureSummary } from '@/lib/return-measure/summary';

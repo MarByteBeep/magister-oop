@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMagisterSession } from '@/context/MagisterSessionContext';
 import { useRegistrationsContext } from '@/context/RegistrationsContext';
 import { useReturnMeasuresContext } from '@/context/ReturnMeasuresContext';
-import { useActionBadge } from '@/hooks/useActionBadge';
+import { useActionBadge } from '@/hooks/shared/useActionBadge';
 
 function App() {
 	const { registrationCount } = useRegistrationsContext();

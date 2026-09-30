@@ -1,13 +1,13 @@
 import { useCallback, useState } from 'react';
 import { useMagisterSession } from '@/context/MagisterSessionContext';
-import { useAgendaLoader } from '@/hooks/useAgendaLoader';
-import { useLessonInfo } from '@/hooks/useLessonInfo';
-import { useCurrentTime } from '@/hooks/useCurrentTime';
-import { useSelectedStudiesStorage } from '@/hooks/useSelectedStudiesStorage';
-import { useStudentFetch } from '@/hooks/useStudentFetch';
-import { useStudentStore } from '@/hooks/useStudentStore';
-import { useStudentsNeedingAgendaCount } from '@/hooks/useStudentsNeedingAgendaCount';
-import { useStudentsSideEffects } from '@/hooks/useStudentsSideEffects';
+import { useAgendaLoader } from '@/hooks/agenda/useAgendaLoader';
+import { useLessonInfo } from '@/hooks/agenda/useLessonInfo';
+import { useCurrentTime } from '@/hooks/shared/useCurrentTime';
+import { useSelectedStudiesStorage } from '@/hooks/shared/useSelectedStudiesStorage';
+import { useStudentFetch } from '@/hooks/students/useStudentFetch';
+import { useStudentStore } from '@/hooks/students/useStudentStore';
+import { useStudentsNeedingAgendaCount } from '@/hooks/students/useStudentsNeedingAgendaCount';
+import { useStudentsSideEffects } from '@/hooks/students/useStudentsSideEffects';
 import { registerLoadAgendaForStudent } from '@/lib/agenda/loadForStudentRegistry';
 import { isStudentsLoading } from '@/lib/students/loadingState';
 

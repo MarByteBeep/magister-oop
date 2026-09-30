@@ -8,7 +8,7 @@ import StudentAgendaCard from '@/components/student/StudentAgendaCard';
 import TardyModal from '@/components/student/tardy/TardyModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useStudentDetailsData } from '@/hooks/useStudentDetailsData';
+import { useStudentDetailsData } from '@/hooks/students/useStudentDetailsData';
 import type { Student } from '@/types/student.types';
 
 interface DetailsProps {

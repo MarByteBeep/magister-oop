@@ -1,0 +1,18 @@
+---
+description: Agents must never stage or commit git changes
+alwaysApply: true
+---
+
+# No agent git stage or commit
+
+An agent MUST NEVER stage or commit.
+
+Forbidden unless the user explicitly asks for that exact action in the current message:
+
+- `git add` / staging (including pathspecs, `-A`, `-u`, interactive staging)
+- `git commit` (including `--amend`, hooks bypass, empty commits)
+- Any other command or tool whose purpose is to stage or create a commit
+
+Do **not** infer permission from prior chat turns, plan completion, “looks ready”, verify-green results, or user rules that describe *how* to commit when asked.
+
+If the user has not explicitly requested staging or committing, leave the index and history untouched. Report that changes are ready; wait for an explicit ask.

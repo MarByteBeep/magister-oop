@@ -8,8 +8,8 @@ import TardyConfirmationModal from '@/components/student/tardy/TardyConfirmation
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { useTardyModalAgenda } from '@/hooks/useTardyModalAgenda';
-import { useCurrentTime } from '@/hooks/useCurrentTime';
+import { useTardyModalAgenda } from '@/hooks/agenda/useTardyModalAgenda';
+import { useCurrentTime } from '@/hooks/shared/useCurrentTime';
 import {
 	findLessonEntry,
 	getAgendaEntryKey,

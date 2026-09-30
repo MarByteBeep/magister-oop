@@ -7,7 +7,7 @@ import { MailAddress } from '@/components/ui/mail-address';
 import { PhoneNumber } from '@/components/ui/phone-number';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { ParentContact } from '@/hooks/useStudentDetailsData';
+import type { ParentContact } from '@/hooks/students/useStudentDetailsData';
 
 interface StudentParentsCardProps {
 	parentContacts: ParentContact[];

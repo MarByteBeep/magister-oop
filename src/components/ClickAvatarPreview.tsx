@@ -2,7 +2,7 @@
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import Avatar from '@/components/ui/avatar';
-import { useLazyBlobUrl } from '@/hooks/useLazyBlobUrl';
+import { useLazyBlobUrl } from '@/hooks/shared/useLazyBlobUrl';
 import { cn } from '@/lib/utils';
 
 interface ClickAvatarPreviewProps {

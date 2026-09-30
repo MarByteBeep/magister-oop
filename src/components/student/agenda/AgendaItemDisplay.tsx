@@ -5,9 +5,9 @@ import { LuRotateCw } from 'react-icons/lu';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import AgendaItemDisplayContent from '@/components/student/agenda/AgendaItemDisplayContent';
 import { Button } from '@/components/ui/button';
-import { useAgendaItemDisplay } from '@/hooks/useAgendaItemDisplay';
-import { useLoadAgendaForStudent } from '@/hooks/useLoadAgendaForStudent';
-import { useStudentById } from '@/hooks/useStudentById';
+import { useAgendaItemDisplay } from '@/hooks/agenda/useAgendaItemDisplay';
+import { useLoadAgendaForStudent } from '@/hooks/agenda/useLoadAgendaForStudent';
+import { useStudentById } from '@/hooks/students/useStudentById';
 
 interface AgendaItemDisplayProps {
 	studentId: number;

@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { PermanentFiltersPanel } from '@/components/PermanentFiltersPanel';
 import { QuickFiltersBar } from '@/components/QuickFiltersBar';
 import { SearchInputRow } from '@/components/SearchInputRow';
-import { useAutoFocus } from '@/hooks/useAutofocus';
-import { useSearchTermStorage } from '@/hooks/useSearchTermStorage';
+import { useAutoFocus } from '@/hooks/shared/useAutofocus';
+import { useSearchTermStorage } from '@/hooks/shared/useSearchTermStorage';
 
 export type QuickFilterItem = {
 	id: string;

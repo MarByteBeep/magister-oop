@@ -4,7 +4,7 @@ import type { CSSProperties, RefObject } from 'react';
 import { LuClock3, LuMapPin } from 'react-icons/lu';
 import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
 import { ReturnMeasureAlertBadge } from '@/components/student/agenda/ReturnMeasureAgendaLabels';
-import { useFittingLineCount } from '@/hooks/useFittingLineCount';
+import { useFittingLineCount } from '@/hooks/shared/useFittingLineCount';
 import type { AgendaEventDisplay } from '@/lib/agenda/eventDisplay';
 import { getFullDayScheduleLabel } from '@/lib/agenda/fullDayScheduleUtils';
 import { formatTime } from '@/lib/shared/dateUtils';

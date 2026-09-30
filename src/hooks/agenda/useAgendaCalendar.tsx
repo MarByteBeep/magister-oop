@@ -9,10 +9,10 @@ import {
 	calendarEventPropGetter,
 	calendarTooltipAccessor,
 	createCalendarSlotPropGetter,
-} from '@/hooks/agendaCalendarPropGetters';
-import { useAgendaCalendarEvents } from '@/hooks/useAgendaCalendarEvents';
-import { useAgendaCalendarSelection } from '@/hooks/useAgendaCalendarSelection';
-import { useStableAgendaEntry } from '@/hooks/useStableAgendaEntries';
+} from '@/hooks/agenda/agendaCalendarPropGetters';
+import { useAgendaCalendarEvents } from '@/hooks/agenda/useAgendaCalendarEvents';
+import { useAgendaCalendarSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
+import { useStableAgendaEntry } from '@/hooks/agenda/useStableAgendaEntries';
 import { hhmmToDate } from '@/lib/agenda/bigCalendarUtils';
 import type { CalendarEvent } from '@/lib/agenda/calendarUtils';
 import { agendaDayLayoutAlgorithm } from '@/lib/agenda/dayLayout';

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useWeeklyAgendaLoader } from '@/hooks/useWeeklyAgendaLoader';
-import { useWeeklyAgendaWeek } from '@/hooks/useWeeklyAgendaWeek';
+import { useWeeklyAgendaLoader } from '@/hooks/agenda/useWeeklyAgendaLoader';
+import { useWeeklyAgendaWeek } from '@/hooks/agenda/useWeeklyAgendaWeek';
 import { getDateKey, parseDateKey, weekOffsetFromDate } from '@/lib/shared/dateUtils';
 import type { Student } from '@/types/student.types';
 

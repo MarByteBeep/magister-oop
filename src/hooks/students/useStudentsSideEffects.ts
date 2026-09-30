@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react';
-import { useAutoLoadAgenda } from '@/hooks/useAutoLoadAgenda';
-import { useBulkLists } from '@/hooks/useBulkLists';
-import { useStudentsInit } from '@/hooks/useStudentsInit';
+import { useAutoLoadAgenda } from '@/hooks/agenda/useAutoLoadAgenda';
+import { useBulkLists } from '@/hooks/bulk-lists/useBulkLists';
+import { useStudentsInit } from '@/hooks/students/useStudentsInit';
 import type { MagisterSessionStatus } from '@/lib/session/magisterSession';
 import type { Student } from '@/types/student.types';
 import type { StudentWrite } from '@/types/studentStore.types';

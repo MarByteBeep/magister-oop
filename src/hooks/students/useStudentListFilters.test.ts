@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { studentMatchesSearch } from '@/hooks/useStudentListFilters';
+import { studentMatchesSearch } from '@/hooks/students/useStudentListFilters';
 import { lessonEntry } from '@/lib/agenda/entryUtils';
 import { getDateKey } from '@/lib/shared/dateUtils';
 import type { Student } from '@/types/student.types';

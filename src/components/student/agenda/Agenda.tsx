@@ -7,7 +7,7 @@ import {
 	agendaCalendarMessages,
 	agendaLocalizer,
 } from '@/components/student/agenda/agendaCalendarConfig';
-import { useAgendaCalendar } from '@/hooks/useAgendaCalendar';
+import { useAgendaCalendar } from '@/hooks/agenda/useAgendaCalendar';
 import { agendaEntriesEqual, isSameAgendaEntryOccurrence } from '@/lib/agenda/entryUtils';
 import { buildLessonGridGradient, getLessonGridLinePercents } from '@/lib/agenda/lessonHours';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';

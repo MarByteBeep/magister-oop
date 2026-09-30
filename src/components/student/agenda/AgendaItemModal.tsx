@@ -7,7 +7,7 @@ import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { useAgendaItemStudents } from '@/hooks/useAgendaItemStudents';
+import { useAgendaItemStudents } from '@/hooks/agenda/useAgendaItemStudents';
 import { isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agenda/entryUtils';
 import { getAgendaItemInfo } from '@/lib/agenda/utils';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';

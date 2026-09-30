@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import type { useGroupedRegistrations } from '@/hooks/useGroupedRegistrations';
+import type { useGroupedRegistrations } from '@/hooks/registrations/useGroupedRegistrations';
 import {
 	ALL_REGISTRATION_CATEGORIES,
 	buildRegistrationCategories,

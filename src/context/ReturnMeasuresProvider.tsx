@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { useBulkList } from '@/hooks/useBulkLists';
+import { useBulkList } from '@/hooks/bulk-lists/useBulkLists';
 import { countOpenReturnMeasuresToday } from '@/lib/return-measure/overview';
 import { createStudentVisibility } from '@/lib/students/visibility';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
