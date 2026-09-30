@@ -1,17 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { LuRefreshCw } from 'react-icons/lu';
 import { asyncFetchStatus } from '@/components/AsyncFetchStatus';
 import ReturnMeasureDayList from '@/components/return-measure/ReturnMeasureDayList';
 import ReturnMeasureFilters from '@/components/return-measure/ReturnMeasureFilters';
 import ReturnMeasuresDialogs from '@/components/return-measure/ReturnMeasuresDialogs';
+import SyncButton from '@/components/SyncButton';
 import type { StudentDetailTab } from '@/components/student/profile/StudentDetailContent';
 import { useReturnMeasuresContext } from '@/context/ReturnMeasuresContext';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useReturnMeasureOverviewData } from '@/hooks/return-measure/useReturnMeasureOverviewData';
 import type { ReturnMeasurePeriod, ReturnMeasureStatusFilter } from '@/lib/return-measure/overview';
-import { Button } from './ui/button';
 
 export default function ReturnMeasures() {
 	const { data, loading, refreshing, error, refresh } = useReturnMeasuresContext();
@@ -53,16 +52,13 @@ export default function ReturnMeasures() {
 					onPeriodChange={setPeriod}
 					onStatusChange={setStatus}
 				/>
-				<Button
-					variant="ghost"
-					size="icon"
-					onClick={refresh}
-					disabled={refreshing}
-					aria-label="Ververs terugkomers"
-					title="Ververs"
-				>
-					<LuRefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-				</Button>
+				<SyncButton
+					kind="plain"
+					label="Ververs terugkomers"
+					busy={refreshing}
+					toast="Terugkomers gesynchroniseerd"
+					onSync={refresh}
+				/>
 			</div>
 
 			<ReturnMeasureDayList
