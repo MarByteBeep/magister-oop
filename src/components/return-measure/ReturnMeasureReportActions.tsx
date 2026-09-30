@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { LuCheck, LuX } from 'react-icons/lu';
-import ReturnMeasureReportConfirmModal from '@/components/return-measures/ReturnMeasureReportConfirmModal';
+import ReturnMeasureReportConfirmModal from '@/components/return-measure/ReturnMeasureReportConfirmModal';
 import { Button } from '@/components/ui/button';
-import { returnMeasurePlanning } from '@/lib/return-measure/overview';
+import { returnMeasurePlanning, returnMeasureReportStatus } from '@/lib/return-measure/overview';
 import { type ReturnMeasureReportAction, submitReturnMeasureReport } from '@/lib/return-measure/report';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import type { Student } from '@/types/student.types';
@@ -26,8 +26,7 @@ export default function ReturnMeasureReportActions({
 	const [pendingAction, setPendingAction] = useState<ReturnMeasureReportAction | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// Only open (planned, not yet handled) measures can be reported.
-	if (returnMeasurePlanning(measure) !== 'open') return null;
+	if (returnMeasurePlanning(measure) !== 'open' || returnMeasureReportStatus(measure) !== 'none') return null;
 
 	async function confirmReport() {
 		if (pendingAction == null || isSubmitting) return;

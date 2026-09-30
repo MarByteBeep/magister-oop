@@ -1,8 +1,8 @@
 'use client';
 
-import ReturnMeasureHandledTooltipContent from '@/components/return-measures/ReturnMeasureHandledTooltipContent';
-import ReturnMeasureReportActions from '@/components/return-measures/ReturnMeasureReportActions';
-import ReturnMeasureStatusBadges from '@/components/return-measures/ReturnMeasureStatusBadges';
+import ReturnMeasureHandledTooltipContent from '@/components/return-measure/ReturnMeasureHandledTooltipContent';
+import ReturnMeasureReportActions from '@/components/return-measure/ReturnMeasureReportActions';
+import ReturnMeasureStatusBadges from '@/components/return-measure/ReturnMeasureStatusBadges';
 import StudentItem from '@/components/student/StudentItem';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ReturnMeasureRow as Row } from '@/lib/return-measure/overview';

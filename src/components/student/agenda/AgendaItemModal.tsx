@@ -1,6 +1,6 @@
 'use client';
 
-import ReturnMeasureModal from '@/components/return-measures/ReturnMeasureModal';
+import ReturnMeasureModal from '@/components/return-measure/ReturnMeasureModal';
 import AgendaItemModalMetadata from '@/components/student/agenda/AgendaItemModalMetadata';
 import AgendaItemStudentsList from '@/components/student/agenda/AgendaItemStudentsList';
 import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';

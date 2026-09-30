@@ -1,7 +1,7 @@
 'use client';
 
 import { LuTriangleAlert } from 'react-icons/lu';
-import ReturnMeasureHandledTooltipContent from '@/components/return-measures/ReturnMeasureHandledTooltipContent';
+import ReturnMeasureHandledTooltipContent from '@/components/return-measure/ReturnMeasureHandledTooltipContent';
 import { returnMeasureIconClasses } from '@/lib/agenda/kindStyles';
 import { returnMeasureReportStatus } from '@/lib/return-measure/overview';
 import { getReturnMeasureDisplay, getReturnMeasureHandledInfo } from '@/lib/return-measure/utils';

@@ -1,6 +1,6 @@
 'use client';
 
-import ReturnMeasureModal from '@/components/return-measures/ReturnMeasureModal';
+import ReturnMeasureModal from '@/components/return-measure/ReturnMeasureModal';
 import StudentModal from '@/components/StudentModal';
 import type { StudentDetailTab } from '@/components/student/profile/StudentDetailContent';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';

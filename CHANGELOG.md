@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0 — 2026-09-30
+
+- Terugkomers: **Gemeld** / **Niet gemeld** met bevestiging
+- Terugkomers: **Afgehandeld door** met tijdstip (lijst, detail, agenda)
+- Extensie-icoon: login focust niet op **verlopen Magister-tab**
+
 ## 1.2.0 — 2026-09-25
 
 - Agenda: **Terugkommaatregel** aanmaken

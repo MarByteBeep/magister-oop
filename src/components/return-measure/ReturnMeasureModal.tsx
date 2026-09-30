@@ -1,20 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { LuTriangleAlert } from 'react-icons/lu';
-import ReturnMeasureHandledDetails from '@/components/return-measures/ReturnMeasureHandledDetails';
-import ReturnMeasureReportButtons from '@/components/return-measures/ReturnMeasureReportButtons';
-import ReturnMeasureScheduleButton from '@/components/return-measures/ReturnMeasureScheduleButton';
+import ReturnMeasureHandledDetails from '@/components/return-measure/ReturnMeasureHandledDetails';
+import ReturnMeasureReportButtons from '@/components/return-measure/ReturnMeasureReportButtons';
+import ReturnMeasureScheduleButton from '@/components/return-measure/ReturnMeasureScheduleButton';
 import StudentItem from '@/components/student/StudentItem';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useStudentAgendaFocus } from '@/context/StudentAgendaFocusContext';
 import { useStudentsContext } from '@/context/StudentsContext';
+import { useReturnMeasureReportOverlays } from '@/hooks/return-measure/useReturnMeasureReportOverlays';
 import { returnMeasureIconClasses } from '@/lib/agenda/kindStyles';
-import {
-	type ReturnMeasureReportStatus,
-	returnMeasurePlanning,
-	returnMeasureReportStatus,
-} from '@/lib/return-measure/overview';
+import { returnMeasurePlanning, returnMeasureReportStatus } from '@/lib/return-measure/overview';
+import { applyReturnMeasureReportOverlay } from '@/lib/return-measure/report';
 import { getReturnMeasureDisplay } from '@/lib/return-measure/utils';
 import { parseOptionalDate } from '@/lib/shared/dateUtils';
 import { formatPersonName } from '@/lib/shared/stringUtils';
@@ -29,7 +26,14 @@ interface ReturnMeasureModalProps {
 	onOpenStudent?: (student: Student, options?: { tab?: 'gegevens' | 'agenda'; date?: Date }) => void;
 }
 
-export default function ReturnMeasureModal({ measure, isOpen, onClose, onOpenStudent }: ReturnMeasureModalProps) {
+export default function ReturnMeasureModal({
+	measure: source,
+	isOpen,
+	onClose,
+	onOpenStudent,
+}: ReturnMeasureModalProps) {
+	const reportOverlays = useReturnMeasureReportOverlays();
+	const measure = applyReturnMeasureReportOverlay(source, reportOverlays);
 	const { students } = useStudentsContext();
 	const display = getReturnMeasureDisplay(measure);
 	const start = parseOptionalDate(measure.begin);
@@ -40,13 +44,7 @@ export default function ReturnMeasureModal({ measure, isOpen, onClose, onOpenStu
 	const agendaFocus = useStudentAgendaFocus();
 	const canOpenAgenda = Boolean(start) && Boolean(agendaFocus || student);
 	const planning = returnMeasurePlanning(measure);
-	const [reportStatus, setReportStatus] = useState<ReturnMeasureReportStatus>(() =>
-		returnMeasureReportStatus(measure),
-	);
-
-	useEffect(() => {
-		setReportStatus(returnMeasureReportStatus(measure));
-	}, [measure]);
+	const reportStatus = returnMeasureReportStatus(measure);
 
 	function openAgenda() {
 		if (!start) return;
@@ -113,7 +111,6 @@ export default function ReturnMeasureModal({ measure, isOpen, onClose, onOpenStu
 						student={student}
 						studentName={studentName}
 						classLabel={details.stamklas.code}
-						onReportStatusChange={setReportStatus}
 					/>
 				)}
 			</DialogContent>

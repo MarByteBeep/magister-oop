@@ -52,6 +52,7 @@ export async function getReturnMeasuresForRange(rangeStart: Date, rangeEnd: Date
 /** Always hits the network. Returns null on failure so callers keep the measures they already show. */
 export async function refreshReturnMeasuresForDate(dateKey: string): Promise<ReturnMeasureStudent[] | null> {
 	const monthKey = getMonthKey(parseDateKey(dateKey));
+	inflight.delete(monthKey);
 	try {
 		const items = await loadReturnMeasuresForMonth(monthKey);
 		cache.set(monthKey, items);

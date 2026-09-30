@@ -6,6 +6,7 @@ import {
 	countReturnMeasureRowsByStatus,
 	filterReturnMeasureRows,
 	groupReturnMeasureRowsByDay,
+	measureWithReportStatus,
 	returnMeasurePeriodRange,
 	returnMeasurePlanning,
 	returnMeasureReportStatus,
@@ -38,6 +39,20 @@ describe('returnMeasureReportStatus', () => {
 		);
 		expect(returnMeasureReportStatus(returnMeasureStudent({ heeftGemeld: true }))).toBe('reported');
 		expect(returnMeasureReportStatus(returnMeasureStudent())).toBe('none');
+	});
+});
+
+describe('measureWithReportStatus', () => {
+	test('sets gemeld flags for an optimistic report', () => {
+		const reported = measureWithReportStatus(returnMeasureStudent(), 'reported');
+		expect(returnMeasureReportStatus(reported)).toBe('reported');
+		expect(reported.heeftGemeld).toBe(true);
+		expect(reported.heeftNietGemeld).toBe(false);
+
+		const missed = measureWithReportStatus(returnMeasureStudent({ heeftGemeld: true }), 'not-reported');
+		expect(returnMeasureReportStatus(missed)).toBe('not-reported');
+		expect(missed.heeftGemeld).toBe(false);
+		expect(missed.heeftNietGemeld).toBe(true);
 	});
 });
 

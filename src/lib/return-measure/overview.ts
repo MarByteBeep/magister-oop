@@ -42,6 +42,18 @@ export function returnMeasureReportStatus(measure: ReturnMeasureStudent): Return
 	return 'none';
 }
 
+/** Optimistic flags so list/modal follow a successful report before the fetch cache catches up. */
+export function measureWithReportStatus(
+	measure: ReturnMeasureStudent,
+	status: Exclude<ReturnMeasureReportStatus, 'none'>,
+): ReturnMeasureStudent {
+	return {
+		...measure,
+		heeftGemeld: status === 'reported',
+		heeftNietGemeld: status === 'not-reported',
+	};
+}
+
 export function returnMeasurePlanning(measure: ReturnMeasureStudent): ReturnMeasurePlanning {
 	if (measure.begin == null) return 'unplanned';
 	return measure.afgehandeldOp == null ? 'open' : 'handled';

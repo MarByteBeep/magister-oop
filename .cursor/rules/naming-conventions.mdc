@@ -47,6 +47,29 @@ The naming distinction is intentional:
 - module → `camelCase`
 - component → `PascalCase`
 
+### Singular vs plural
+
+A domain uses **exactly one** folder stem in `src/lib/`, `src/hooks/`, and `src/components/` (except `src/components/ui/`). Mixing a singular and a plural twin is forbidden (`return-measure/` plus `return-measures/` is a miss).
+
+Default: **singular** — the concept name:
+
+- `return-measure/`
+- `absence-notice/`
+- `agenda/`
+- `occupancy/`
+
+Keep **plural** only when that stem is already the domain name in lib/hooks:
+
+- `students/`
+- `registrations/`
+- `bulk-lists/`
+
+Do not pluralize a component folder to mean "the list of X". Do not invent a singular twin of an established plural domain (`lib/student/` next to `lib/students/`).
+
+`components/student/` is the single-student UI (profile, agenda) for the `students` domain. That is not a second domain and does not license `return-measures/` next to `return-measure/`.
+
+Internal string values (tab keys, bulk-list ids) are not folders; they may stay plural (`'return-measures'`) when they name a collection.
+
 ## UI exception
 
 Files under `src/components/ui/**` MUST use lowercase `kebab-case`.

@@ -1,6 +1,6 @@
 'use client';
 
-import ReturnMeasureRow from '@/components/return-measures/ReturnMeasureRow';
+import ReturnMeasureRow from '@/components/return-measure/ReturnMeasureRow';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ReturnMeasureDayGroup } from '@/lib/return-measure/overview';

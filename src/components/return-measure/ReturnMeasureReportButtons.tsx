@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import ReturnMeasureReportConfirmModal from '@/components/return-measures/ReturnMeasureReportConfirmModal';
+import ReturnMeasureReportConfirmModal from '@/components/return-measure/ReturnMeasureReportConfirmModal';
 import { Button } from '@/components/ui/button';
 import type { ReturnMeasureReportStatus } from '@/lib/return-measure/overview';
 import { type ReturnMeasureReportAction, submitReturnMeasureReport } from '@/lib/return-measure/report';
@@ -21,7 +21,6 @@ interface ReturnMeasureReportButtonsProps {
 	student?: Student;
 	studentName: string;
 	classLabel?: string;
-	onReportStatusChange: (status: Exclude<ReturnMeasureReportStatus, 'none'>) => void;
 }
 
 export default function ReturnMeasureReportButtons({
@@ -30,7 +29,6 @@ export default function ReturnMeasureReportButtons({
 	student,
 	studentName,
 	classLabel,
-	onReportStatusChange,
 }: ReturnMeasureReportButtonsProps) {
 	const photoUrl = student?.links.foto?.href ?? measure.leerling.links.foto?.href;
 	const [pendingAction, setPendingAction] = useState<ReturnMeasureReportAction | null>(null);
@@ -43,8 +41,7 @@ export default function ReturnMeasureReportButtons({
 		if (pendingAction == null || isSubmitting) return;
 		setIsSubmitting(true);
 		try {
-			const ok = await submitReturnMeasureReport(measure, pendingAction);
-			if (ok) onReportStatusChange(pendingAction);
+			await submitReturnMeasureReport(measure, pendingAction);
 		} finally {
 			setIsSubmitting(false);
 			setPendingAction(null);
