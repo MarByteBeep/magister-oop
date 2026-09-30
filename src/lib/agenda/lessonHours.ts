@@ -178,9 +178,12 @@ export function selectionCoversFullSchoolDay(selection: { start: Date; end: Date
 	const range = findOverlappingLessonIndexRangeByDate(selection.start, selection.end);
 	if (!range) return false;
 
-	const firstRegularIndex = getPreSchoolTimeTable().length;
+	// Vierkant rooster only when the drag includes the 08:00 pre-school slot, not merely 1e uur.
+	const preSchoolCount = getPreSchoolTimeTable().length;
+	if (preSchoolCount === 0 || range.from > 0) return false;
+
 	const lastRegularIndex = getSelectableTimeTable().length - 1;
-	return range.from <= firstRegularIndex && range.to >= lastRegularIndex;
+	return range.to >= lastRegularIndex;
 }
 
 export function snapSelectionToLessonHours(selection: { start: Date; end: Date }): AgendaSlotSelection | null {

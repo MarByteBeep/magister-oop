@@ -52,7 +52,7 @@ describe('snapSelectionToLessonHours', () => {
 		});
 	});
 
-	test('snaps a whole-day drag to the full-day schedule (vierkant rooster)', () => {
+	test('snaps a whole-day drag from 08:00 to the full-day schedule (vierkant rooster)', () => {
 		const snapped = requireSnap({
 			start: at('2026-09-16', '08:05'),
 			end: at('2026-09-16', '15:55'),
@@ -60,6 +60,19 @@ describe('snapSelectionToLessonHours', () => {
 
 		expect(snapped).toEqual({
 			start: at('2026-09-16', '08:00'),
+			end: at('2026-09-16', '16:00'),
+		});
+		expect(getOverlappingLessonHoursForSelection(snapped)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+	});
+
+	test('does not treat a 1e-uur-to-end drag as vierkant rooster', () => {
+		const snapped = requireSnap({
+			start: at('2026-09-16', '08:35'),
+			end: at('2026-09-16', '15:55'),
+		});
+
+		expect(snapped).toEqual({
+			start: at('2026-09-16', '08:30'),
 			end: at('2026-09-16', '16:00'),
 		});
 		expect(getOverlappingLessonHoursForSelection(snapped)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
