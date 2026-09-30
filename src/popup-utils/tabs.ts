@@ -111,6 +111,23 @@ export async function findReadySchoolSessionTab(): Promise<chrome.tabs.Tab | und
 	return undefined;
 }
 
+async function schoolSessionTabIds(): Promise<Set<number>> {
+	const tabs = await chrome.tabs.query(MAGISTER_TAB_QUERY);
+	return new Set(
+		tabs.flatMap((tab) => (tab.id !== undefined && tab.url && isSchoolSessionUrl(tab.url) ? [tab.id] : [])),
+	);
+}
+
+/** School SPA that belongs to this login wait — not a tab that was already open (likely expired). */
+export function isLoginSuccessorTabId(
+	tabId: number,
+	preexistingSchoolTabIds: ReadonlySet<number>,
+	rememberedLoginTabId: number | undefined,
+): boolean {
+	if (tabId === rememberedLoginTabId) return true;
+	return !preexistingSchoolTabIds.has(tabId);
+}
+
 export async function openMagisterLoginTab(): Promise<chrome.tabs.Tab> {
 	const remembered = await getRememberedLoginTab();
 	if (remembered?.id !== undefined) {
@@ -177,13 +194,16 @@ export async function rememberSchoolOrigin(tab: chrome.tabs.Tab): Promise<void> 
 }
 
 const SESSION_POLL_MS = 2000;
+const RECOVER_SUCCESSOR_WAIT_MS = 100;
 
 export function waitForSchoolSessionTab(signal?: AbortSignal): Promise<chrome.tabs.Tab> {
 	return new Promise((resolve, reject) => {
 		let settled = false;
 		let pollTimer: ReturnType<typeof setInterval> | undefined;
-		/** School SPA seen via onUpdated during this wait (may still be loading). */
+		/** School SPA opened/navigated during this wait (may still be loading). */
 		let successorTabId: number | undefined;
+		let preexistingSchoolTabIds = new Set<number>();
+		let rememberedLoginTabId: number | undefined;
 
 		const finish = (tab: chrome.tabs.Tab) => {
 			if (settled) return;
@@ -200,6 +220,12 @@ export function waitForSchoolSessionTab(signal?: AbortSignal): Promise<chrome.ta
 		};
 
 		const onAbort = () => fail(new DOMException('Magister login aborted', 'AbortError'));
+		const isSettled = () => settled;
+
+		const isAdoptableSchoolTab = (tab: chrome.tabs.Tab) => {
+			if (tab.id === undefined || !tab.url || !isSchoolSessionUrl(tab.url)) return false;
+			return isLoginSuccessorTabId(tab.id, preexistingSchoolTabIds, rememberedLoginTabId);
+		};
 
 		const probeSuccessorReady = async (tab: chrome.tabs.Tab | undefined) => {
 			if (settled || tab?.id === undefined) return;
@@ -212,8 +238,7 @@ export function waitForSchoolSessionTab(signal?: AbortSignal): Promise<chrome.ta
 
 		/** Adopt a school SPA opened/navigated during this login — even while still loading. */
 		const adoptSuccessor = async (tab: chrome.tabs.Tab) => {
-			if (settled || tab.id === undefined) return;
-			if (!tab.url || !isSchoolSessionUrl(tab.url)) return;
+			if (settled || tab.id === undefined || !isAdoptableSchoolTab(tab)) return;
 			successorTabId = tab.id;
 			await saveLoginTabId(tab.id);
 			await probeSuccessorReady(tab);
@@ -225,7 +250,7 @@ export function waitForSchoolSessionTab(signal?: AbortSignal): Promise<chrome.ta
 
 		const onRemoved = (tabId: number) => {
 			if (successorTabId === tabId) successorTabId = undefined;
-			void recoverAfterTabClosed(tabId, () => successorTabId).catch(fail);
+			void recoverAfterTabClosed(tabId, () => successorTabId, isSettled).catch(fail);
 		};
 
 		const cleanup = () => {
@@ -235,47 +260,70 @@ export function waitForSchoolSessionTab(signal?: AbortSignal): Promise<chrome.ta
 			signal?.removeEventListener('abort', onAbort);
 		};
 
-		if (signal) {
-			if (signal.aborted) {
-				onAbort();
-				return;
-			}
-			signal.addEventListener('abort', onAbort, { once: true });
-		}
-
-		chrome.tabs.onUpdated.addListener(onUpdated);
-		chrome.tabs.onRemoved.addListener(onRemoved);
-
 		const poll = () => {
 			void (async () => {
 				if (settled) return;
-				// Only poll the login successor — never latch onto a pre-existing expired school SPA.
 				if (successorTabId !== undefined) {
 					try {
 						await probeSuccessorReady(await chrome.tabs.get(successorTabId));
-						return;
+						if (settled) return;
 					} catch {
 						successorTabId = undefined;
 					}
 				}
-				const remembered = await getRememberedLoginTab();
-				if (remembered?.url && isSchoolSessionUrl(remembered.url)) {
-					await probeSuccessorReady(remembered);
+
+				const tabs = await chrome.tabs.query(MAGISTER_TAB_QUERY);
+				for (const tab of tabs) {
+					if (settled) return;
+					if (tab.id !== successorTabId) await adoptSuccessor(tab);
+				}
+
+				if (settled) return;
+				// Pre-existing expired SPA became ready (user signed in on that tab).
+				const readyTab = await findReadySchoolSessionTab();
+				if (readyTab?.id !== undefined) {
+					await saveLoginTabId(readyTab.id);
+					finish(readyTab);
 				}
 			})();
 		};
 
-		pollTimer = setInterval(poll, SESSION_POLL_MS);
-		poll();
+		const begin = async () => {
+			if (signal?.aborted) {
+				onAbort();
+				return;
+			}
+
+			preexistingSchoolTabIds = await schoolSessionTabIds();
+			rememberedLoginTabId = (await getRememberedLoginTab())?.id;
+			if (settled) return;
+			if (signal?.aborted) {
+				onAbort();
+				return;
+			}
+
+			if (signal) signal.addEventListener('abort', onAbort, { once: true });
+			chrome.tabs.onUpdated.addListener(onUpdated);
+			chrome.tabs.onRemoved.addListener(onRemoved);
+			pollTimer = setInterval(poll, SESSION_POLL_MS);
+			poll();
+		};
+
+		void begin().catch(fail);
 	});
 }
 
-async function recoverAfterTabClosed(tabId: number, getSuccessorId: () => number | undefined) {
+async function recoverAfterTabClosed(
+	tabId: number,
+	getSuccessorId: () => number | undefined,
+	isSettled: () => boolean,
+) {
 	const storedId = Number((await chrome.storage.session.get(LOGIN_TAB_ID_KEY))[LOGIN_TAB_ID_KEY]);
 	if (storedId !== tabId) return;
 
 	// Magister often opens the school SPA before closing accounts — let onUpdated land first.
-	await new Promise<void>((resolve) => setTimeout(resolve, 100));
+	await new Promise<void>((resolve) => setTimeout(resolve, RECOVER_SUCCESSOR_WAIT_MS));
+	if (isSettled()) return;
 
 	const successorId = getSuccessorId();
 	if (successorId !== undefined && successorId !== tabId) {
@@ -290,6 +338,8 @@ async function recoverAfterTabClosed(tabId: number, getSuccessorId: () => number
 		}
 	}
 
+	if (isSettled()) return;
+
 	// Only latch onto a school SPA that is actually signed in — an expired SPA hangs forever.
 	const readyTab = await findReadySchoolSessionTab();
 	if (readyTab?.id !== undefined) {
@@ -297,7 +347,9 @@ async function recoverAfterTabClosed(tabId: number, getSuccessorId: () => number
 		return;
 	}
 
+	if (isSettled()) return;
 	await clearLoginTabId();
+	if (isSettled()) return;
 	const next = await openMagisterLoginTab();
 	if (next.id === undefined) throw new Error('Magister login tab was closed');
 }

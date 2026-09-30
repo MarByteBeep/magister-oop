@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { isCompleteSchoolTab, isSchoolSessionUrl } from './tabs';
+import { isCompleteSchoolTab, isLoginSuccessorTabId, isSchoolSessionUrl } from './tabs';
 
 describe('isSchoolSessionUrl', () => {
 	test('accepts a school Magister SPA host', () => {
@@ -32,5 +32,21 @@ describe('isCompleteSchoolTab', () => {
 			false,
 		);
 		expect(isCompleteSchoolTab({ url: 'https://www.magister.net/', status: 'complete' })).toBe(false);
+	});
+});
+
+describe('isLoginSuccessorTabId', () => {
+	test('rejects a school tab that was already open when the wait started', () => {
+		expect(isLoginSuccessorTabId(1, new Set([1]), undefined)).toBe(false);
+		expect(isLoginSuccessorTabId(1, new Set([1]), 5)).toBe(false);
+	});
+
+	test('accepts a school tab opened after the wait started', () => {
+		expect(isLoginSuccessorTabId(2, new Set([1]), undefined)).toBe(true);
+		expect(isLoginSuccessorTabId(2, new Set([1]), 5)).toBe(true);
+	});
+
+	test('accepts the remembered login tab even if it was already a school SPA', () => {
+		expect(isLoginSuccessorTabId(1, new Set([1]), 1)).toBe(true);
 	});
 });
