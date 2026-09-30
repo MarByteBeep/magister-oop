@@ -1,14 +1,12 @@
 # Changelog
 
-Alle gebruikersgerichte wijzigingen in de Magister OOP Chrome-extensie.
-
 ## 1.2.0 — 2026-09-25
 
-- Agenda: **Terugkommaatregel aanmaken** (omschrijving, dagen, opslaan)
+- Agenda: **Terugkommaatregel** aanmaken
 - Agenda: **vierkant rooster** aanmaken
 - Agenda: **pauzes** zichtbaar tussen lessen
 
-# 1.1.0 — 2026-09-10
+## 1.1.0 — 2026-09-10
 
 - Terugkomers: nieuwe tab met **overzicht per dag** — leerling, tijd en maatregel
 - Absenties heet nu **Registraties**
