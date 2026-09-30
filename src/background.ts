@@ -3,12 +3,11 @@ import { MAGISTER_SESSION_KEY } from './lib/session/magisterSession';
 import {
 	clearLoginTabId,
 	findReadySchoolSessionTab,
-	findSchoolSessionTab,
 	focusTab,
 	getRememberedLoginTab,
+	isSchoolSessionUrl,
 	openMagisterLoginTab,
 	rememberSchoolOrigin,
-	saveLoginTabId,
 	waitForSchoolSessionTab,
 } from './popup-utils/tabs';
 
@@ -56,92 +55,104 @@ async function resetToolbarAction() {
 
 let popupWindowId: number | undefined;
 let connecting: Promise<void> | undefined;
+let connectAbort: AbortController | undefined;
 
 chrome.action.onClicked.addListener(async () => {
-	const openPopupId = await getOpenPopupWindowId();
-	if (openPopupId !== undefined) {
-		const loginTab = await getRememberedLoginTab();
-		if (loginTab) {
-			await focusTab(loginTab);
-			return;
-		}
+	// Always surface the popup first — never no-op while a prior connect is hanging.
+	await ensurePopupVisible();
 
-		chrome.windows.update(openPopupId, { focused: true });
-
-		const stored = await chrome.storage.session.get(MAGISTER_SESSION_KEY);
-		if (stored[MAGISTER_SESSION_KEY] === 'ready' || connecting) return;
-
-		connecting = connectMagisterSession();
-		try {
-			await connecting;
-		} finally {
-			connecting = undefined;
-		}
-		return;
-	}
-
-	if (connecting) {
-		await connecting;
-		return;
-	}
-
-	connecting = openExtension();
-	try {
-		await connecting;
-	} finally {
-		connecting = undefined;
-	}
-});
-
-async function openExtension() {
 	const readyTab = await findReadySchoolSessionTab();
 	if (readyTab?.id) {
+		// Mark ready before aborting so a racing AbortError cannot overwrite status with cancelled.
 		await markSessionReady(readyTab);
-		await createPopupWindow();
+		connectAbort?.abort();
 		return;
 	}
 
-	await chrome.storage.session.set({ [MAGISTER_SESSION_KEY]: 'connecting' });
+	// Only steal focus for a real login surface (e.g. accounts), never an expired school SPA.
+	const loginTab = await getRememberedLoginTab();
+	if (loginTab && isLoginSurfaceTab(loginTab)) {
+		await focusTab(loginTab);
+	}
+
+	// Abort + restart — do not skip while `connecting` is still settling after an abort.
+	await startConnecting();
+});
+
+function isLoginSurfaceTab(tab: chrome.tabs.Tab) {
+	return !tab.url || !isSchoolSessionUrl(tab.url);
+}
+
+function isAbortError(error: unknown) {
+	return error instanceof DOMException && error.name === 'AbortError';
+}
+
+async function ensurePopupVisible() {
+	const openPopupId = await getOpenPopupWindowId();
+	if (openPopupId !== undefined) {
+		await chrome.windows.update(openPopupId, { focused: true });
+		return;
+	}
 	await createPopupWindow();
-	await connectMagisterSession();
+}
+
+async function startConnecting() {
+	connectAbort?.abort();
+	connectAbort = new AbortController();
+	const { signal } = connectAbort;
+
+	const run = connectMagisterSession(signal);
+	connecting = run;
+	try {
+		await run;
+	} finally {
+		if (connecting === run) connecting = undefined;
+		if (connectAbort?.signal === signal) connectAbort = undefined;
+	}
 }
 
 async function resumeConnectingSession() {
 	const stored = await chrome.storage.session.get(MAGISTER_SESSION_KEY);
 	if (stored[MAGISTER_SESSION_KEY] !== 'connecting' || connecting) return;
 
-	connecting = connectMagisterSession();
-	try {
-		await connecting;
-	} finally {
-		connecting = undefined;
-	}
+	await startConnecting();
 }
 
-async function connectMagisterSession() {
+async function connectMagisterSession(signal: AbortSignal) {
+	const isOwner = () => connectAbort?.signal === signal;
 	try {
+		await chrome.storage.session.set({ [MAGISTER_SESSION_KEY]: 'connecting' });
 		const readyTab = await findReadySchoolSessionTab();
-		const schoolTab = readyTab ?? (await waitForLoginSession());
+		const schoolTab = readyTab ?? (await waitForLoginSession(signal));
+		if (signal.aborted) throw new DOMException('Magister login aborted', 'AbortError');
 		if (!schoolTab?.id) {
-			await chrome.storage.session.set({ [MAGISTER_SESSION_KEY]: 'cancelled' });
+			if (isOwner()) await chrome.storage.session.set({ [MAGISTER_SESSION_KEY]: 'cancelled' });
 			return;
 		}
 		await markSessionReady(schoolTab);
 	} catch (err) {
+		// Superseded by a newer connect — leave status and login tab alone.
+		if (!isOwner()) return;
+		if (isAbortError(err) || signal.aborted) {
+			const stored = await chrome.storage.session.get(MAGISTER_SESSION_KEY);
+			if (stored[MAGISTER_SESSION_KEY] === 'ready') return;
+			await chrome.storage.session.set({ [MAGISTER_SESSION_KEY]: 'cancelled' });
+			return;
+		}
 		console.log('Magister login cancelled', err);
 		await chrome.storage.session.set({ [MAGISTER_SESSION_KEY]: 'cancelled' });
 	} finally {
-		await clearLoginTabId();
+		if (isOwner()) await clearLoginTabId();
 	}
 }
 
-async function waitForLoginSession() {
-	const loginTab = (await findSchoolSessionTab()) ?? (await openMagisterLoginTab());
+async function waitForLoginSession(signal: AbortSignal) {
+	// Let openMagisterLoginTab skip expired school SPAs and reuse accounts tabs.
+	const loginTab = await openMagisterLoginTab();
 	if (loginTab.id !== undefined) {
-		await saveLoginTabId(loginTab.id);
+		await focusTab(loginTab);
 	}
-	await chrome.storage.session.set({ [MAGISTER_SESSION_KEY]: 'connecting' });
-	return waitForSchoolSessionTab();
+	return waitForSchoolSessionTab(signal);
 }
 
 async function markSessionReady(schoolTab: chrome.tabs.Tab) {
@@ -200,6 +211,8 @@ function createPopupWindow(): Promise<void> {
 						popupWindowId = undefined;
 						void chrome.storage.session.remove(POPUP_WINDOW_ID_KEY);
 						chrome.windows.onRemoved.removeListener(onRemoved);
+						// Drop a hanging login wait so the next toolbar click can open a fresh popup.
+						connectAbort?.abort();
 					}
 				};
 				chrome.windows.onRemoved.addListener(onRemoved);
