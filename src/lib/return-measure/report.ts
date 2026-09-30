@@ -2,6 +2,7 @@ import { toast } from 'sonner';
 import { bulkListRegistry } from '@/lib/bulk-lists/sources';
 import { invalidateReturnMeasureCache } from '@/lib/return-measure/fetch';
 import { getMonthKey, getNow, getTodayKey, parseOptionalDate } from '@/lib/shared/dateUtils';
+import { formatPersonName } from '@/lib/shared/stringUtils';
 import { putJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
@@ -15,10 +16,11 @@ const REPORT_REQUEST_TYPE: Record<ReturnMeasureReportAction, ReturnMeasureReport
 	'not-reported': 'NietTijdig',
 };
 
-const REPORT_SUCCESS_MESSAGE: Record<ReturnMeasureReportAction, string> = {
-	reported: 'Terugkommaatregel gemeld',
-	'not-reported': 'Terugkommaatregel niet gemeld',
-};
+function reportSuccessMessage(measure: ReturnMeasureStudent, action: ReturnMeasureReportAction): string {
+	const student = measure.leerling;
+	const name = formatPersonName(student.roepnaam, student.tussenvoegsel, student.achternaam);
+	return action === 'reported' ? `${name} heeft zich gemeld` : `${name} heeft zich niet gemeld`;
+}
 
 function monthKeysForMeasure(measure: ReturnMeasureStudent): string[] {
 	const keys = new Set<string>([getMonthKey(getNow())]);
@@ -45,7 +47,7 @@ export async function submitReturnMeasureReport(
 		invalidateReturnMeasureCache(monthKeys);
 		await bulkListRegistry.refresh('return-measures', getTodayKey(), 'background');
 
-		toast.success(REPORT_SUCCESS_MESSAGE[action]);
+		toast.success(reportSuccessMessage(measure, action));
 		return true;
 	} catch (err) {
 		toast.error('Fout bij het melden van de terugkommaatregel', {

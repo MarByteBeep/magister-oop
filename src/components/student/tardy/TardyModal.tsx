@@ -111,6 +111,7 @@ export default function TardyModal({ student, isOpen, onClose }: TardyModalProps
 			{selectedEntry && isLessonEntry(selectedEntry) && (
 				<TardyConfirmationModal
 					item={selectedEntry.item}
+					student={student}
 					studentName={fullName}
 					isOpen={isConfirmationOpen}
 					onConfirm={handleConfirm}

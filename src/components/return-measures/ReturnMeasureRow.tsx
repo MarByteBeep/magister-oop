@@ -1,9 +1,12 @@
 'use client';
 
+import ReturnMeasureHandledTooltipContent from '@/components/return-measures/ReturnMeasureHandledTooltipContent';
 import ReturnMeasureReportActions from '@/components/return-measures/ReturnMeasureReportActions';
 import ReturnMeasureStatusBadges from '@/components/return-measures/ReturnMeasureStatusBadges';
 import StudentItem from '@/components/student/StudentItem';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ReturnMeasureRow as Row } from '@/lib/return-measure/overview';
+import { getReturnMeasureHandledInfo } from '@/lib/return-measure/utils';
 import { formatTime, parseOptionalDate } from '@/lib/shared/dateUtils';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import type { Student } from '@/types/student.types';
@@ -25,12 +28,14 @@ export default function ReturnMeasureRow({ row, student, onSelectMeasure }: Retu
 	const timeRange = formatTimeRange(row);
 	const measureLabel =
 		[timeRange, row.primaryLabel, row.secondaryLabel].filter(Boolean).join(' · ') || 'Terugkommaatregel';
+	const { handledBy, handledAt } = getReturnMeasureHandledInfo(row.measure);
+	const hasHandledTooltip = handledBy != null || handledAt != null;
 
-	return (
-		<div className="flex w-full items-center justify-between gap-3 rounded-md border bg-muted/50 p-2">
+	const card = (
+		<div className="flex w-full items-center gap-2 rounded-md border bg-muted/50 p-2 hover:bg-muted">
 			<button
 				type="button"
-				className="min-w-0 flex-1 cursor-pointer rounded-md text-left hover:bg-muted"
+				className="flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md text-left"
 				onClick={() => onSelectMeasure(row.measure)}
 				aria-label={`Toon terugkommaatregel voor ${row.studentName}`}
 			>
@@ -41,13 +46,27 @@ export default function ReturnMeasureRow({ row, student, onSelectMeasure }: Retu
 					classLabel={row.classCode}
 					description={measureLabel}
 					variant="plain"
-					className="w-full max-w-full"
+					className="min-w-0 flex-1 max-w-full"
 				/>
-			</button>
-			<div className="flex items-center gap-2 shrink-0">
-				<ReturnMeasureReportActions measure={row.measure} studentName={row.studentName} />
 				<ReturnMeasureStatusBadges reportStatus={row.reportStatus} planning={row.planning} />
-			</div>
+			</button>
+			<ReturnMeasureReportActions
+				measure={row.measure}
+				student={student}
+				studentName={row.studentName}
+				classLabel={row.classCode}
+			/>
 		</div>
+	);
+
+	if (!hasHandledTooltip) return card;
+
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>{card}</TooltipTrigger>
+			<TooltipContent>
+				<ReturnMeasureHandledTooltipContent measure={row.measure} />
+			</TooltipContent>
+		</Tooltip>
 	);
 }

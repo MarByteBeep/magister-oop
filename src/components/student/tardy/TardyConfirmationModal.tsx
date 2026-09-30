@@ -1,11 +1,13 @@
 'use client';
 
 import { LuPrinter } from 'react-icons/lu';
+import StudentItem from '@/components/student/StudentItem';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatTime, getNow } from '@/lib/shared/dateUtils';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import templateHtml from '@/templates/tardySlip.html?raw';
+import type { Student } from '@/types/student.types';
 
 /** Generates the HTML content for the tardy slip. Edit src/templates/tardySlip.html to change the appearance. */
 function generateTardySlipHtml(data: {
@@ -25,6 +27,7 @@ function generateTardySlipHtml(data: {
 
 interface TardyConfirmationModalProps {
 	item: AgendaItem;
+	student?: Student;
 	studentName: string;
 	isOpen: boolean;
 	onConfirm: () => void;
@@ -33,6 +36,7 @@ interface TardyConfirmationModalProps {
 
 export default function TardyConfirmationModal({
 	item,
+	student,
 	studentName,
 	isOpen,
 	onConfirm,
@@ -101,9 +105,17 @@ export default function TardyConfirmationModal({
 				<DialogHeader>
 					<DialogTitle>Te laat melding aanmaken</DialogTitle>
 				</DialogHeader>
-				<p className="text-sm text-muted-foreground">
-					Weet je zeker dat je een te laat melding wilt aanmaken voor {lessonInfo} ({subject})?
-				</p>
+				<div className="space-y-3">
+					<p className="text-sm text-muted-foreground">
+						Weet je zeker dat je een te laat melding wilt aanmaken voor {lessonInfo} ({subject})?
+					</p>
+					<StudentItem
+						student={student}
+						name={studentName}
+						description={`${lessonInfo} · ${subject}`}
+						variant="card"
+					/>
+				</div>
 				<DialogFooter>
 					<Button variant="outline" onClick={handlePrint}>
 						<LuPrinter className="h-4 w-4" />

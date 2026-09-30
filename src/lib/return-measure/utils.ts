@@ -1,4 +1,13 @@
-import { addSchoolDays, eachMonthKey, getDateKey, parseDateKey } from '@/lib/shared/dateUtils';
+import { formatDayLabel } from '@/lib/shared/dateLabels';
+import {
+	addSchoolDays,
+	eachMonthKey,
+	formatTime,
+	getDateKey,
+	parseDateKey,
+	parseOptionalDate,
+} from '@/lib/shared/dateUtils';
+import { formatPersonName } from '@/lib/shared/stringUtils';
 import type { ReturnMeasureStudent, ScheduledReturnMeasure } from '@/magister/response/returnMeasure.types';
 
 export type ReturnMeasureDisplay = {
@@ -10,6 +19,11 @@ export type ReturnMeasureDisplay = {
 	hasDescription: boolean;
 	hasBoth: boolean;
 	primaryLabel: string;
+};
+
+export type ReturnMeasureHandledInfo = {
+	handledBy: string | null;
+	handledAt: string | null;
 };
 
 function normalizeLabel(value: string | null | undefined): string | null {
@@ -32,6 +46,15 @@ export function getReturnMeasureDisplay(measure: ReturnMeasureStudent): ReturnMe
 		hasBoth: hasMeasureLabel && hasDescription,
 		primaryLabel: measureLabel ?? description ?? '',
 	};
+}
+
+/** Who settled the measure and when, for modal / tooltip copy. */
+export function getReturnMeasureHandledInfo(measure: ReturnMeasureStudent): ReturnMeasureHandledInfo {
+	const handler = measure.afgehandeldDoor;
+	const handledBy = handler ? formatPersonName(handler.roepnaam, handler.tussenvoegsel, handler.achternaam) : null;
+	const at = parseOptionalDate(measure.afgehandeldOp);
+	const handledAt = at == null ? null : `${formatDayLabel(at)} om ${formatTime(at)}`;
+	return { handledBy, handledAt };
 }
 
 export function isScheduledReturnMeasure(measure: ReturnMeasureStudent): measure is ScheduledReturnMeasure {

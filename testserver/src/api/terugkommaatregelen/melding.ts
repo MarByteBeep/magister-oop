@@ -1,5 +1,6 @@
+import { formatTime, getNow } from '@/lib/shared/dateUtils';
 import type { ReturnMeasureReportRequest } from '@/magister/response/returnMeasureReport.types';
-import { getReturnMeasureTemplates, writeReturnMeasureTemplates } from '../utils/helpers';
+import { getAllStaffMembers, getReturnMeasureTemplates, writeReturnMeasureTemplates } from '../utils/helpers';
 import type { StoredReturnMeasureTemplate } from '../utils/returnMeasures';
 
 function matchesMeasureId(template: StoredReturnMeasureTemplate, measureId: number): boolean {
@@ -56,11 +57,15 @@ export async function PUT(req: Request, measureId: number): Promise<Response> {
 	}
 
 	const reported = body.type === 'Tijdig';
+	const current = templates[templateIndex];
 	const nextTemplates = [...templates];
 	nextTemplates[templateIndex] = {
-		...templates[templateIndex],
+		...current,
 		hasReported: reported,
 		hasNotReported: !reported,
+		// Magister treats a report as handling the measure (`afgehandeldOp` / `afgehandeldDoor`).
+		handledTime: current.handledTime ?? formatTime(getNow()),
+		handledById: current.handledById ?? getAllStaffMembers()[0]?.id ?? null,
 	};
 	writeReturnMeasureTemplates({ ...data, [studentId]: nextTemplates });
 

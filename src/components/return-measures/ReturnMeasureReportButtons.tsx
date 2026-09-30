@@ -1,39 +1,50 @@
 'use client';
 
 import { useState } from 'react';
-import { LuCheck, LuX } from 'react-icons/lu';
 import ReturnMeasureReportConfirmModal from '@/components/return-measures/ReturnMeasureReportConfirmModal';
 import { Button } from '@/components/ui/button';
-import { returnMeasurePlanning } from '@/lib/return-measure/overview';
+import type { ReturnMeasureReportStatus } from '@/lib/return-measure/overview';
 import { type ReturnMeasureReportAction, submitReturnMeasureReport } from '@/lib/return-measure/report';
+import {
+	notReportedHoverClasses,
+	notReportedSolidClasses,
+	reportedHoverClasses,
+	reportedSolidClasses,
+} from '@/lib/return-measure/reportStyles';
+import { cn } from '@/lib/utils';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import type { Student } from '@/types/student.types';
 
-interface ReturnMeasureReportActionsProps {
+interface ReturnMeasureReportButtonsProps {
 	measure: ReturnMeasureStudent;
+	reportStatus: ReturnMeasureReportStatus;
 	student?: Student;
 	studentName: string;
 	classLabel?: string;
+	onReportStatusChange: (status: Exclude<ReturnMeasureReportStatus, 'none'>) => void;
 }
 
-export default function ReturnMeasureReportActions({
+export default function ReturnMeasureReportButtons({
 	measure,
+	reportStatus,
 	student,
 	studentName,
 	classLabel,
-}: ReturnMeasureReportActionsProps) {
+	onReportStatusChange,
+}: ReturnMeasureReportButtonsProps) {
 	const photoUrl = student?.links.foto?.href ?? measure.leerling.links.foto?.href;
 	const [pendingAction, setPendingAction] = useState<ReturnMeasureReportAction | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	// Only open (planned, not yet handled) measures can be reported.
-	if (returnMeasurePlanning(measure) !== 'open') return null;
+	const isReported = reportStatus === 'reported';
+	const isNotReported = reportStatus === 'not-reported';
 
 	async function confirmReport() {
 		if (pendingAction == null || isSubmitting) return;
 		setIsSubmitting(true);
 		try {
-			await submitReturnMeasureReport(measure, pendingAction);
+			const ok = await submitReturnMeasureReport(measure, pendingAction);
+			if (ok) onReportStatusChange(pendingAction);
 		} finally {
 			setIsSubmitting(false);
 			setPendingAction(null);
@@ -42,31 +53,30 @@ export default function ReturnMeasureReportActions({
 
 	return (
 		<>
-			<fieldset className="m-0 flex shrink-0 items-center gap-1 border-0 p-0">
-				<legend className="sr-only">Gemeld?</legend>
+			<div className="flex flex-wrap items-center justify-end gap-2">
 				<Button
 					type="button"
-					variant="outline"
-					size="icon-sm"
-					className="rounded-full border-primary text-primary hover:bg-primary/10 hover:text-primary"
-					aria-label="Gemeld"
-					title="Gemeld"
+					variant={isReported ? 'default' : 'outline'}
+					disabled={isReported || isSubmitting}
+					aria-pressed={isReported}
+					className={cn(isReported ? cn(reportedSolidClasses, 'disabled:opacity-100') : reportedHoverClasses)}
 					onClick={() => setPendingAction('reported')}
 				>
-					<LuCheck className="h-4 w-4" />
+					Gemeld
 				</Button>
 				<Button
 					type="button"
-					variant="outline"
-					size="icon-sm"
-					className="rounded-full border-primary text-primary hover:bg-primary/10 hover:text-primary"
-					aria-label="Niet gemeld"
-					title="Niet gemeld"
+					variant={isNotReported ? 'destructive' : 'outline'}
+					disabled={isNotReported || isSubmitting}
+					aria-pressed={isNotReported}
+					className={cn(
+						isNotReported ? cn(notReportedSolidClasses, 'disabled:opacity-100') : notReportedHoverClasses,
+					)}
 					onClick={() => setPendingAction('not-reported')}
 				>
-					<LuX className="h-4 w-4" />
+					Niet gemeld
 				</Button>
-			</fieldset>
+			</div>
 			<ReturnMeasureReportConfirmModal
 				action={pendingAction}
 				student={student}

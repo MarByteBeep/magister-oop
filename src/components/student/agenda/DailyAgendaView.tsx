@@ -1,10 +1,10 @@
 'use client';
 
-import { memo, useCallback, useMemo, useState } from 'react';
+import { memo, useMemo } from 'react';
 import Agenda from '@/components/student/agenda/Agenda';
-import AgendaItemModal from '@/components/student/agenda/AgendaItemModal';
-import NewAppointmentDialog from '@/components/student/agenda/NewAppointmentDialog';
+import AgendaViewDialogs from '@/components/student/agenda/AgendaViewDialogs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAgendaViewDialogs } from '@/hooks/agenda/useAgendaViewDialogs';
 import { useDailyAgendaBootstrap } from '@/hooks/agenda/useDailyAgendaBootstrap';
 import { useLoadAgendaForStudent } from '@/hooks/agenda/useLoadAgendaForStudent';
 import { useStableAgendaEntries, useStableAgendaEntry } from '@/hooks/agenda/useStableAgendaEntries';
@@ -88,37 +88,25 @@ const DailyAgendaCalendar = memo(function DailyAgendaCalendar({
 });
 
 export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgendaViewProps) {
-	const [selectedEntry, setSelectedEntry] = useState<AgendaEntry | null>(null);
-	const [draftSelection, setDraftSelection] = useState<AgendaSlotSelection | null>(null);
-	const handleSelectEntry = useCallback((entry: AgendaEntry) => setSelectedEntry(entry), []);
-	const handleSelectSlot = useCallback((selection: AgendaSlotSelection) => setDraftSelection(selection), []);
+	const { selectedEntry, draftSelection, onSelectEntry, onSelectSlot, clearSelectedEntry, clearDraftSelection } =
+		useAgendaViewDialogs();
 
 	return (
 		<>
 			<DailyAgendaCalendar
 				studentId={studentId}
-				onSelectEntry={handleSelectEntry}
-				onSelectSlot={handleSelectSlot}
+				onSelectEntry={onSelectEntry}
+				onSelectSlot={onSelectSlot}
 				draftSelection={draftSelection}
 			/>
-
-			{selectedEntry && (
-				<AgendaItemModal
-					entry={selectedEntry}
-					isOpen={selectedEntry !== null}
-					onClose={() => setSelectedEntry(null)}
-					onOpenStudent={onOpenStudent}
-				/>
-			)}
-
-			{draftSelection && (
-				<NewAppointmentDialog
-					studentId={studentId}
-					selection={draftSelection}
-					isOpen={draftSelection !== null}
-					onClose={() => setDraftSelection(null)}
-				/>
-			)}
+			<AgendaViewDialogs
+				studentId={studentId}
+				onOpenStudent={onOpenStudent}
+				selectedEntry={selectedEntry}
+				draftSelection={draftSelection}
+				onCloseEntry={clearSelectedEntry}
+				onCloseDraft={clearDraftSelection}
+			/>
 		</>
 	);
 }

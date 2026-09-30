@@ -2,6 +2,8 @@
 
 import { Badge } from '@/components/ui/badge';
 import type { ReturnMeasurePlanning, ReturnMeasureReportStatus } from '@/lib/return-measure/overview';
+import { notReportedSolidClasses, reportedSolidClasses } from '@/lib/return-measure/reportStyles';
+import { cn } from '@/lib/utils';
 
 const REPORT_STATUS_LABELS: Record<ReturnMeasureReportStatus, string> = {
 	reported: 'Gemeld',
@@ -10,8 +12,12 @@ const REPORT_STATUS_LABELS: Record<ReturnMeasureReportStatus, string> = {
 };
 
 function ReportStatusBadge({ status }: { status: ReturnMeasureReportStatus }) {
-	if (status === 'not-reported') return <Badge variant="destructive">{REPORT_STATUS_LABELS[status]}</Badge>;
-	if (status === 'reported') return <Badge variant="secondary">{REPORT_STATUS_LABELS[status]}</Badge>;
+	if (status === 'not-reported') {
+		return <Badge className={cn(notReportedSolidClasses)}>{REPORT_STATUS_LABELS[status]}</Badge>;
+	}
+	if (status === 'reported') {
+		return <Badge className={cn(reportedSolidClasses)}>{REPORT_STATUS_LABELS[status]}</Badge>;
+	}
 	return <Badge variant="outline">{REPORT_STATUS_LABELS[status]}</Badge>;
 }
 

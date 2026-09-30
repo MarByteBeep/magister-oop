@@ -34,7 +34,7 @@ const TEST_RETURN_MEASURES = [
 		endTime: '11:50',
 		hasReported: false,
 		hasNotReported: true,
-		handledTime: null,
+		handledTime: '11:50',
 	},
 	{
 		description: 'Te laat zonder geldige reden',

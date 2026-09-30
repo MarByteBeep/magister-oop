@@ -1,16 +1,22 @@
 'use client';
 
-import { LuCalendar, LuClock, LuTriangleAlert, LuUser } from 'react-icons/lu';
-import ReturnMeasureStatusBadges from '@/components/return-measures/ReturnMeasureStatusBadges';
+import { useEffect, useState } from 'react';
+import { LuTriangleAlert } from 'react-icons/lu';
+import ReturnMeasureHandledDetails from '@/components/return-measures/ReturnMeasureHandledDetails';
+import ReturnMeasureReportButtons from '@/components/return-measures/ReturnMeasureReportButtons';
+import ReturnMeasureScheduleButton from '@/components/return-measures/ReturnMeasureScheduleButton';
 import StudentItem from '@/components/student/StudentItem';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useStudentAgendaFocus } from '@/context/StudentAgendaFocusContext';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { returnMeasureIconClasses } from '@/lib/agenda/kindStyles';
-import { returnMeasurePlanning, returnMeasureReportStatus } from '@/lib/return-measure/overview';
+import {
+	type ReturnMeasureReportStatus,
+	returnMeasurePlanning,
+	returnMeasureReportStatus,
+} from '@/lib/return-measure/overview';
 import { getReturnMeasureDisplay } from '@/lib/return-measure/utils';
-import { formatDayLabel } from '@/lib/shared/dateLabels';
-import { formatTime, parseOptionalDate } from '@/lib/shared/dateUtils';
+import { parseOptionalDate } from '@/lib/shared/dateUtils';
 import { formatPersonName } from '@/lib/shared/stringUtils';
 import { cn } from '@/lib/utils';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
@@ -23,32 +29,24 @@ interface ReturnMeasureModalProps {
 	onOpenStudent?: (student: Student, options?: { tab?: 'gegevens' | 'agenda'; date?: Date }) => void;
 }
 
-function formatTimeRange(measure: ReturnMeasureStudent): string | null {
-	const start = parseOptionalDate(measure.begin);
-	const end = parseOptionalDate(measure.einde);
-	if (!start || !end) return null;
-	return `${formatTime(start)} - ${formatTime(end)}`;
-}
-
-function handlerName(measure: ReturnMeasureStudent): string | null {
-	const handler = measure.afgehandeldDoor;
-	if (!handler) return null;
-	return formatPersonName(handler.roepnaam, handler.tussenvoegsel, handler.achternaam);
-}
-
 export default function ReturnMeasureModal({ measure, isOpen, onClose, onOpenStudent }: ReturnMeasureModalProps) {
 	const { students } = useStudentsContext();
 	const display = getReturnMeasureDisplay(measure);
 	const start = parseOptionalDate(measure.begin);
-	const timeRange = formatTimeRange(measure);
-	const dateLabel = start ? formatDayLabel(start) : null;
-	const handledBy = handlerName(measure);
 	const measureTitle = display.primaryLabel || 'Terugkommaatregel';
 	const details = measure.leerling;
 	const studentName = formatPersonName(details.roepnaam, details.tussenvoegsel, details.achternaam);
 	const student = students.find((item) => item.id === details.id);
 	const agendaFocus = useStudentAgendaFocus();
 	const canOpenAgenda = Boolean(start) && Boolean(agendaFocus || student);
+	const planning = returnMeasurePlanning(measure);
+	const [reportStatus, setReportStatus] = useState<ReturnMeasureReportStatus>(() =>
+		returnMeasureReportStatus(measure),
+	);
+
+	useEffect(() => {
+		setReportStatus(returnMeasureReportStatus(measure));
+	}, [measure]);
 
 	function openAgenda() {
 		if (!start) return;
@@ -86,43 +84,12 @@ export default function ReturnMeasureModal({ measure, isOpen, onClose, onOpenStu
 				</DialogHeader>
 
 				<div className="space-y-3">
-					<div className="flex flex-wrap items-center gap-2">
-						<p className="text-base font-medium text-foreground">{measureTitle}</p>
-						<ReturnMeasureStatusBadges
-							reportStatus={returnMeasureReportStatus(measure)}
-							planning={returnMeasurePlanning(measure)}
-						/>
-					</div>
-
-					<button
-						type="button"
-						disabled={!canOpenAgenda}
-						className={cn(
-							'flex w-fit max-w-full flex-wrap items-center gap-4 rounded-md p-2 text-sm text-left outline-none',
-							'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-							canOpenAgenda ? 'cursor-pointer hover:bg-muted' : 'cursor-default',
-						)}
-						onClick={openAgenda}
-						aria-label={dateLabel ? `Open rooster op ${dateLabel}` : undefined}
-					>
-						{dateLabel && (
-							<span className="flex items-center gap-1.5 text-muted-foreground">
-								<LuCalendar className="h-4 w-4" />
-								<span className="font-medium text-foreground">{dateLabel}</span>
-							</span>
-						)}
-						<span className="flex items-center gap-1.5 text-muted-foreground">
-							<LuClock className="h-4 w-4" />
-							<span className="font-medium text-foreground">{timeRange ?? 'Nog niet ingepland'}</span>
-						</span>
-					</button>
-					{handledBy && (
-						<div className="flex items-center gap-1.5 px-2 text-sm text-muted-foreground">
-							<LuUser className="h-4 w-4" />
-							<span className="font-medium text-foreground">{handledBy}</span>
-						</div>
-					)}
-
+					<p className="text-base font-medium text-foreground">{measureTitle}</p>
+					<ReturnMeasureScheduleButton
+						measure={measure}
+						canOpenAgenda={canOpenAgenda}
+						onOpenAgenda={openAgenda}
+					/>
 					{display.hasBoth && (
 						<div className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-md">
 							<LuTriangleAlert
@@ -136,6 +103,19 @@ export default function ReturnMeasureModal({ measure, isOpen, onClose, onOpenStu
 						</div>
 					)}
 				</div>
+
+				<ReturnMeasureHandledDetails measure={measure} />
+
+				{planning !== 'unplanned' && (
+					<ReturnMeasureReportButtons
+						measure={measure}
+						reportStatus={reportStatus}
+						student={student}
+						studentName={studentName}
+						classLabel={details.stamklas.code}
+						onReportStatusChange={setReportStatus}
+					/>
+				)}
 			</DialogContent>
 		</Dialog>
 	);
