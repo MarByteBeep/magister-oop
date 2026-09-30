@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import StudentDetailDialog from '@/components/student/StudentDetailDialog';
+import StudentDetailDialog from '@/components/student/profile/StudentDetailDialog';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';

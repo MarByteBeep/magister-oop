@@ -1,9 +1,9 @@
 import { useCallback, useMemo } from 'react';
-import { isLessonEntry } from '@/lib/agendaEntryUtils';
-import { agendaItemOverlapsLesson, getAgendaItemInfo, getItemLocationCodes } from '@/lib/agendaUtils';
-import { getStudentsForLessonRange } from '@/lib/occupancyUtils';
+import { isLessonEntry } from '@/lib/agenda/entryUtils';
+import { agendaItemOverlapsLesson, getAgendaItemInfo, getItemLocationCodes } from '@/lib/agenda/utils';
+import { getStudentsForLessonRange } from '@/lib/occupancy/utils';
 import { sortAndGroupStudentsByClass } from '@/lib/utils';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 
 export type OccupancyClassGroup = {

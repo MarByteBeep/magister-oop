@@ -3,7 +3,7 @@
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getDateKey, parseDateKey } from '@/lib/dateUtils';
+import { getDateKey, parseDateKey } from '@/lib/shared/dateUtils';
 
 interface DateAndTimeRangePickerProps {
 	dateKey: string;

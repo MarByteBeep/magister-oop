@@ -7,18 +7,18 @@ import {
 	draftSelectionToBackgroundEvent,
 	getOverlappingEventIds,
 	hoverLessonSlotToBackgroundEvent,
-} from '@/lib/agendaCalendarUtils';
-import { isLessonEntry } from '@/lib/agendaEntryUtils';
-import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
-import { getDateKey, getWeekDays, parseDateKey } from '@/lib/dateUtils';
-import { getFullDayScheduleLabel, isFullDayScheduleSelection } from '@/lib/fullDayScheduleUtils';
+} from '@/lib/agenda/calendarUtils';
+import { isLessonEntry } from '@/lib/agenda/entryUtils';
+import { getFullDayScheduleLabel, isFullDayScheduleSelection } from '@/lib/agenda/fullDayScheduleUtils';
 import {
 	findOverlappingLessonIndexRangeByDate,
 	formatLessonHoursCompact,
 	getLessonHourDateRange,
 	getOverlappingLessonHoursForSelection,
-} from '@/lib/lessonHours';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+} from '@/lib/agenda/lessonHours';
+import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
+import { getDateKey, getWeekDays, parseDateKey } from '@/lib/shared/dateUtils';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 
 function collectOccupiedLessonHours(entries: AgendaEntry[]): Set<string> {
 	const occupied = new Set<string>();

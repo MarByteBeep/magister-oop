@@ -1,4 +1,4 @@
-import { getTodayKey } from '@/lib/dateUtils';
+import { getTodayKey } from '@/lib/shared/dateUtils';
 import type { AgendaItem, AgendaResponse, Participant } from '@/magister/response/agenda.types';
 import { getAllAgendaItems } from '../utils/helpers';
 

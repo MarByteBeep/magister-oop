@@ -1,5 +1,5 @@
-import { timeTable } from '@/lib/agendaUtils';
-import { getTodayKey } from '@/lib/dateUtils';
+import { timeTable } from '@/lib/agenda/utils';
+import { getTodayKey } from '@/lib/shared/dateUtils';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import { getAllStudents } from '../../utils/helpers';
 import { pickRandom } from '../../utils/random';

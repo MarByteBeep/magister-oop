@@ -1,6 +1,6 @@
 import { useRef } from 'react';
-import { agendaEntriesEqual, isSameAgendaEntryOccurrence } from '@/lib/agendaEntryUtils';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import { agendaEntriesEqual, isSameAgendaEntryOccurrence } from '@/lib/agenda/entryUtils';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 
 export function useStableAgendaEntries(entries: AgendaEntry[]): AgendaEntry[] {
 	const stableRef = useRef(entries);

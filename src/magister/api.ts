@@ -1,4 +1,4 @@
-import { jsonCacheGet, jsonCacheSet, loadJsonCache } from '@/lib/cache';
+import { jsonCacheGet, jsonCacheSet, loadJsonCache } from '@/lib/shared/cache';
 import { fetchBlobInMagisterTab } from '@/magister/fetchBlobInMagisterTab';
 import { fetchJsonInMagisterTab } from '@/magister/fetchInMagisterTab';
 import { type PostResult, postJsonInMagisterTab, postResponseToResult } from '@/magister/postJsonInMagisterTab';

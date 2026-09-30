@@ -3,7 +3,7 @@
 import type { ApexOptions } from 'apexcharts';
 import { useMemo } from 'react';
 import Chart from 'react-apexcharts';
-import type { LessonInfo } from '@/lib/agendaUtils';
+import type { LessonInfo } from '@/lib/agenda/utils';
 import type { OccupancyChartPoint } from './useOccupancyChartData';
 
 interface OccupancyChartProps {

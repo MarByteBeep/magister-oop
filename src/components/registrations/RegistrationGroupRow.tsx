@@ -1,13 +1,13 @@
 'use client';
 
-import { findLessonEntry, isLessonEntry } from '@/lib/agendaEntryUtils';
-import { formatTime, getDateKey, parseOptionalDate } from '@/lib/dateUtils';
-import type { RegistrationRow } from '@/lib/registrationsUtils';
-import type { LessonAgendaEntry } from '@/magister/response/agenda-entry.types';
+import AgendaTooltipContent from '@/components/student/agenda/AgendaTooltipContent';
+import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
+import { findLessonEntry, isLessonEntry } from '@/lib/agenda/entryUtils';
+import type { RegistrationRow } from '@/lib/registrations/utils';
+import { formatTime, getDateKey, parseOptionalDate } from '@/lib/shared/dateUtils';
+import type { LessonAgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 import LazyAvatar from '../LazyAvatar';
-import LessonHourBadge from '../LessonHourBadge';
-import AgendaTooltipContent from '../student/AgendaTooltipContent';
 import { Badge } from '../ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 

@@ -1,5 +1,5 @@
-import { applyActionBadgeText } from './lib/actionBadge';
-import { MAGISTER_SESSION_KEY } from './lib/magisterSession';
+import { applyActionBadgeText } from './lib/extension/actionBadge';
+import { MAGISTER_SESSION_KEY } from './lib/session/magisterSession';
 import {
 	clearLoginTabId,
 	findReadySchoolSessionTab,

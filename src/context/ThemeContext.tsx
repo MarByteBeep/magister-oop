@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, type ReactNode, useCallback, useContext, useLayoutEffect, useMemo, useState } from 'react';
-import { applyThemePreference, getStoredTheme, setStoredTheme, type ThemePreference } from '@/lib/themePreference';
+import { applyThemePreference, getStoredTheme, setStoredTheme, type ThemePreference } from '@/lib/theme/preference';
 
 type ThemeContextValue = {
 	theme: ThemePreference;

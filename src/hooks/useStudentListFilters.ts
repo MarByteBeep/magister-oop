@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { findLessonEntryPreferringLessons } from '@/lib/agendaEntryUtils';
-import { getAgendaItemInfo } from '@/lib/agendaUtils';
-import { getDateKey } from '@/lib/dateUtils';
-import { normalizeString } from '@/lib/stringUtils';
+import { findLessonEntryPreferringLessons } from '@/lib/agenda/entryUtils';
+import { getAgendaItemInfo } from '@/lib/agenda/utils';
+import { getDateKey } from '@/lib/shared/dateUtils';
+import { normalizeString } from '@/lib/shared/stringUtils';
 import type { Student } from '@/types/student.types';
 
 export type SortColumn = 'name' | 'class' | 'lockerCode' | 'now' | 'next';

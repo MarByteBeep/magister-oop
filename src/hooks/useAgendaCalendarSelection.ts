@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SlotInfo } from 'react-big-calendar';
-import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
-import { isAllDaySlotSelection, slotInfoToSelection } from '@/lib/agendaSlotSelection';
-import { getFullDayScheduleSelection } from '@/lib/fullDayScheduleUtils';
-import { snapSelectionToLessonHours } from '@/lib/lessonHours';
+import { getFullDayScheduleSelection } from '@/lib/agenda/fullDayScheduleUtils';
+import { snapSelectionToLessonHours } from '@/lib/agenda/lessonHours';
+import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
+import { isAllDaySlotSelection, slotInfoToSelection } from '@/lib/agenda/slotSelection';
 
 export function useAgendaCalendarSelection(onSelectSlot?: (selection: AgendaSlotSelection) => void) {
 	const [selectingPreview, setSelectingPreview] = useState<AgendaSlotSelection | null>(null);

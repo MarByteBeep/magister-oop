@@ -1,6 +1,6 @@
 import type { Address } from '@/magister/response/address.types';
 import type { ContactItem } from '@/magister/response/contact.types';
-import type { StudentDetails } from '@/magister/response/student-details.types';
+import type { StudentDetails } from '@/magister/response/studentDetails.types';
 
 export type ParentContact = {
 	id: number;

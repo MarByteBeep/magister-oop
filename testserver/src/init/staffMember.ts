@@ -1,5 +1,5 @@
 import { fakerNL as faker } from '@faker-js/faker';
-import type { StaffMember } from '@/magister/response/staffmember.types';
+import type { StaffMember } from '@/magister/response/staffMember.types';
 import { downloadEntityPhoto } from './shared';
 
 export async function generateDummyStaffMember(id: number): Promise<StaffMember> {

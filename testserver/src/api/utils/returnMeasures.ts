@@ -5,9 +5,9 @@ import {
 	getNow,
 	parseOptionalDate,
 	toISOFromDateKeyAndTime,
-} from '@/lib/dateUtils';
-import type { Measure, ReturnMeasureHandler, ReturnMeasureStudent } from '@/magister/response/return-measure.types';
-import type { StaffMember } from '@/magister/response/staffmember.types';
+} from '@/lib/shared/dateUtils';
+import type { Measure, ReturnMeasureHandler, ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
+import type { StaffMember } from '@/magister/response/staffMember.types';
 import type { StudentBase } from '@/magister/response/student.types';
 
 export type StoredReturnMeasureTemplate = {

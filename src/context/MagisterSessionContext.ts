@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { MagisterSessionStatus } from '@/lib/magisterSession';
+import type { MagisterSessionStatus } from '@/lib/session/magisterSession';
 
 export const MagisterSessionContext = createContext<MagisterSessionStatus>('ready');
 

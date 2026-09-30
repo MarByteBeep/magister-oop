@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { getOrCreateBlobUrl } from '@/lib/blobUtils';
+import { getOrCreateBlobUrl } from '@/lib/shared/blobUtils';
 
 export function useLazyBlobUrl<T extends HTMLElement>(src?: string) {
 	const [isVisible, setIsVisible] = useState(false);

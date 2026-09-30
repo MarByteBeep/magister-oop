@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getNow } from '@/lib/dateUtils';
+import { getNow } from '@/lib/shared/dateUtils';
 
 export function useCurrentTime(): Date {
 	const [currentTime, setCurrentTime] = useState(getNow);

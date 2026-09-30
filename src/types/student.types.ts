@@ -1,4 +1,4 @@
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { StudentBase } from '@/magister/response/student.types';
 
 /** App student: API fields plus locker and hydrated agenda days. */

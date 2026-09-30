@@ -1,6 +1,6 @@
-import { absenceNoticeOverlapsDate } from '@/lib/absenceNoticeUtils';
-import { getTodayKey } from '@/lib/dateUtils';
-import type { AbsenceNotice, AbsenceNoticesResponse } from '@/magister/response/absence-notice.types';
+import { absenceNoticeOverlapsDate } from '@/lib/absence-notice/utils';
+import { getTodayKey } from '@/lib/shared/dateUtils';
+import type { AbsenceNotice, AbsenceNoticesResponse } from '@/magister/response/absenceNotice.types';
 import { expandAbsenceNoticeTemplates } from '../../utils/absenceNotices';
 import { getAbsenceNoticeTemplates, getAllStudents } from '../../utils/helpers';
 

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { findStudentOverviewEntry, findStudentOverviewEntryOverlappingLessonRange } from '@/lib/agendaEntryUtils';
-import { agendaEntriesForDate, isAgendaDayLoaded } from '@/lib/agendaLoadUtils';
-import { getDateKey, getNow, getWorkWeekRange } from '@/lib/dateUtils';
+import { findStudentOverviewEntry, findStudentOverviewEntryOverlappingLessonRange } from '@/lib/agenda/entryUtils';
+import { agendaEntriesForDate, isAgendaDayLoaded } from '@/lib/agenda/loadUtils';
+import { getDateKey, getNow, getWorkWeekRange } from '@/lib/shared/dateUtils';
 import { deepEqual } from '@/lib/utils';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
 

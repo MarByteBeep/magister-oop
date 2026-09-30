@@ -1,11 +1,11 @@
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useState } from 'react';
-import { storage, syncFromChrome } from '@/lib/storage';
-import { type StudentDataSnapshot, studentDataStore } from '@/lib/studentDataStore';
+import { storage, syncFromChrome } from '@/lib/shared/storage';
+import { type StudentDataSnapshot, studentDataStore } from '@/lib/students/dataStore';
 import {
 	isWritingStudentDataToSession,
 	queuePersistStudentDataToSession,
 	STUDENT_DATA_STORAGE_KEY,
-} from '@/lib/studentDataStorePersistence';
+} from '@/lib/students/dataStorePersistence';
 import type { Student } from '@/types/student.types';
 import type { StudentWrite } from '@/types/studentStore.types';
 

@@ -2,7 +2,7 @@
 
 import type { MouseEvent } from 'react';
 import StudentItemContent from '@/components/student/StudentItemContent';
-import { formatPersonName } from '@/lib/stringUtils';
+import { formatPersonName } from '@/lib/shared/stringUtils';
 import { cn } from '@/lib/utils';
 import type { Student } from '@/types/student.types';
 

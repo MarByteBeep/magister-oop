@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { formatWeekRange } from '@/lib/dateLabels';
-import { getDateKey, getNow, getStartOfWeek, getWeekDays } from '@/lib/dateUtils';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import { formatWeekRange } from '@/lib/shared/dateLabels';
+import { getDateKey, getNow, getStartOfWeek, getWeekDays } from '@/lib/shared/dateUtils';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 
 export function useWeeklyAgendaWeek(weekOffset: number, student: Student | undefined) {

@@ -11,7 +11,7 @@ export function useSearchTermStorage(
 		if (!searchStorageKey) return;
 		let cancelled = false;
 		(async () => {
-			const { storage } = await import('@/lib/storage');
+			const { storage } = await import('@/lib/shared/storage');
 			const stored = await storage.session.get<string>(searchStorageKey);
 			if (!cancelled && stored != null) onSearchTermChange(stored);
 			if (!cancelled) setSearchStorageReady(true);
@@ -24,7 +24,7 @@ export function useSearchTermStorage(
 	useEffect(() => {
 		if (!searchStorageKey || !searchStorageReady) return;
 		(async () => {
-			const { storage } = await import('@/lib/storage');
+			const { storage } = await import('@/lib/shared/storage');
 			await storage.session.set(searchStorageKey, searchTerm);
 		})();
 	}, [searchTerm, searchStorageKey, searchStorageReady]);

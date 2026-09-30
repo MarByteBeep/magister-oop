@@ -1,4 +1,4 @@
-import { getNow } from '@/lib/dateUtils';
+import { getNow } from '@/lib/shared/dateUtils';
 
 const startYear = getNow().getMonth() < 8 ? getNow().getFullYear() - 1 : getNow().getFullYear();
 const startDate = startYear + '-08-01';

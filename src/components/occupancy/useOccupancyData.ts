@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
-import { getTodayKey } from '@/lib/dateUtils';
-import { getOccupancyForDay } from '@/lib/occupancyUtils';
+import { getOccupancyForDay } from '@/lib/occupancy/utils';
+import { getTodayKey } from '@/lib/shared/dateUtils';
 import type { Student } from '@/types/student.types';
 
 export function useOccupancyData(students: Student[]) {

@@ -1,4 +1,4 @@
-import type { StaffMember } from '@/magister/response/staffmember.types';
+import type { StaffMember } from '@/magister/response/staffMember.types';
 import { getAllStaffMembers } from '../utils/helpers';
 import { search } from '../utils/search';
 

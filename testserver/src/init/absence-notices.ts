@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import type { AbsenceNoticePerson } from '@/magister/response/absence-notice.types';
+import type { AbsenceNoticePerson } from '@/magister/response/absenceNotice.types';
 import type { StudentBase } from '@/magister/response/student.types';
 import type { StoredAbsenceNoticeTemplate } from '../api/utils/absenceNotices';
 

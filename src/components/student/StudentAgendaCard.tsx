@@ -1,10 +1,10 @@
 'use client';
 
+import AgendaSyncButton from '@/components/student/agenda/AgendaSyncButton';
+import DailyAgendaView from '@/components/student/agenda/DailyAgendaView';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { getNow, getWorkWeekRange } from '@/lib/dateUtils';
+import { getNow, getWorkWeekRange } from '@/lib/shared/dateUtils';
 import type { Student } from '@/types/student.types';
-import AgendaSyncButton from './AgendaSyncButton';
-import DailyAgendaView from './DailyAgendaView';
 
 interface StudentAgendaCardProps {
 	student: Student;

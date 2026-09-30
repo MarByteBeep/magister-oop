@@ -1,11 +1,11 @@
-import { getOrCreateBlobUrl } from '@/lib/blobUtils';
+import type { ParentContact, StudentDetailsData } from '@/hooks/studentDetailsTypes';
+import { getOrCreateBlobUrl } from '@/lib/shared/blobUtils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { AddressesResponse } from '@/magister/response/address.types';
 import type { ContactItem, ContactsResponse } from '@/magister/response/contact.types';
 import type { ParentsResponse } from '@/magister/response/parent.types';
-import type { StudentDetails } from '@/magister/response/student-details.types';
-import type { ParentContact, StudentDetailsData } from './studentDetailsTypes';
+import type { StudentDetails } from '@/magister/response/studentDetails.types';
 
 function filterAndDeduplicateContacts(contacts: ContactItem[]): ContactItem[] {
 	const uniqueContacts: ContactItem[] = [];

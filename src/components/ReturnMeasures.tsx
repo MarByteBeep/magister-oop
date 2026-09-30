@@ -3,15 +3,15 @@
 import { useState } from 'react';
 import { LuRefreshCw } from 'react-icons/lu';
 import { asyncFetchStatus } from '@/components/AsyncFetchStatus';
-import ReturnMeasureDayList from '@/components/returnMeasures/ReturnMeasureDayList';
-import ReturnMeasureFilters from '@/components/returnMeasures/ReturnMeasureFilters';
-import ReturnMeasuresDialogs from '@/components/returnMeasures/ReturnMeasuresDialogs';
-import type { StudentDetailTab } from '@/components/student/StudentDetailContent';
+import ReturnMeasureDayList from '@/components/return-measures/ReturnMeasureDayList';
+import ReturnMeasureFilters from '@/components/return-measures/ReturnMeasureFilters';
+import ReturnMeasuresDialogs from '@/components/return-measures/ReturnMeasuresDialogs';
+import type { StudentDetailTab } from '@/components/student/profile/StudentDetailContent';
 import { useReturnMeasuresContext } from '@/context/ReturnMeasuresContext';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useReturnMeasureOverviewData } from '@/hooks/useReturnMeasureOverviewData';
-import type { ReturnMeasurePeriod, ReturnMeasureStatusFilter } from '@/lib/returnMeasureOverview';
-import type { ReturnMeasureStudent } from '@/magister/response/return-measure.types';
+import type { ReturnMeasurePeriod, ReturnMeasureStatusFilter } from '@/lib/return-measure/overview';
+import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import { Button } from './ui/button';
 
 export default function ReturnMeasures() {

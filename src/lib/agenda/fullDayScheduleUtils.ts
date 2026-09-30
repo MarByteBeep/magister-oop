@@ -1,0 +1,63 @@
+import { hhmmToDate } from '@/lib/agenda/bigCalendarUtils';
+import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
+import { formatTime } from '@/lib/shared/dateUtils';
+import type { ReturnMeasureAgendaEntry } from '@/magister/response/agendaEntry.types';
+
+export type FullDayScheduleConfig = {
+	/** Local start time (HH:mm). Default school day start. */
+	beginTime: string;
+	/** Local end time (HH:mm). Default school day end. */
+	endTime: string;
+	/** Short UI label (Dutch product copy: "Vierkant rooster"). */
+	label: string;
+};
+
+const DEFAULT_FULL_DAY_SCHEDULE_CONFIG: FullDayScheduleConfig = {
+	beginTime: '08:00',
+	endTime: '16:00',
+	label: 'Vierkant rooster',
+};
+
+let fullDayScheduleConfig: FullDayScheduleConfig = { ...DEFAULT_FULL_DAY_SCHEDULE_CONFIG };
+
+/** Override school-specific times/label later (e.g. from settings). */
+export function configureFullDaySchedule(overrides: Partial<FullDayScheduleConfig>): void {
+	fullDayScheduleConfig = {
+		...fullDayScheduleConfig,
+		...overrides,
+	};
+}
+
+export function resetFullDayScheduleConfig(): void {
+	fullDayScheduleConfig = { ...DEFAULT_FULL_DAY_SCHEDULE_CONFIG };
+}
+
+/**
+ * Full-day return measure ("vierkant rooster"): student must be present the whole school day
+ * (default 08:00–16:00). Times are configurable via {@link configureFullDaySchedule}.
+ */
+export function isFullDayReturnMeasureEntry(entry: ReturnMeasureAgendaEntry): boolean {
+	const { beginTime, endTime } = fullDayScheduleConfig;
+	return formatTime(new Date(entry.start)) === beginTime && formatTime(new Date(entry.end)) === endTime;
+}
+
+export function getFullDayScheduleSelection(date: Date): AgendaSlotSelection {
+	const { beginTime, endTime } = fullDayScheduleConfig;
+	return {
+		start: hhmmToDate(date, beginTime),
+		end: hhmmToDate(date, endTime),
+	};
+}
+
+export function isFullDayScheduleSelection(selection: { start: Date; end: Date }): boolean {
+	const { beginTime, endTime } = fullDayScheduleConfig;
+	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
+	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
+	return formatTime(rangeStart) === beginTime && formatTime(rangeEnd) === endTime;
+}
+
+export function getFullDayScheduleLabel(): string {
+	return fullDayScheduleConfig.label;
+}
+
+export const fullDayScheduleShortcutTooltip = 'Aanmaken vierkant rooster';

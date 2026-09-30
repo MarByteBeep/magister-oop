@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getLesson, getNextLesson, type LessonInfo } from '@/lib/agendaUtils';
+import { getLesson, getNextLesson, type LessonInfo } from '@/lib/agenda/utils';
 import { deepEqual } from '@/lib/utils';
 
 export function useLessonInfo(currentTime: Date) {

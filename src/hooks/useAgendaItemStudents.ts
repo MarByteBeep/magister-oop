@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
-import { findStudentsInAgendaLocation, resolveAgendaItemLocation } from '@/lib/agendaItemStudents';
-import { formatTime, getDateKey } from '@/lib/dateUtils';
+import { findStudentsInAgendaLocation, resolveAgendaItemLocation } from '@/lib/agenda/itemStudents';
+import { formatTime, getDateKey } from '@/lib/shared/dateUtils';
 import { sortAndGroupStudentsByClass } from '@/lib/utils';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 
 export function useAgendaItemStudents(entry: AgendaEntry, students: Student[]) {

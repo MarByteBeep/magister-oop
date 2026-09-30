@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { eachMonthKey, getMonthKey, getNow, parseDateKey } from '@/lib/dateUtils';
-import { getReturnMeasuresForMonth } from '@/lib/returnMeasureFetch';
+import { getReturnMeasuresForMonth } from '@/lib/return-measure/fetch';
 import {
 	buildReturnMeasureRows,
 	countReturnMeasureRowsByStatus,
@@ -9,9 +8,10 @@ import {
 	type ReturnMeasurePeriod,
 	type ReturnMeasureStatusFilter,
 	returnMeasurePeriodRange,
-} from '@/lib/returnMeasureOverview';
-import { createStudentVisibility } from '@/lib/studentVisibility';
-import type { ReturnMeasureStudent } from '@/magister/response/return-measure.types';
+} from '@/lib/return-measure/overview';
+import { eachMonthKey, getMonthKey, getNow, parseDateKey } from '@/lib/shared/dateUtils';
+import { createStudentVisibility } from '@/lib/students/visibility';
+import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import type { Student } from '@/types/student.types';
 
 function useNeighbourMonthMeasures(period: ReturnMeasurePeriod): ReturnMeasureStudent[] {

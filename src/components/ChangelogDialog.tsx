@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { parseChangelog } from '@/lib/changelog/parse-changelog';
+import { parseChangelog } from '@/lib/changelog/parseChangelog';
 import changelogMarkdown from '../../CHANGELOG.md?raw';
 
 const CHANGELOG_SECTIONS = parseChangelog(changelogMarkdown);

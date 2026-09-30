@@ -1,0 +1,104 @@
+---
+description: TypeScript, React, folder, and source filename naming conventions
+alwaysApply: true
+---
+
+# Naming conventions
+
+These are project conventions. Apply them when creating, renaming, or moving application source files.
+
+## TypeScript files
+
+- React component files MUST use `PascalCase`.
+- React Context and Provider files MUST use `PascalCase`.
+- Other TypeScript module files MUST use `camelCase`.
+- Type-only module files MUST use `camelCase.types.ts`.
+- Test files MUST use the source/module stem followed by `.test.ts`.
+- Application TypeScript filenames MUST NOT use `kebab-case`.
+- Application TypeScript filenames MUST NOT use `snake_case`.
+
+Examples:
+
+- `ReturnMeasureRow.tsx`
+- `ThemeContext.tsx`
+- `entryUtils.ts`
+- `staffMember.types.ts`
+- `entryUtils.test.ts`
+
+**Invariant:** outside `src/components/ui/**`, application `.ts` / `.tsx` basenames MUST NOT contain hyphens. Tooling/ambient files named by the toolchain (e.g. `vite-env.d.ts`, `react-big-calendar-no-overlap.d.ts`) are not application modules and are exempt.
+
+## Folders
+
+- Multi-word application folders MUST use `kebab-case`.
+- Single-word application folders MUST use lowercase.
+- Application folders MUST NOT use `camelCase` or `PascalCase`.
+
+Examples:
+
+- `return-measure/`
+- `bulk-lists/`
+- `absence-notice/`
+- `students/`
+- `agenda/`
+
+The naming distinction is intentional:
+
+- folder → `kebab-case`
+- module → `camelCase`
+- component → `PascalCase`
+
+## UI exception
+
+Files under `src/components/ui/**` MUST use lowercase `kebab-case`.
+
+Examples:
+
+- `scroll-area.tsx`
+- `date-picker.tsx`
+- `mail-address.tsx`
+- `phone-number.tsx`
+
+This is the only application-source exception to the filename convention.
+
+Do NOT rename these files to `PascalCase`.
+
+## Type-only modules
+
+Type-only modules MUST use the `.types.ts` suffix.
+
+Examples:
+
+- `staffMember.types.ts`
+- `studentDetails.types.ts`
+- `returnMeasure.types.ts`
+
+Do NOT rename exported type names solely to match the filename.
+
+## Tests
+
+For a 1:1 source/test relationship:
+
+```text
+foo.ts → foo.test.ts
+```
+
+When there is no same-named source file, name the test after the **primary module under test**: the single runtime module that owns the behaviour the suite is written for (imports and assertions center on that module).
+
+Example: a suite whose primary subject is helpers in `utils.ts` → `utils.test.ts`.
+
+Do NOT rename a test to `utils.test.ts` merely because it also imports `utils`, or because a helper name appears in the topic. If the primary module is unclear, use a descriptive stem that matches a real source file.
+
+## Domain `utils.ts`
+
+Use `utils.ts` only for the generic utility module of that domain folder. Specialized utility modules MUST keep a meaningful camelCase name.
+
+Examples:
+
+- `agenda/utils.ts` — generic agenda helpers
+- `agenda/fullDayScheduleUtils.ts` — specialized
+- `return-measure/utils.ts` — generic return-measure helpers
+- `src/lib/utils.ts` — shared `cn` helpers; stays at lib root (shadcn alias)
+
+## API-mirrored paths
+
+Keep API spelling **only** for directories/files that mirror a real Magister API path segment (e.g. `leerlingen/`, `terugkomers`). Do NOT invent freestyle English kebab folders under that exception.

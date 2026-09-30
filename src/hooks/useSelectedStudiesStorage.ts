@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { storage, syncFromChrome } from '@/lib/storage';
+import { storage, syncFromChrome } from '@/lib/shared/storage';
 
 const selectedStudiesStorageKey = 'selectedStudies';
 

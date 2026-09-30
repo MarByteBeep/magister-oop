@@ -1,6 +1,6 @@
 import { type Dispatch, type SetStateAction, useCallback } from 'react';
 import { clearStudentStore } from '@/hooks/useStudentStore';
-import { mergeStudent } from '@/lib/mergeStudent';
+import { mergeStudent } from '@/lib/students/mergeStudent';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { LockersResponse } from '@/magister/response/locker.types';

@@ -1,8 +1,8 @@
 import { expect, test } from 'bun:test';
-import { lessonEntry } from '@/lib/agendaEntryUtils';
-import { getDateKey } from '@/lib/dateUtils';
+import { studentMatchesSearch } from '@/hooks/useStudentListFilters';
+import { lessonEntry } from '@/lib/agenda/entryUtils';
+import { getDateKey } from '@/lib/shared/dateUtils';
 import type { Student } from '@/types/student.types';
-import { studentMatchesSearch } from './useStudentListFilters';
 
 const lessonStart = '2026-09-23T08:00:00.000Z';
 const lessonEnd = '2026-09-23T09:00:00.000Z';

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
-import { isAgendaRangeLoaded, needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
-import { getDateKey, getStartOfWeek } from '@/lib/dateUtils';
-import { studentDataStore } from '@/lib/studentDataStore';
+import { isAgendaRangeLoaded, needsAgendaDayFetch } from '@/lib/agenda/loadUtils';
+import { getDateKey, getStartOfWeek } from '@/lib/shared/dateUtils';
+import { studentDataStore } from '@/lib/students/dataStore';
 import type { Student } from '@/types/student.types';
 
 export function useWeeklyAgendaLoader(

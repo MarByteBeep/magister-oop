@@ -1,9 +1,9 @@
 import ClickAvatarPreview from '@/components/ClickAvatarPreview';
+import AgendaItemDisplay from '@/components/student/agenda/AgendaItemDisplay';
+import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
 import type { SortColumn, SortDirection } from '@/hooks/useStudentListFilters';
-import type { LessonInfo } from '@/lib/agendaUtils';
+import type { LessonInfo } from '@/lib/agenda/utils';
 import type { Student } from '@/types/student.types';
-import LessonHourBadge from './LessonHourBadge';
-import AgendaItemDisplay from './student/AgendaItemDisplay';
 
 interface StudentsTableProps {
 	sortedStudents: Student[];

@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
-import type { Measure } from '@/magister/response/return-measure.types';
-import type { StaffMember } from '@/magister/response/staffmember.types';
+import type { Measure } from '@/magister/response/returnMeasure.types';
+import type { StaffMember } from '@/magister/response/staffMember.types';
 import type { StudentBase } from '@/magister/response/student.types';
 import type { StoredReturnMeasureTemplate } from '../api/utils/returnMeasures';
 

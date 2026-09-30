@@ -1,5 +1,5 @@
-import { addDays, getDateKey, getNow, toISOFromDateKeyAndTime } from '@/lib/dateUtils';
-import type { AbsenceNotice, AbsenceNoticePerson } from '@/magister/response/absence-notice.types';
+import { addDays, getDateKey, getNow, toISOFromDateKeyAndTime } from '@/lib/shared/dateUtils';
+import type { AbsenceNotice, AbsenceNoticePerson } from '@/magister/response/absenceNotice.types';
 import type { StudentBase } from '@/magister/response/student.types';
 
 export type StoredAbsenceNoticeTemplate = {

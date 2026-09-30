@@ -1,7 +1,7 @@
 'use client';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ALL_REGISTRATION_CATEGORIES } from '@/lib/registrationCategories';
+import { ALL_REGISTRATION_CATEGORIES } from '@/lib/registrations/categories';
 
 export interface RegistrationCategory {
 	key: string;

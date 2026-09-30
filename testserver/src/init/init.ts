@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { faker } from '@faker-js/faker';
 import type { Locker, LockersResponse } from '@/magister/response/locker.types';
-import type { StaffMember } from '@/magister/response/staffmember.types';
+import type { StaffMember } from '@/magister/response/staffMember.types';
 import type { StudentBase } from '@/magister/response/student.types';
 import { generateAbsenceNoticeData } from './absence-notices';
 import { generateAgendaData } from './agenda';

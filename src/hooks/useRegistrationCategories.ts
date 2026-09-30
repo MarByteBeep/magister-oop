@@ -4,7 +4,7 @@ import {
 	ALL_REGISTRATION_CATEGORIES,
 	buildRegistrationCategories,
 	resolveActiveRegistrationCategory,
-} from '@/lib/registrationCategories';
+} from '@/lib/registrations/categories';
 
 type GroupedRegistrations = ReturnType<typeof useGroupedRegistrations>;
 

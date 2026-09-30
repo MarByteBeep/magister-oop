@@ -6,7 +6,7 @@ import staffMembers from '@data/staff-members.json' with { type: 'json' };
 import students from '@data/students.json' with { type: 'json' };
 import type { AgendaItem, Participant } from '@/magister/response/agenda.types';
 import type { Locker } from '@/magister/response/locker.types';
-import type { StaffMember } from '@/magister/response/staffmember.types';
+import type { StaffMember } from '@/magister/response/staffMember.types';
 import type { StudentBase } from '@/magister/response/student.types';
 import type { StoredAbsenceNoticeTemplate } from './absenceNotices';
 import type { StoredReturnMeasureTemplate } from './returnMeasures';

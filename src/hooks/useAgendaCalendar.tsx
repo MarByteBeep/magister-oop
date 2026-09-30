@@ -1,9 +1,9 @@
 import { createElement, useCallback, useMemo } from 'react';
 import type { EventProps, View } from 'react-big-calendar';
-import AgendaCalendarEvent from '@/components/student/AgendaCalendarEvent';
-import AgendaCalendarHeader from '@/components/student/AgendaCalendarHeader';
-import AgendaFullDayShortcutCellWrapper from '@/components/student/AgendaFullDayShortcutCellWrapper';
-import { firstLessonTime, lastLessonTime } from '@/components/student/agendaCalendarConfig';
+import AgendaCalendarEvent from '@/components/student/agenda/AgendaCalendarEvent';
+import AgendaCalendarHeader from '@/components/student/agenda/AgendaCalendarHeader';
+import AgendaFullDayShortcutCellWrapper from '@/components/student/agenda/AgendaFullDayShortcutCellWrapper';
+import { firstLessonTime, lastLessonTime } from '@/components/student/agenda/agendaCalendarConfig';
 import {
 	calendarDayPropGetter,
 	calendarEventPropGetter,
@@ -13,11 +13,11 @@ import {
 import { useAgendaCalendarEvents } from '@/hooks/useAgendaCalendarEvents';
 import { useAgendaCalendarSelection } from '@/hooks/useAgendaCalendarSelection';
 import { useStableAgendaEntry } from '@/hooks/useStableAgendaEntries';
-import type { CalendarEvent } from '@/lib/agendaCalendarUtils';
-import { agendaDayLayoutAlgorithm } from '@/lib/agendaDayLayout';
-import type { AgendaSlotSelection } from '@/lib/agendaSlotSelection';
-import { hhmmToDate } from '@/lib/bigCalendarUtils';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import { hhmmToDate } from '@/lib/agenda/bigCalendarUtils';
+import type { CalendarEvent } from '@/lib/agenda/calendarUtils';
+import { agendaDayLayoutAlgorithm } from '@/lib/agenda/dayLayout';
+import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 
 export function useAgendaCalendar(
 	entries: AgendaEntry[],

@@ -1,15 +1,15 @@
 import { useCallback, useState } from 'react';
 import { useMagisterSession } from '@/context/MagisterSessionContext';
 import { useAgendaLoader } from '@/hooks/useAgendaLoader';
+import { useLessonInfo } from '@/hooks/useLessonInfo';
+import { useCurrentTime } from '@/hooks/useCurrentTime';
+import { useSelectedStudiesStorage } from '@/hooks/useSelectedStudiesStorage';
+import { useStudentFetch } from '@/hooks/useStudentFetch';
 import { useStudentStore } from '@/hooks/useStudentStore';
 import { useStudentsNeedingAgendaCount } from '@/hooks/useStudentsNeedingAgendaCount';
 import { useStudentsSideEffects } from '@/hooks/useStudentsSideEffects';
-import { registerLoadAgendaForStudent } from '@/lib/loadAgendaForStudentRegistry';
-import { isStudentsLoading } from '@/lib/studentsLoadingState';
-import { useCurrentTime } from './useCurrentTime';
-import { useLessonInfo } from './useLessonInfo';
-import { useSelectedStudiesStorage } from './useSelectedStudiesStorage';
-import { useStudentFetch } from './useStudentFetch';
+import { registerLoadAgendaForStudent } from '@/lib/agenda/loadForStudentRegistry';
+import { isStudentsLoading } from '@/lib/students/loadingState';
 
 export function useStudents() {
 	const session = useMagisterSession();

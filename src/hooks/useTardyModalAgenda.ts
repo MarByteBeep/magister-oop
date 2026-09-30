@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { agendaEntriesForDate } from '@/lib/agendaLoadUtils';
-import { getDateKey, getNow, getWorkWeekRange } from '@/lib/dateUtils';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import { agendaEntriesForDate } from '@/lib/agenda/loadUtils';
+import { getDateKey, getNow, getWorkWeekRange } from '@/lib/shared/dateUtils';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
 

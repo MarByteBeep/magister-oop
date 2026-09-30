@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { studentDataStore } from '@/lib/studentDataStore';
+import { studentDataStore } from '@/lib/students/dataStore';
 import type { Student } from '@/types/student.types';
 
 const subscribeByStudentId = new Map<number, (onStoreChange: () => void) => () => void>();

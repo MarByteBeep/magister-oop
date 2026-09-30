@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { getDateKey, parseDateKey, weekOffsetFromDate } from '@/lib/dateUtils';
+import { useWeeklyAgendaLoader } from '@/hooks/useWeeklyAgendaLoader';
+import { useWeeklyAgendaWeek } from '@/hooks/useWeeklyAgendaWeek';
+import { getDateKey, parseDateKey, weekOffsetFromDate } from '@/lib/shared/dateUtils';
 import type { Student } from '@/types/student.types';
-import { useWeeklyAgendaLoader } from './useWeeklyAgendaLoader';
-import { useWeeklyAgendaWeek } from './useWeeklyAgendaWeek';
 
 export function useWeeklyAgenda(
 	studentId: number,

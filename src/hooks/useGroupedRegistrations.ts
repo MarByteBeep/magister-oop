@@ -5,8 +5,8 @@ import {
 	buildRegistrationRows,
 	type RegistrationRow,
 	sortRegistrationRows,
-} from '@/lib/registrationsUtils';
-import { createStudentVisibility } from '@/lib/studentVisibility';
+} from '@/lib/registrations/utils';
+import { createStudentVisibility } from '@/lib/students/visibility';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import type { Student } from '@/types/student.types';
 

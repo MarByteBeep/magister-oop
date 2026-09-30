@@ -7,7 +7,7 @@ import { useMagisterSession } from '@/context/MagisterSessionContext';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/useCurrentTime';
 import { type SortColumn, type SortDirection, useStudentListFilters } from '@/hooks/useStudentListFilters';
-import { studentsLoadingTooltip } from '@/lib/studentsLoadingTooltip';
+import { studentsLoadingTooltip } from '@/lib/students/loadingTooltip';
 import type { Student } from '@/types/student.types';
 import StudentModal from './StudentModal';
 

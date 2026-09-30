@@ -1,4 +1,4 @@
-import type { LessonInfo } from '@/lib/agendaUtils';
+import type { LessonInfo } from '@/lib/agenda/utils';
 import { cn } from '@/lib/utils';
 
 interface OccupancyLocationCardProps {

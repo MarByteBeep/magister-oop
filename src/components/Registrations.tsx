@@ -7,13 +7,13 @@ import RegistrationCategoryFilter from '@/components/registrations/RegistrationC
 import RegistrationGroupList from '@/components/registrations/RegistrationGroupList';
 import { useRegistrationsContext } from '@/context/RegistrationsContext';
 import { useStudentsContext } from '@/context/StudentsContext';
-import { useAllowedStudentIds } from '@/hooks/useAllowedStudentIds';
 import { useGroupedRegistrations } from '@/hooks/useGroupedRegistrations';
 import { useRegistrationCategories } from '@/hooks/useRegistrationCategories';
 import { useRegistrationsAgendaLoader } from '@/hooks/useRegistrationsAgendaLoader';
+import { useAllowedStudentIds } from '@/hooks/useAllowedStudentIds';
 import { useSelectedStudentFromId } from '@/hooks/useSelectedStudentFromId';
-import { getTodayKey } from '@/lib/dateUtils';
-import { ALL_REGISTRATION_CATEGORIES } from '@/lib/registrationCategories';
+import { ALL_REGISTRATION_CATEGORIES } from '@/lib/registrations/categories';
+import { getTodayKey } from '@/lib/shared/dateUtils';
 import StudentModal from './StudentModal';
 import { Button } from './ui/button';
 

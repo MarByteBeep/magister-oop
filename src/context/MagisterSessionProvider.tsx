@@ -1,6 +1,10 @@
 import { type ReactNode, useEffect, useState } from 'react';
 import { MagisterSessionContext } from '@/context/MagisterSessionContext';
-import { isMagisterSessionStatus, MAGISTER_SESSION_KEY, type MagisterSessionStatus } from '@/lib/magisterSession';
+import {
+	isMagisterSessionStatus,
+	MAGISTER_SESSION_KEY,
+	type MagisterSessionStatus,
+} from '@/lib/session/magisterSession';
 
 export function MagisterSessionProvider({ children }: { children: ReactNode }) {
 	const [status, setStatus] = useState<MagisterSessionStatus>(() => (import.meta.env.DEV ? 'ready' : 'connecting'));

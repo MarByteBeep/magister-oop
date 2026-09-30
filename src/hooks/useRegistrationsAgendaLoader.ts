@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { needsAgendaDayFetch } from '@/lib/agendaLoadUtils';
-import { getNow, getWorkWeekRange } from '@/lib/dateUtils';
-import { createLimiter } from '@/lib/limiter';
-import { studentDataStore } from '@/lib/studentDataStore';
+import { needsAgendaDayFetch } from '@/lib/agenda/loadUtils';
+import { getNow, getWorkWeekRange } from '@/lib/shared/dateUtils';
+import { createLimiter } from '@/lib/shared/limiter';
+import { studentDataStore } from '@/lib/students/dataStore';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import type { Student } from '@/types/student.types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';

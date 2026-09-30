@@ -1,5 +1,5 @@
-import type { LessonInfo } from '@/lib/agendaUtils';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import type { LessonInfo } from '@/lib/agenda/utils';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 
 export type LoadAgendaForStudentResult = {

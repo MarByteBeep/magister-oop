@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import type { MagisterSessionStatus } from '@/lib/magisterSession';
-import { loadStudentDataFromSession } from '@/lib/studentDataStorePersistence';
+import type { MagisterSessionStatus } from '@/lib/session/magisterSession';
+import { loadStudentDataFromSession } from '@/lib/students/dataStorePersistence';
 
 const LOGIN_CANCELLED_MESSAGE = 'Inloggen op Magister is afgebroken. Klik opnieuw op het extensie-icoon.';
 

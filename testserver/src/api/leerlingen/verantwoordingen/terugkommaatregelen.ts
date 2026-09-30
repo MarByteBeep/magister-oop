@@ -1,5 +1,5 @@
-import { dayOffsetFromIsoInstant, isLocalTimeLabel } from '@/lib/dateUtils';
-import type { CreateReturnMeasureRequest } from '@/magister/response/create-return-measure.types';
+import { dayOffsetFromIsoInstant, isLocalTimeLabel } from '@/lib/shared/dateUtils';
+import type { CreateReturnMeasureRequest } from '@/magister/response/createReturnMeasure.types';
 import { appendReturnMeasureTemplate, getAllStudents } from '../../utils/helpers';
 import type { StoredReturnMeasureTemplate } from '../../utils/returnMeasures';
 

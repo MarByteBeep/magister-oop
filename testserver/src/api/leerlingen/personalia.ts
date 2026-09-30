@@ -1,4 +1,4 @@
-import type { StudentDetails } from '@/magister/response/student-details.types';
+import type { StudentDetails } from '@/magister/response/studentDetails.types';
 import { sleep } from '../utils/sleep';
 
 export async function GET(_req: Request, id: number): Promise<Response> {

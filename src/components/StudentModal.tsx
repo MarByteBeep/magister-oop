@@ -1,8 +1,8 @@
 'use client';
 
-import type { StudentDetailTab } from '@/components/student/StudentDetailContent';
+import type { StudentDetailTab } from '@/components/student/profile/StudentDetailContent';
+import StudentDetailDialog from '@/components/student/profile/StudentDetailDialog';
 import type { Student } from '@/types/student.types';
-import StudentDetailDialog from './student/StudentDetailDialog';
 
 interface StudentModalProps {
 	student?: Student;

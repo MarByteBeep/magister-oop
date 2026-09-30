@@ -1,5 +1,5 @@
 import LazyAvatar from '@/components/LazyAvatar';
-import { getInitials } from '@/lib/stringUtils';
+import { getInitials } from '@/lib/shared/stringUtils';
 
 interface StudentItemContentProps {
 	displayName: string;

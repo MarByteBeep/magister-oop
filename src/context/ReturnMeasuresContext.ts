@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { ReturnMeasureStudent } from '@/magister/response/return-measure.types';
+import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 
 export interface ReturnMeasuresState {
 	data: ReturnMeasureStudent[] | null;

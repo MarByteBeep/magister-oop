@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { storage } from '@/lib/storage';
+import { storage } from '@/lib/shared/storage';
 
 const OCCUPANCY_LOCATIONS_STORAGE_KEY = 'occupancySelectedLocations';
 

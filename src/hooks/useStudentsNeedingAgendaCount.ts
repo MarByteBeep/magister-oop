@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { needsAgendaRangeFetch } from '@/lib/agendaLoadUtils';
-import { getNow, getWorkWeekRange } from '@/lib/dateUtils';
-import { studentDataStore } from '@/lib/studentDataStore';
+import { needsAgendaRangeFetch } from '@/lib/agenda/loadUtils';
+import { getNow, getWorkWeekRange } from '@/lib/shared/dateUtils';
+import { studentDataStore } from '@/lib/students/dataStore';
 import type { Student } from '@/types/student.types';
 
 export function useStudentsNeedingAgendaCount(students: Student[], selectedStudies: Set<string>): number {

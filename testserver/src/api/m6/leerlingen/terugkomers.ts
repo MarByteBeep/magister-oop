@@ -1,4 +1,4 @@
-import type { ReturnMeasureStudent, ReturnMeasureStudentsResponse } from '@/magister/response/return-measure.types';
+import type { ReturnMeasureStudent, ReturnMeasureStudentsResponse } from '@/magister/response/returnMeasure.types';
 import { getAllStaffMembers, getAllStudents, getReturnMeasureTemplates } from '../../utils/helpers';
 import { expandReturnMeasureTemplates } from '../../utils/returnMeasures';
 

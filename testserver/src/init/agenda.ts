@@ -1,12 +1,12 @@
 import { faker } from '@faker-js/faker';
-import { timeTable } from '@/lib/agendaUtils';
+import { timeTable } from '@/lib/agenda/utils';
 import type {
 	AgendaItem,
 	AttendanceStaffMember,
 	AttendanceStudent,
 	Participant,
 } from '@/magister/response/agenda.types';
-import type { StaffMember } from '@/magister/response/staffmember.types';
+import type { StaffMember } from '@/magister/response/staffMember.types';
 import type { StudentBase } from '@/magister/response/student.types';
 import { pickRandom } from '../api/utils/random';
 

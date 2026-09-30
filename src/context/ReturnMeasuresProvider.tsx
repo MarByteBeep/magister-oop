@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 import { useMemo } from 'react';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useBulkList } from '@/hooks/useBulkLists';
-import { countOpenReturnMeasuresToday } from '@/lib/returnMeasureOverview';
-import { createStudentVisibility } from '@/lib/studentVisibility';
-import type { ReturnMeasureStudent } from '@/magister/response/return-measure.types';
+import { countOpenReturnMeasuresToday } from '@/lib/return-measure/overview';
+import { createStudentVisibility } from '@/lib/students/visibility';
+import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import { ReturnMeasuresContext, type ReturnMeasuresState } from './ReturnMeasuresContext';
 
 export function ReturnMeasuresProvider({ children }: { children: ReactNode }) {

@@ -5,6 +5,8 @@ alwaysApply: true
 
 # Language conventions
 
+File and folder casing is defined in `naming-conventions.mdc`.
+
 **Code is English. Only the product language is Dutch.** No Dutch in code, ever, unless one of the two exceptions below applies.
 
 ## English — everything we write ourselves

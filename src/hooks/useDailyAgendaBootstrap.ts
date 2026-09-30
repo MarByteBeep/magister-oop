@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { agendaEntriesForDate, isAgendaDayLoaded, needsAgendaRangeFetch } from '@/lib/agendaLoadUtils';
-import { addDays, parseDateKey } from '@/lib/dateUtils';
-import { studentDataStore } from '@/lib/studentDataStore';
-import type { AgendaEntry } from '@/magister/response/agenda-entry.types';
+import { agendaEntriesForDate, isAgendaDayLoaded, needsAgendaRangeFetch } from '@/lib/agenda/loadUtils';
+import { addDays, parseDateKey } from '@/lib/shared/dateUtils';
+import { studentDataStore } from '@/lib/students/dataStore';
+import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
 
