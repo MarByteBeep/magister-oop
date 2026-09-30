@@ -59,3 +59,22 @@ export function getAbsenceNoticeTemplates(): Record<string, StoredAbsenceNoticeT
 		StoredAbsenceNoticeTemplate[]
 	>;
 }
+
+export function appendAbsenceNoticeTemplate(studentUuid: string, template: StoredAbsenceNoticeTemplate): void {
+	const data = getAbsenceNoticeTemplates();
+	const existing = data[studentUuid] ?? [];
+	writeFileSync(
+		ABSENCE_NOTICES_FILE_PATH,
+		JSON.stringify({ ...data, [studentUuid]: [...existing, template] }, null, 2),
+		'utf-8',
+	);
+}
+
+export function removeAbsenceNoticeTemplate(studentUuid: string, absenceNoticeId: string): boolean {
+	const data = getAbsenceNoticeTemplates();
+	const existing = data[studentUuid] ?? [];
+	const next = existing.filter((template) => template.absenceNoticeId !== absenceNoticeId);
+	if (next.length === existing.length) return false;
+	writeFileSync(ABSENCE_NOTICES_FILE_PATH, JSON.stringify({ ...data, [studentUuid]: next }, null, 2), 'utf-8');
+	return true;
+}

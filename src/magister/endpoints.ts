@@ -14,6 +14,18 @@ export const endpoints = {
 		const path = `/api/v2/absence-notices/today?roles=Ondersteuner&date=${date}`;
 		return import.meta.env.PROD ? `https://attendance.magister.net${path}` : path;
 	},
+	attendanceTypes: (studentUuid: string) => {
+		const path = `/api/v2/student/${studentUuid}/attendance-types?active=true`;
+		return import.meta.env.PROD ? `https://attendance.magister.net${path}` : path;
+	},
+	createAbsenceNotice: (studentUuid: string) => {
+		const path = `/api/v2/student/${studentUuid}/absence-notices`;
+		return import.meta.env.PROD ? `https://attendance.magister.net${path}` : path;
+	},
+	deleteAbsenceNotice: (studentUuid: string, absenceNoticeId: string) => {
+		const path = `/api/v2/student/${studentUuid}/absence-notices/${absenceNoticeId}`;
+		return import.meta.env.PROD ? `https://attendance.magister.net${path}` : path;
+	},
 
 	registrations: (date: string) => `/api/m6/verantwoordingen/ongeoorloofderegistraties?datum=${date}`,
 	/** All return measures of all students in one range; `start`/`end` are ISO instants. */

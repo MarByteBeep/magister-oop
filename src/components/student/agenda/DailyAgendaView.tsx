@@ -88,6 +88,7 @@ const DailyAgendaCalendar = memo(function DailyAgendaCalendar({
 });
 
 export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgendaViewProps) {
+	const student = useStudentById(studentId);
 	const { selectedEntry, draftSelection, onSelectEntry, onSelectSlot, clearSelectedEntry, clearDraftSelection } =
 		useAgendaViewDialogs();
 
@@ -101,6 +102,7 @@ export default function DailyAgendaView({ studentId, onOpenStudent }: DailyAgend
 			/>
 			<AgendaViewDialogs
 				studentId={studentId}
+				studentExterneId={student?.externeId ?? ''}
 				onOpenStudent={onOpenStudent}
 				selectedEntry={selectedEntry}
 				draftSelection={draftSelection}

@@ -1,7 +1,6 @@
 import { describe, expect, mock, test } from 'bun:test';
 import { fetchBlobInMagisterTab } from '@/magister/fetchBlobInMagisterTab';
-import { fetchJsonInMagisterTab } from '@/magister/fetchInMagisterTab';
-import { sendJsonInMagisterTab } from '@/magister/sendJsonInMagisterTab';
+import { magisterTabJsonInPage } from '@/magister/magisterTabJsonInPage';
 import { checkSchoolSessionReadyInPage } from '@/popup-utils/tabs';
 
 /** Mimics chrome.scripting.executeScript: only the function source travels to the page. */
@@ -27,27 +26,28 @@ function createOidcStorage(token: string | null): Storage {
 }
 
 describe('injected script functions', () => {
-	test('fetchJsonInMagisterTab runs without module-scope references', async () => {
+	test('magisterTabJsonInPage GET runs without module-scope references', async () => {
 		const originalFetch = globalThis.fetch;
 		globalThis.fetch = mockFetch(new Response(JSON.stringify({ value: 1 }), { status: 200 }));
 
 		try {
-			const result = await invokeAsInjectedScript(
-				fetchJsonInMagisterTab,
-				'https://school.magister.net/api/test',
-				'include',
-				'cookies',
-				'session expired',
-				'token missing',
-			);
+			const result = await invokeAsInjectedScript(magisterTabJsonInPage, {
+				method: 'GET',
+				url: 'https://school.magister.net/api/test',
+				credentials: 'include',
+				auth: 'cookies',
+				body: null,
+				sessionExpiredMessage: 'session expired',
+				tokenMissingMessage: 'token missing',
+			});
 
-			expect(result).toEqual({ ok: true, data: { value: 1 } });
+			expect(result).toEqual({ ok: true, status: 200, data: { value: 1 } });
 		} finally {
 			globalThis.fetch = originalFetch;
 		}
 	});
 
-	test('fetchJsonInMagisterTab bearer auth reads OIDC token from storage', async () => {
+	test('magisterTabJsonInPage GET bearer auth reads OIDC token from storage', async () => {
 		const originalFetch = globalThis.fetch;
 		const originalWindow = globalThis.window;
 		globalThis.fetch = mockFetch(new Response(JSON.stringify({ value: 2 }), { status: 200 }));
@@ -57,16 +57,17 @@ describe('injected script functions', () => {
 		} as Window & typeof globalThis;
 
 		try {
-			const result = await invokeAsInjectedScript(
-				fetchJsonInMagisterTab,
-				'https://platform.magister.net/api/test',
-				'omit',
-				'bearer',
-				'session expired',
-				'token missing',
-			);
+			const result = await invokeAsInjectedScript(magisterTabJsonInPage, {
+				method: 'GET',
+				url: 'https://platform.magister.net/api/test',
+				credentials: 'omit',
+				auth: 'bearer',
+				body: null,
+				sessionExpiredMessage: 'session expired',
+				tokenMissingMessage: 'token missing',
+			});
 
-			expect(result).toEqual({ ok: true, data: { value: 2 } });
+			expect(result).toEqual({ ok: true, status: 200, data: { value: 2 } });
 		} finally {
 			globalThis.fetch = originalFetch;
 			globalThis.window = originalWindow;
@@ -93,19 +94,20 @@ describe('injected script functions', () => {
 		}
 	});
 
-	test('sendJsonInMagisterTab runs without module-scope references', async () => {
+	test('magisterTabJsonInPage POST runs without module-scope references', async () => {
 		const originalFetch = globalThis.fetch;
 		globalThis.fetch = mockFetch(new Response(null, { status: 201 }));
 
 		try {
-			const result = await invokeAsInjectedScript(
-				sendJsonInMagisterTab,
-				'https://school.magister.net/api/test',
-				'POST',
-				{ value: 1 },
-				'include',
-				'session expired',
-			);
+			const result = await invokeAsInjectedScript(magisterTabJsonInPage, {
+				method: 'POST',
+				url: 'https://school.magister.net/api/test',
+				credentials: 'include',
+				auth: 'cookies',
+				body: { value: 1 },
+				sessionExpiredMessage: 'session expired',
+				tokenMissingMessage: 'token missing',
+			});
 
 			expect(result).toEqual({ ok: true, status: 201 });
 		} finally {
@@ -113,23 +115,58 @@ describe('injected script functions', () => {
 		}
 	});
 
-	test('sendJsonInMagisterTab treats non-2xx as failure', async () => {
+	test('magisterTabJsonInPage treats non-2xx as failure', async () => {
 		const originalFetch = globalThis.fetch;
 		globalThis.fetch = mockFetch(new Response(null, { status: 500 }));
 
 		try {
-			const result = await invokeAsInjectedScript(
-				sendJsonInMagisterTab,
-				'https://school.magister.net/api/test',
-				'PUT',
-				{},
-				'include',
-				'session expired',
-			);
+			const result = await invokeAsInjectedScript(magisterTabJsonInPage, {
+				method: 'PUT',
+				url: 'https://school.magister.net/api/test',
+				credentials: 'include',
+				auth: 'cookies',
+				body: {},
+				sessionExpiredMessage: 'session expired',
+				tokenMissingMessage: 'token missing',
+			});
 
 			expect(result).toEqual({ ok: false, error: 'HTTP error 500' });
 		} finally {
 			globalThis.fetch = originalFetch;
+		}
+	});
+
+	test('magisterTabJsonInPage DELETE bearer auth reads OIDC token from storage', async () => {
+		const originalFetch = globalThis.fetch;
+		const originalWindow = globalThis.window;
+		const fetchMock = mock(() => Promise.resolve(new Response(null, { status: 204 }))) as unknown as typeof fetch;
+		globalThis.fetch = fetchMock;
+		globalThis.window = {
+			sessionStorage: createOidcStorage('test-token'),
+			localStorage: createOidcStorage(null),
+		} as Window & typeof globalThis;
+
+		try {
+			const result = await invokeAsInjectedScript(magisterTabJsonInPage, {
+				method: 'DELETE',
+				url: 'https://attendance.magister.net/api/v2/student/x/absence-notices/y',
+				credentials: 'omit',
+				auth: 'bearer',
+				body: null,
+				sessionExpiredMessage: 'session expired',
+				tokenMissingMessage: 'token missing',
+			});
+
+			expect(result).toEqual({ ok: true, status: 204 });
+			expect(fetchMock).toHaveBeenCalled();
+			const call = (fetchMock as unknown as { mock: { calls: unknown[][] } }).mock.calls[0];
+			const init = call[1] as RequestInit;
+			expect(init.method).toBe('DELETE');
+			expect(init.body).toBeUndefined();
+			expect((init.headers as Record<string, string>).Authorization).toBe('Bearer test-token');
+		} finally {
+			globalThis.fetch = originalFetch;
+			globalThis.window = originalWindow;
 		}
 	});
 

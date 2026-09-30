@@ -1,5 +1,6 @@
 import { type Dispatch, type SetStateAction, useCallback } from 'react';
 import { clearStudentStore } from '@/hooks/students/useStudentStore';
+import { ensureAttendanceTypes } from '@/lib/absence-notice/attendanceTypes';
 import { mergeStudent } from '@/lib/students/mergeStudent';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
@@ -24,9 +25,13 @@ export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>
 
 	const fetchStudentsPaginated = useCallback(async () => {
 		let nextUrl: string | null = endpoints.searchStudents(50, 0);
+		let firstStudentUuid: string | null = null;
 
 		while (nextUrl) {
 			const data: StudentsResponse = await getJson<StudentsResponse>(nextUrl, 'include', 'no-cache');
+			if (!firstStudentUuid && data.items[0]?.externeId) {
+				firstStudentUuid = data.items[0].externeId;
+			}
 			setStudents((prev) => {
 				const merged = [...prev];
 				for (const s of data.items) {
@@ -37,6 +42,12 @@ export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>
 				return merged;
 			});
 			nextUrl = data.links.next?.href ?? null;
+		}
+
+		if (firstStudentUuid) {
+			await ensureAttendanceTypes(firstStudentUuid).catch((error) => {
+				console.error('Failed to load attendance types', error);
+			});
 		}
 	}, [setStudents]);
 

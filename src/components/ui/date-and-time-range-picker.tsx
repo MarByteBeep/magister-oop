@@ -38,7 +38,7 @@ export function DateAndTimeRangePicker({
 		<div className="flex flex-col gap-6">
 			<div className="flex w-full flex-col gap-2">
 				<Label htmlFor={dateId} className="px-1">
-					Datum
+					Datum *
 				</Label>
 				<DatePicker
 					id={dateId}
@@ -52,7 +52,7 @@ export function DateAndTimeRangePicker({
 			<div className="flex gap-4">
 				<div className="flex flex-1 flex-col gap-2">
 					<Label htmlFor={startTimeId} className="px-1">
-						Begintijd
+						Begintijd *
 					</Label>
 					<Input
 						type="time"
@@ -64,7 +64,7 @@ export function DateAndTimeRangePicker({
 				</div>
 				<div className="flex flex-1 flex-col gap-2">
 					<Label htmlFor={endTimeId} className="px-1">
-						Eindtijd
+						Eindtijd *
 					</Label>
 					<Input
 						type="time"

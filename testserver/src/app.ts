@@ -17,6 +17,8 @@ import { GET as getPhoto } from './api/photos/handler';
 import { PUT as putReturnMeasureReport } from './api/terugkommaatregelen/melding';
 import { GET as getLockersDetails } from './api/v1/lockers/details';
 import { GET as getAbsenceNoticesToday } from './api/v2/absence-notices/today';
+import { POST as createAbsenceNotice, DELETE as deleteAbsenceNotice } from './api/v2/student/absence-notices';
+import { GET as getAttendanceTypes } from './api/v2/student/attendance-types';
 
 const api = new Hono();
 
@@ -33,6 +35,11 @@ api.get('/leerlingen/zoeken', (c) => getSearchStudents(c.req.raw));
 api.get('/medewerkers/zoeken', (c) => getSearchStaff(c.req.raw));
 api.get('/v1/lockers/details', (c) => getLockersDetails(c.req.raw));
 api.get('/v2/absence-notices/today', (c) => getAbsenceNoticesToday(c.req.raw));
+api.get('/v2/student/:uuid/attendance-types', (c) => getAttendanceTypes(c.req.raw, c.req.param('uuid')));
+api.post('/v2/student/:uuid/absence-notices', (c) => createAbsenceNotice(c.req.raw, c.req.param('uuid')));
+api.delete('/v2/student/:uuid/absence-notices/:absenceNoticeId', (c) =>
+	deleteAbsenceNotice(c.req.raw, c.req.param('uuid'), c.req.param('absenceNoticeId')),
+);
 api.get('/m6/verantwoordingen/ongeoorloofderegistraties', (c) => getRegistrations(c.req.raw));
 api.get('/m6/leerlingen/terugkomers', (c) => getReturnMeasures(c.req.raw));
 

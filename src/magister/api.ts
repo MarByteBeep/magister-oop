@@ -1,13 +1,8 @@
 import { jsonCacheGet, jsonCacheSet, loadJsonCache } from '@/lib/shared/cache';
 import { fetchBlobInMagisterTab } from '@/magister/fetchBlobInMagisterTab';
-import { fetchJsonInMagisterTab } from '@/magister/fetchInMagisterTab';
+import { magisterTabJsonInPage } from '@/magister/magisterTabJsonInPage';
 import { MAGISTER_SESSION_EXPIRED_MESSAGE, schoolApiHttpErrorMessage } from '@/magister/schoolApiHttpError';
-import {
-	type SendJsonMethod,
-	type SendJsonResult,
-	sendJsonInMagisterTab,
-	sendJsonResponseToResult,
-} from '@/magister/sendJsonInMagisterTab';
+import { type SendJsonMethod, type SendJsonResult, sendJsonResponseToResult } from '@/magister/sendJsonResult';
 import { findSchoolSessionTab, isSchoolSessionUrl } from '@/popup-utils/tabs';
 
 type CredentialsOption = 'include' | 'omit' | 'same-origin';
@@ -51,8 +46,9 @@ export async function postJson(
 	url: string,
 	body: unknown,
 	credentials: CredentialsOption = 'include',
+	auth: AuthOption = 'cookies',
 ): Promise<SendJsonResult> {
-	return sendJson(url, 'POST', body, credentials);
+	return sendJson(url, 'POST', body, credentials, auth);
 }
 
 /**
@@ -63,8 +59,21 @@ export async function putJson(
 	url: string,
 	body: unknown,
 	credentials: CredentialsOption = 'include',
+	auth: AuthOption = 'cookies',
 ): Promise<SendJsonResult> {
-	return sendJson(url, 'PUT', body, credentials);
+	return sendJson(url, 'PUT', body, credentials, auth);
+}
+
+/**
+ * DELETE an endpoint.
+ * `ok: true` means HTTP 2xx; non-success status codes become `ok: false` with an error message.
+ */
+export async function deleteJson(
+	url: string,
+	credentials: CredentialsOption = 'include',
+	auth: AuthOption = 'cookies',
+): Promise<SendJsonResult> {
+	return sendJson(url, 'DELETE', null, credentials, auth);
 }
 
 async function sendJson(
@@ -72,25 +81,40 @@ async function sendJson(
 	method: SendJsonMethod,
 	body: unknown,
 	credentials: CredentialsOption,
+	auth: AuthOption,
 ): Promise<SendJsonResult> {
 	try {
 		if (import.meta.env.DEV) {
 			console.log(`[DEV] ${method} json`, url);
+			const hasBody = method !== 'DELETE' && body !== undefined && body !== null;
 			const res = await fetch(url, {
 				method,
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(body),
+				headers: hasBody
+					? { 'Content-Type': 'application/json', Accept: 'application/json' }
+					: { Accept: 'application/json' },
+				body: hasBody ? JSON.stringify(body) : undefined,
 			});
 
-			return sendJsonResponseToResult(res);
+			if (!res.ok) return sendJsonResponseToResult(res);
+
+			try {
+				const data = (await res.json()) as unknown;
+				return sendJsonResponseToResult(res, data);
+			} catch {
+				return sendJsonResponseToResult(res);
+			}
 		}
 
-		const result = await executeInActiveMagisterTab(sendJsonInMagisterTab, [
-			url,
-			method,
-			body,
-			credentials,
-			MAGISTER_SESSION_EXPIRED_MESSAGE,
+		const result = await executeInActiveMagisterTab(magisterTabJsonInPage, [
+			{
+				method,
+				url,
+				credentials,
+				auth,
+				body,
+				sessionExpiredMessage: MAGISTER_SESSION_EXPIRED_MESSAGE,
+				tokenMissingMessage: MAGISTER_TOKEN_MISSING_MESSAGE,
+			},
 		]);
 
 		return result;
@@ -205,18 +229,23 @@ async function getJsonImpl<T>(
 			return { ok: true, data };
 		}
 
-		const result = await executeInActiveMagisterTab(fetchJsonInMagisterTab<T>, [
-			url,
-			credentials,
-			auth,
-			MAGISTER_SESSION_EXPIRED_MESSAGE,
-			MAGISTER_TOKEN_MISSING_MESSAGE,
+		const result = await executeInActiveMagisterTab(magisterTabJsonInPage, [
+			{
+				method: 'GET',
+				url,
+				credentials,
+				auth,
+				body: null,
+				sessionExpiredMessage: MAGISTER_SESSION_EXPIRED_MESSAGE,
+				tokenMissingMessage: MAGISTER_TOKEN_MISSING_MESSAGE,
+			},
 		]);
 
-		if (result.ok && cache !== 'no-cache') {
-			await jsonCacheSet(url, result.data);
+		if (!result.ok) return result;
+		if (cache !== 'no-cache') {
+			await jsonCacheSet(url, result.data as T);
 		}
-		return result;
+		return { ok: true, data: result.data as T };
 	} catch (err) {
 		return { ok: false, error: (err as Error).message };
 	}

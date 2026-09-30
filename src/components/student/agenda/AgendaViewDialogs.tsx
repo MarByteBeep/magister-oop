@@ -8,6 +8,7 @@ import type { Student } from '@/types/student.types';
 
 interface AgendaViewDialogsProps {
 	studentId: number;
+	studentExterneId: string;
 	onOpenStudent?: (student: Student) => void;
 	selectedEntry: AgendaEntry | null;
 	draftSelection: AgendaSlotSelection | null;
@@ -17,6 +18,7 @@ interface AgendaViewDialogsProps {
 
 export default function AgendaViewDialogs({
 	studentId,
+	studentExterneId,
 	onOpenStudent,
 	selectedEntry,
 	draftSelection,
@@ -37,6 +39,7 @@ export default function AgendaViewDialogs({
 			{draftSelection && (
 				<NewAppointmentDialog
 					studentId={studentId}
+					studentExterneId={studentExterneId}
 					selection={draftSelection}
 					isOpen={draftSelection !== null}
 					onClose={onCloseDraft}
