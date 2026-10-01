@@ -1,7 +1,7 @@
 import { hhmmToDate } from '@/lib/agenda/bigCalendarUtils';
 import { getFullDayScheduleSelection } from '@/lib/agenda/fullDayScheduleUtils';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
-import { getPreSchoolTimeTable, getSelectableTimeTable } from '@/lib/agenda/utils';
+import { getBreakPeriods, getPreSchoolTimeTable, getSelectableTimeTable } from '@/lib/agenda/utils';
 import { formatTime } from '@/lib/shared/dateUtils';
 
 function lessonHourNumberFromIndex(index: number): number {
@@ -12,18 +12,6 @@ function lessonHourNumberFromIndex(index: number): number {
 
 export function findLessonIndexContainingTime(time: string): number {
 	return getSelectableTimeTable().findIndex((slot) => time >= slot.start && time < slot.end);
-}
-
-export function findLessonIndexForDateTime(date: Date): number {
-	return findLessonIndexContainingTime(formatTime(date));
-}
-
-export function getLessonHourDateRange(date: Date, lessonIndex: number): AgendaSlotSelection {
-	const slot = getSelectableTimeTable()[lessonIndex];
-	return {
-		start: hhmmToDate(date, slot.start),
-		end: hhmmToDate(date, slot.end),
-	};
 }
 
 export function findNearestLessonIndex(time: string): number {
@@ -72,13 +60,16 @@ export function findOverlappingLessonIndexRangeByTime(
 	return { from: nearest, to: nearest };
 }
 
-export function findOverlappingLessonIndexRangeByDate(start: Date, end: Date): { from: number; to: number } | null {
+function findCoveredSlotIndexRange(
+	slots: { start: string; end: string }[],
+	start: Date,
+	end: Date,
+): { from: number; to: number } | null {
 	const rangeStart = start <= end ? start : end;
 	const rangeEnd = start <= end ? end : start;
 	let from = -1;
 	let to = -1;
 
-	const slots = getSelectableTimeTable();
 	for (let index = 0; index < slots.length; index++) {
 		const slotStart = hhmmToDate(rangeStart, slots[index].start);
 		const slotEnd = hhmmToDate(rangeStart, slots[index].end);
@@ -88,11 +79,51 @@ export function findOverlappingLessonIndexRangeByDate(start: Date, end: Date): {
 		}
 	}
 
-	if (from >= 0) return { from, to };
+	if (from < 0) return null;
+	return { from, to };
+}
 
+/** Lesson hours plus the breaks between them. Appointment drags snap to these slots. */
+function getAppointmentTimeSlots(): { start: string; end: string }[] {
+	return [...getSelectableTimeTable(), ...getBreakPeriods()].sort((left, right) =>
+		left.start.localeCompare(right.start),
+	);
+}
+
+export type HoveredAgendaSlot = {
+	dateKey: string;
+	startTime: string;
+	endTime: string;
+};
+
+export function findAppointmentSlotForDateTime(date: Date): { start: string; end: string } | null {
+	const time = formatTime(date);
+	return getAppointmentTimeSlots().find((slot) => time >= slot.start && time < slot.end) ?? null;
+}
+
+export function findOverlappingLessonIndexRangeByDate(start: Date, end: Date): { from: number; to: number } | null {
+	const covered = findCoveredSlotIndexRange(getSelectableTimeTable(), start, end);
+	if (covered) return covered;
+
+	const rangeStart = start <= end ? start : end;
+	const rangeEnd = start <= end ? end : start;
 	const midpoint = new Date((rangeStart.getTime() + rangeEnd.getTime()) / 2);
 	const nearest = findNearestLessonIndex(formatTime(midpoint));
 	return { from: nearest, to: nearest };
+}
+
+function findOverlappingAppointmentSlotRange(start: Date, end: Date): { from: number; to: number } | null {
+	const slots = getAppointmentTimeSlots();
+	const covered = findCoveredSlotIndexRange(slots, start, end);
+	if (covered) return covered;
+
+	const rangeStart = start <= end ? start : end;
+	const rangeEnd = start <= end ? end : start;
+	const midpoint = formatTime(new Date((rangeStart.getTime() + rangeEnd.getTime()) / 2));
+	const nearest = slots.findIndex((slot) => midpoint < slot.start);
+	const index = nearest >= 0 ? nearest : slots.length - 1;
+	if (index < 0) return null;
+	return { from: index, to: index };
 }
 
 export function lessonHourNumbersFromIndexRange(range: { from: number; to: number }): number[] {
@@ -112,7 +143,7 @@ export function getOverlappingLessonHours(startTime: string, endTime: string): n
 }
 
 export function getOverlappingLessonHoursForSelection(selection: { start: Date; end: Date }): number[] {
-	const range = findOverlappingLessonIndexRangeByDate(selection.start, selection.end);
+	const range = findCoveredSlotIndexRange(getSelectableTimeTable(), selection.start, selection.end);
 	if (!range) return [];
 	return lessonHourNumbersFromIndexRange(range);
 }
@@ -143,7 +174,7 @@ export type LessonHourBadgePlacement = {
 };
 
 export function getLessonHourBadgePlacements(selection: { start: Date; end: Date }): LessonHourBadgePlacement[] {
-	const range = findOverlappingLessonIndexRangeByDate(selection.start, selection.end);
+	const range = findCoveredSlotIndexRange(getSelectableTimeTable(), selection.start, selection.end);
 	if (!range) return [];
 
 	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
@@ -192,13 +223,13 @@ export function snapSelectionToLessonHours(selection: { start: Date; end: Date }
 		return getFullDayScheduleSelection(rangeStart);
 	}
 
-	const range = findOverlappingLessonIndexRangeByDate(selection.start, selection.end);
+	const range = findOverlappingAppointmentSlotRange(selection.start, selection.end);
 	if (!range) return null;
 
 	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
 	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
 
-	const slots = getSelectableTimeTable();
+	const slots = getAppointmentTimeSlots();
 	return {
 		start: hhmmToDate(rangeStart, slots[range.from].start),
 		end: hhmmToDate(rangeEnd, slots[range.to].end),

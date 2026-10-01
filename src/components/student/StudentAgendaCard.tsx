@@ -1,5 +1,6 @@
 'use client';
 
+import AgendaCreateHint from '@/components/student/agenda/AgendaCreateHint';
 import AgendaSyncButton from '@/components/student/agenda/AgendaSyncButton';
 import DailyAgendaView from '@/components/student/agenda/DailyAgendaView';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,7 +18,10 @@ export default function StudentAgendaCard({ student, onOpenStudent }: StudentAge
 	return (
 		<Card className="relative row-span-2 col-start-3 row-start-1 flex flex-col">
 			<CardHeader>
-				<CardTitle>Rooster</CardTitle>
+				<CardTitle className="flex items-center gap-1.5">
+					Rooster
+					<AgendaCreateHint />
+				</CardTitle>
 			</CardHeader>
 			<AgendaSyncButton
 				studentId={student.id}

@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react';
 import type { View } from 'react-big-calendar';
+import { hhmmToDate } from '@/lib/agenda/bigCalendarUtils';
 import {
 	agendaEntriesToCalendarEvents,
 	breakPeriodsToCalendarEvents,
@@ -8,36 +9,15 @@ import {
 	getOverlappingEventIds,
 	hoverLessonSlotToBackgroundEvent,
 } from '@/lib/agenda/calendarUtils';
-import { isLessonEntry } from '@/lib/agenda/entryUtils';
 import { getFullDayScheduleLabel, isFullDayScheduleSelection } from '@/lib/agenda/fullDayScheduleUtils';
 import {
-	findOverlappingLessonIndexRangeByDate,
 	formatLessonHoursCompact,
-	getLessonHourDateRange,
 	getOverlappingLessonHoursForSelection,
+	type HoveredAgendaSlot,
 } from '@/lib/agenda/lessonHours';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
-import { getDateKey, getWeekDays, parseDateKey } from '@/lib/shared/dateUtils';
+import { getWeekDays, parseDateKey } from '@/lib/shared/dateUtils';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
-
-function collectOccupiedLessonHours(entries: AgendaEntry[]): Set<string> {
-	const occupied = new Set<string>();
-
-	for (const entry of entries) {
-		if (!isLessonEntry(entry)) continue;
-
-		const entryStart = new Date(entry.start);
-		const range = findOverlappingLessonIndexRangeByDate(entryStart, new Date(entry.end));
-		if (!range) continue;
-
-		const dateKey = getDateKey(entryStart);
-		for (let index = range.from; index <= range.to; index++) {
-			occupied.add(`${dateKey}:${index}`);
-		}
-	}
-
-	return occupied;
-}
 
 function calendarEventsEqual(a: CalendarEvent[], b: CalendarEvent[]): boolean {
 	if (a.length !== b.length) return false;
@@ -66,7 +46,7 @@ function setsEqual(a: Set<string>, b: Set<string>): boolean {
 
 function buildOverlayEvents(
 	activePreview: AgendaSlotSelection | null,
-	hoveredLessonSlot: { dateKey: string; lessonIndex: number } | null,
+	hoveredSlot: HoveredAgendaSlot | null,
 	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
 ): CalendarEvent[] {
 	if (activePreview) {
@@ -80,10 +60,15 @@ function buildOverlayEvents(
 		];
 	}
 
-	if (!hoveredLessonSlot || !onSelectSlot) return [];
+	if (!hoveredSlot || !onSelectSlot) return [];
 
-	const hoverDate = parseDateKey(hoveredLessonSlot.dateKey);
-	return [hoverLessonSlotToBackgroundEvent(getLessonHourDateRange(hoverDate, hoveredLessonSlot.lessonIndex))];
+	const hoverDate = parseDateKey(hoveredSlot.dateKey);
+	return [
+		hoverLessonSlotToBackgroundEvent({
+			start: hhmmToDate(hoverDate, hoveredSlot.startTime),
+			end: hhmmToDate(hoverDate, hoveredSlot.endTime),
+		}),
+	];
 }
 
 export function useAgendaCalendarEvents(
@@ -91,20 +76,19 @@ export function useAgendaCalendarEvents(
 	date: Date,
 	view: View,
 	activePreview: AgendaSlotSelection | null,
-	hoveredLessonSlot: { dateKey: string; lessonIndex: number } | null,
+	hoveredSlot: HoveredAgendaSlot | null,
 	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
 ) {
 	const dateTimestamp = date.getTime();
 	const events = useMemo(() => agendaEntriesToCalendarEvents(entries), [entries]);
-	const occupiedLessonHours = useMemo(() => collectOccupiedLessonHours(entries), [entries]);
 	const visibleDates = useMemo(() => {
 		const resolvedDate = new Date(dateTimestamp);
 		return view === 'work_week' ? getWeekDays(resolvedDate) : [resolvedDate];
 	}, [dateTimestamp, view]);
 	const breakEvents = useMemo(() => breakPeriodsToCalendarEvents(visibleDates), [visibleDates]);
 	const overlayEvents = useMemo(
-		() => buildOverlayEvents(activePreview, hoveredLessonSlot, onSelectSlot),
-		[activePreview, hoveredLessonSlot, onSelectSlot],
+		() => buildOverlayEvents(activePreview, hoveredSlot, onSelectSlot),
+		[activePreview, hoveredSlot, onSelectSlot],
 	);
 	const calendarEventsRef = useRef<CalendarEvent[]>([]);
 	const calendarEvents = useMemo(() => {
@@ -123,5 +107,5 @@ export function useAgendaCalendarEvents(
 		return next;
 	}, [calendarEvents]);
 
-	return { calendarEvents, occupiedLessonHours, overlappingEventIds };
+	return { calendarEvents, overlappingEventIds };
 }

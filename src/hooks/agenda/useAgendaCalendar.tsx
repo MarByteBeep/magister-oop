@@ -12,6 +12,7 @@ import {
 } from '@/hooks/agenda/agendaCalendarPropGetters';
 import { useAgendaCalendarEvents } from '@/hooks/agenda/useAgendaCalendarEvents';
 import { useAgendaCalendarSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
+import { useCreateAppointmentMode } from '@/hooks/agenda/useCreateAppointmentMode';
 import { useStableAgendaEntry } from '@/hooks/agenda/useStableAgendaEntries';
 import { hhmmToDate } from '@/lib/agenda/bigCalendarUtils';
 import type { CalendarEvent } from '@/lib/agenda/calendarUtils';
@@ -31,24 +32,25 @@ export function useAgendaCalendar(
 	},
 ) {
 	const { draftSelection, onSelectSlot } = options ?? {};
+	const createMode = useCreateAppointmentMode(onSelectSlot !== undefined);
 	const {
 		selectingPreview,
-		hoveredLessonSlot,
-		setHoveredLessonSlot,
+		hoveredSlot,
+		setHoveredSlot,
 		clearHoverTimeoutRef,
 		handleSelecting,
 		handleSelectFullDay,
 		handleSelectSlot,
-	} = useAgendaCalendarSelection(onSelectSlot);
+	} = useAgendaCalendarSelection(onSelectSlot, createMode);
 
 	const activePreview = draftSelection ?? selectingPreview;
 
-	const { calendarEvents, occupiedLessonHours, overlappingEventIds } = useAgendaCalendarEvents(
+	const { calendarEvents, overlappingEventIds } = useAgendaCalendarEvents(
 		entries,
 		date,
 		view,
 		activePreview,
-		hoveredLessonSlot,
+		hoveredSlot,
 		onSelectSlot,
 	);
 
@@ -66,17 +68,12 @@ export function useAgendaCalendar(
 
 	const slotPropGetter = useMemo(
 		() =>
-			createCalendarSlotPropGetter(
-				occupiedLessonHours,
-				activePreview,
-				onSelectSlot,
-				setHoveredLessonSlot,
-				clearHoverTimeoutRef,
-			),
-		[occupiedLessonHours, activePreview, onSelectSlot, setHoveredLessonSlot, clearHoverTimeoutRef],
+			createCalendarSlotPropGetter(activePreview, createMode, onSelectSlot, setHoveredSlot, clearHoverTimeoutRef),
+		[activePreview, createMode, onSelectSlot, setHoveredSlot, clearHoverTimeoutRef],
 	);
 
 	const weekFullDayShortcut = view === 'work_week' && onSelectSlot !== undefined;
+	const fullDayCreateEnabled = weekFullDayShortcut && createMode;
 	const stableActiveEntry = useStableAgendaEntry(activeEntry);
 
 	const components = useMemo(
@@ -84,13 +81,13 @@ export function useAgendaCalendar(
 			header: (props: { date: Date; label: string }) =>
 				createElement(AgendaCalendarHeader, {
 					...props,
-					onSelectFullDay: weekFullDayShortcut ? handleSelectFullDay : undefined,
+					onSelectFullDay: fullDayCreateEnabled ? handleSelectFullDay : undefined,
 				}),
-			dateCellWrapper: weekFullDayShortcut ? AgendaFullDayShortcutCellWrapper : undefined,
+			dateCellWrapper: fullDayCreateEnabled ? AgendaFullDayShortcutCellWrapper : undefined,
 			event: (props: EventProps<CalendarEvent>) =>
 				createElement(AgendaCalendarEvent, { ...props, activeEntry: stableActiveEntry, overlappingEventIds }),
 		}),
-		[stableActiveEntry, handleSelectFullDay, overlappingEventIds, weekFullDayShortcut],
+		[stableActiveEntry, handleSelectFullDay, overlappingEventIds, fullDayCreateEnabled],
 	);
 
 	const views: View[] = view === 'work_week' ? ['work_week'] : ['day'];
@@ -103,6 +100,7 @@ export function useAgendaCalendar(
 		handleSelectEvent,
 		handleSelecting,
 		handleSelectSlot,
+		createMode,
 		slotSelectionEnabled: onSelectSlot !== undefined,
 		dayPropGetter: calendarDayPropGetter,
 		slotPropGetter,

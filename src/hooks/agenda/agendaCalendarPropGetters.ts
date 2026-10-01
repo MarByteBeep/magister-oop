@@ -2,7 +2,7 @@ import type { CalendarEvent } from '@/lib/agenda/calendarUtils';
 import { isSameCalendarDay } from '@/lib/agenda/calendarUtils';
 import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agenda/entryUtils';
 import { isFullDayReturnMeasureEntry, isFullDayScheduleSelection } from '@/lib/agenda/fullDayScheduleUtils';
-import { findLessonIndexForDateTime } from '@/lib/agenda/lessonHours';
+import { findAppointmentSlotForDateTime, type HoveredAgendaSlot } from '@/lib/agenda/lessonHours';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import { getDateKey } from '@/lib/shared/dateUtils';
 import { cn } from '@/lib/utils';
@@ -49,32 +49,30 @@ export function calendarEventPropGetter(event: CalendarEvent) {
 }
 
 export function createCalendarSlotPropGetter(
-	occupiedLessonHours: Set<string>,
 	activePreview: AgendaSlotSelection | null,
+	createMode: boolean,
 	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
-	setHoveredLessonSlot: (slot: { dateKey: string; lessonIndex: number } | null) => void,
+	setHoveredSlot: (slot: HoveredAgendaSlot | null) => void,
 	clearHoverTimeoutRef: { current: number | undefined },
 ) {
 	return (slotDate: Date) => {
-		if (!onSelectSlot || activePreview) return {};
+		if (!createMode || !onSelectSlot || activePreview) return {};
 
-		const lessonIndex = findLessonIndexForDateTime(slotDate);
-		if (lessonIndex < 0) return {};
+		const appointmentSlot = findAppointmentSlotForDateTime(slotDate);
+		if (!appointmentSlot) return {};
 
 		const dateKey = getDateKey(slotDate);
-		const slotKey = `${dateKey}:${lessonIndex}`;
-		if (occupiedLessonHours.has(slotKey)) return {};
 
 		return {
 			className: 'agenda-creatable-slot',
 			onMouseEnter: () => {
 				window.clearTimeout(clearHoverTimeoutRef.current);
-				setHoveredLessonSlot({ dateKey, lessonIndex });
+				setHoveredSlot({ dateKey, startTime: appointmentSlot.start, endTime: appointmentSlot.end });
 			},
 			onMouseLeave: () => {
 				window.clearTimeout(clearHoverTimeoutRef.current);
 				clearHoverTimeoutRef.current = window.setTimeout(() => {
-					setHoveredLessonSlot(null);
+					setHoveredSlot(null);
 				}, 40);
 			},
 		};

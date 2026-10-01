@@ -1,6 +1,7 @@
 'use client';
 
 import { LuChevronLeft, LuChevronRight } from 'react-icons/lu';
+import AgendaCreateHint from '@/components/student/agenda/AgendaCreateHint';
 import AgendaSyncButton from '@/components/student/agenda/AgendaSyncButton';
 import { Button } from '@/components/ui/button';
 
@@ -31,8 +32,9 @@ export default function WeeklyAgendaNavigation({
 				<LuChevronLeft className="h-5 w-5" />
 			</Button>
 
-			<div className="flex items-center gap-2">
+			<div className="flex items-center gap-1.5">
 				<span className="text-sm font-medium">{weekRangeText}</span>
+				<AgendaCreateHint />
 				{!isCurrentWeek && (
 					<Button variant="outline" size="sm" onClick={onCurrentWeek} className="text-xs h-7">
 						Vandaag

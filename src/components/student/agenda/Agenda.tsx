@@ -42,6 +42,7 @@ function Agenda({ entries, date, view, activeEntry, onSelectEntry, onSelectSlot,
 		handleSelectEvent,
 		handleSelecting,
 		handleSelectSlot,
+		createMode,
 		slotSelectionEnabled,
 		dayPropGetter,
 		slotPropGetter,
@@ -58,12 +59,14 @@ function Agenda({ entries, date, view, activeEntry, onSelectEntry, onSelectSlot,
 	}, [min, max]);
 
 	const weekFullDayShortcut = view === 'work_week' && slotSelectionEnabled;
+	const slotCreateEnabled = slotSelectionEnabled && createMode;
 
 	return (
 		<div
 			className={cn(
 				'agenda-lesson-grid h-full overflow-hidden',
 				weekFullDayShortcut && 'agenda-week-full-day-shortcut',
+				createMode && 'agenda-create-mode',
 			)}
 			style={lessonGridStyle}
 		>
@@ -76,7 +79,7 @@ function Agenda({ entries, date, view, activeEntry, onSelectEntry, onSelectSlot,
 				view={view}
 				views={views}
 				toolbar={false}
-				selectable={slotSelectionEnabled ? 'ignoreEvents' : false}
+				selectable={slotCreateEnabled ? 'ignoreEvents' : false}
 				popup={false}
 				dayLayoutAlgorithm={dayLayoutAlgorithm}
 				step={15}

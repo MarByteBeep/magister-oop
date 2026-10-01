@@ -78,6 +78,32 @@ describe('snapSelectionToLessonHours', () => {
 		expect(getOverlappingLessonHoursForSelection(snapped)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 	});
 
+	test('snaps a click inside a break to that break', () => {
+		const snapped = requireSnap({
+			start: at('2026-09-16', '10:35'),
+			end: at('2026-09-16', '10:40'),
+		});
+
+		expect(snapped).toEqual({
+			start: at('2026-09-16', '10:30'),
+			end: at('2026-09-16', '10:50'),
+		});
+		expect(getOverlappingLessonHoursForSelection(snapped)).toEqual([]);
+	});
+
+	test('snaps a drag from a lesson into the following break', () => {
+		const snapped = requireSnap({
+			start: at('2026-09-16', '10:20'),
+			end: at('2026-09-16', '10:40'),
+		});
+
+		expect(snapped).toEqual({
+			start: at('2026-09-16', '09:50'),
+			end: at('2026-09-16', '10:50'),
+		});
+		expect(getOverlappingLessonHoursForSelection(snapped)).toEqual([3]);
+	});
+
 	test('snaps a drag across two lesson hours', () => {
 		const snapped = requireSnap({
 			start: at('2026-09-16', '08:35'),

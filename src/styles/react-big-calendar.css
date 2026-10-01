@@ -180,6 +180,28 @@
 	z-index: 2;
 }
 
+.rbc-day-slot .rbc-event.agenda-lesson-event,
+.rbc-day-slot .rbc-event.agenda-return-measure-event,
+.rbc-day-slot .rbc-event.agenda-return-measure-gutter-event,
+.rbc-day-slot .rbc-event.agenda-absence-notice-event {
+	transition: opacity 120ms ease;
+}
+
+/* Ctrl create mode: existing lessons and appointments step back so slots can be chosen through them. */
+.agenda-create-mode .rbc-day-slot {
+	cursor: pointer;
+}
+
+.agenda-create-mode .rbc-day-slot .rbc-time-slot,
+.agenda-create-mode .rbc-day-slot .rbc-timeslot-group {
+	background-color: color-mix(in oklch, var(--rbc-surface) 88%, var(--primary) 12%);
+}
+
+.agenda-create-mode .rbc-day-slot .rbc-event:not(.agenda-break-band):not(.agenda-hover-slot):not(.agenda-draft-event) {
+	opacity: 0.32;
+	pointer-events: none;
+}
+
 .rbc-day-slot .rbc-event-label {
 	display: none;
 }
@@ -239,10 +261,13 @@
 
 .agenda-week-full-day-shortcut .rbc-allday-cell .rbc-row-bg {
 	min-height: 2rem;
+}
+
+.agenda-create-mode.agenda-week-full-day-shortcut .rbc-allday-cell .rbc-row-bg {
 	cursor: pointer;
 }
 
-.agenda-week-full-day-shortcut .rbc-allday-cell .rbc-day-bg:hover {
+.agenda-create-mode.agenda-week-full-day-shortcut .rbc-allday-cell .rbc-day-bg:hover {
 	background: color-mix(in oklch, var(--primary) 8%, transparent);
 }
 
