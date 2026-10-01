@@ -1,4 +1,4 @@
-import { LuClock, LuMapPin } from 'react-icons/lu';
+import { LuClock, LuGraduationCap, LuMapPin } from 'react-icons/lu';
 import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
 import type { RegistrationModalDisplay } from '@/lib/registrations/registrationModalDisplay';
 
@@ -15,7 +15,12 @@ export default function RegistrationModalDetails({ display }: { display: Registr
 				</span>
 			</div>
 			{subjectName ? <div className="font-medium text-foreground">{subjectName}</div> : null}
-			{teachers ? <div className="text-foreground">{teachers}</div> : null}
+			{teachers ? (
+				<div className="flex items-center gap-1.5 text-muted-foreground">
+					<LuGraduationCap className="h-4 w-4 shrink-0" />
+					<span className="text-foreground">{teachers}</span>
+				</div>
+			) : null}
 			{locations ? (
 				<div className="flex items-center gap-1.5 text-muted-foreground">
 					<LuMapPin className="h-4 w-4 shrink-0" />

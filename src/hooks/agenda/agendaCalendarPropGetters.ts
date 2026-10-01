@@ -48,6 +48,32 @@ export function calendarEventPropGetter(event: CalendarEvent) {
 	return { className: 'agenda-lesson-event', style: { zIndex: 2 } };
 }
 
+const agendaSlotDateKeyAttr = 'data-agenda-date-key';
+const agendaSlotStartTimeAttr = 'data-agenda-start-time';
+const agendaSlotEndTimeAttr = 'data-agenda-end-time';
+
+function agendaSlotDataAttrs(slot: HoveredAgendaSlot) {
+	return {
+		[agendaSlotDateKeyAttr]: slot.dateKey,
+		[agendaSlotStartTimeAttr]: slot.startTime,
+		[agendaSlotEndTimeAttr]: slot.endTime,
+	};
+}
+
+/** Resolve the appointment slot under the pointer (works through lesson events). */
+export function findHoveredAgendaSlotAtPoint(clientX: number, clientY: number): HoveredAgendaSlot | null {
+	for (const element of document.elementsFromPoint(clientX, clientY)) {
+		if (!(element instanceof HTMLElement)) continue;
+		const dateKey = element.getAttribute(agendaSlotDateKeyAttr);
+		const startTime = element.getAttribute(agendaSlotStartTimeAttr);
+		const endTime = element.getAttribute(agendaSlotEndTimeAttr);
+		if (dateKey && startTime && endTime) {
+			return { dateKey, startTime, endTime };
+		}
+	}
+	return null;
+}
+
 export function createCalendarSlotPropGetter(
 	activePreview: AgendaSlotSelection | null,
 	createMode: boolean,
@@ -56,18 +82,26 @@ export function createCalendarSlotPropGetter(
 	clearHoverTimeoutRef: { current: number | undefined },
 ) {
 	return (slotDate: Date) => {
-		if (!createMode || !onSelectSlot || activePreview) return {};
+		if (!onSelectSlot || activePreview) return {};
 
 		const appointmentSlot = findAppointmentSlotForDateTime(slotDate);
 		if (!appointmentSlot) return {};
 
-		const dateKey = getDateKey(slotDate);
+		const slot: HoveredAgendaSlot = {
+			dateKey: getDateKey(slotDate),
+			startTime: appointmentSlot.start,
+			endTime: appointmentSlot.end,
+		};
+		const slotMeta = agendaSlotDataAttrs(slot);
+
+		if (!createMode) return slotMeta;
 
 		return {
+			...slotMeta,
 			className: 'agenda-creatable-slot',
 			onMouseEnter: () => {
 				window.clearTimeout(clearHoverTimeoutRef.current);
-				setHoveredSlot({ dateKey, startTime: appointmentSlot.start, endTime: appointmentSlot.end });
+				setHoveredSlot(slot);
 			},
 			onMouseLeave: () => {
 				window.clearTimeout(clearHoverTimeoutRef.current);

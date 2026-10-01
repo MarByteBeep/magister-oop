@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SlotInfo } from 'react-big-calendar';
+import { findHoveredAgendaSlotAtPoint } from '@/hooks/agenda/agendaCalendarPropGetters';
 import { getFullDayScheduleSelection } from '@/lib/agenda/fullDayScheduleUtils';
 import { type HoveredAgendaSlot, snapSelectionToLessonHours } from '@/lib/agenda/lessonHours';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
@@ -14,6 +15,7 @@ export function useAgendaCalendarSelection(
 	const isSelectingRef = useRef(false);
 	const selectionCompletedRef = useRef(false);
 	const clearHoverTimeoutRef = useRef<number | undefined>(undefined);
+	const pointerRef = useRef<{ x: number; y: number } | null>(null);
 	const createModeRef = useRef(createMode);
 	createModeRef.current = createMode;
 
@@ -54,10 +56,28 @@ export function useAgendaCalendarSelection(
 	);
 
 	useEffect(() => {
-		if (createMode) return;
-		window.clearTimeout(clearHoverTimeoutRef.current);
-		setSelectingPreview(null);
-		setHoveredSlot(null);
+		if (!onSelectSlot) return;
+
+		const trackPointer = (event: PointerEvent) => {
+			pointerRef.current = { x: event.clientX, y: event.clientY };
+		};
+
+		window.addEventListener('pointermove', trackPointer, { passive: true });
+		return () => window.removeEventListener('pointermove', trackPointer);
+	}, [onSelectSlot]);
+
+	useEffect(() => {
+		if (!createMode) {
+			window.clearTimeout(clearHoverTimeoutRef.current);
+			setSelectingPreview(null);
+			setHoveredSlot(null);
+			return;
+		}
+
+		const point = pointerRef.current;
+		if (!point) return;
+		const slot = findHoveredAgendaSlotAtPoint(point.x, point.y);
+		if (slot) setHoveredSlot(slot);
 	}, [createMode]);
 
 	useEffect(() => {
