@@ -1,0 +1,17 @@
+---
+description: Agents must never start, restart, or stop the dev server
+alwaysApply: true
+---
+
+# No agent dev server
+
+An agent MUST NEVER start, restart, or stop the dev server.
+
+Forbidden unless the user explicitly asks for that exact action in the current message:
+
+- `bun dev`, `bun run dev`, `vite`, or any other command whose purpose is to start the app
+- Killing or restarting an already running Vite/dev process, including to reload the test server
+
+Do **not** infer permission from browser verification, a stale API module, a port already in use, or a previous turn where a server was started.
+
+The user runs the dev server. Leave it alone.

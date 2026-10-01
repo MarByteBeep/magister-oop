@@ -117,7 +117,7 @@ function timedStyleFromEvent(
 
 /**
  * Pack lessons with no-overlap. Full-day return measures ("vierkant rooster") stay full-width behind.
- * Absences and partial return measures use the left gutter beside overlapping lessons,
+ * Absences and partial return measures use the left gutter beside overlapping lessons.
  * or full row width when no lesson overlaps that time slot.
  */
 export const agendaDayLayoutAlgorithm: DayLayoutFunction<CalendarEvent> = ({

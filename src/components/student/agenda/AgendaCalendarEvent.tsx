@@ -6,14 +6,20 @@ import AgendaSlotGhost from '@/components/student/agenda/AgendaSlotGhost';
 import DraftAgendaEvent from '@/components/student/agenda/DraftAgendaEvent';
 import { type CalendarEvent, isBreakCalendarEvent, isDraftCalendarEvent } from '@/lib/agenda/calendarUtils';
 import { isSameAgendaEntryOccurrence } from '@/lib/agenda/entryUtils';
-import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
+import type { AgendaEntry, RegistrationAgendaEntry } from '@/magister/response/agendaEntry.types';
 
 export interface AgendaCalendarEventProps extends EventProps<CalendarEvent> {
 	activeEntry?: AgendaEntry | null;
 	overlappingEventIds: Set<string>;
+	onSelectRegistration?: (entry: RegistrationAgendaEntry) => void;
 }
 
-function AgendaCalendarEvent({ event, activeEntry, overlappingEventIds }: AgendaCalendarEventProps) {
+function AgendaCalendarEvent({
+	event,
+	activeEntry,
+	overlappingEventIds,
+	onSelectRegistration,
+}: AgendaCalendarEventProps) {
 	if (isBreakCalendarEvent(event)) {
 		return <AgendaBreakBand start={event.start} end={event.end} />;
 	}
@@ -31,6 +37,8 @@ function AgendaCalendarEvent({ event, activeEntry, overlappingEventIds }: Agenda
 	return (
 		<AgendaEvent
 			entry={event.resource}
+			registrations={event.registrations}
+			onSelectRegistration={onSelectRegistration}
 			isActive={isSameAgendaEntryOccurrence(event.resource, activeEntry)}
 			isCompact={overlappingEventIds.has(event.id)}
 		/>
@@ -42,5 +50,6 @@ export default memo(
 	(prev, next) =>
 		prev.event === next.event &&
 		prev.activeEntry === next.activeEntry &&
+		prev.onSelectRegistration === next.onSelectRegistration &&
 		prev.overlappingEventIds === next.overlappingEventIds,
 );

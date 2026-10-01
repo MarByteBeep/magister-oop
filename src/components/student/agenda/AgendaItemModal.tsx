@@ -6,6 +6,7 @@ import AbsenceNoticeDeleteConfirmModal from '@/components/student/agenda/Absence
 import AgendaItemModalMetadata from '@/components/student/agenda/AgendaItemModalMetadata';
 import AgendaItemStudentsList from '@/components/student/agenda/AgendaItemStudentsList';
 import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
+import RegistrationModal from '@/components/student/agenda/RegistrationModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,7 +14,12 @@ import { useStudentsContext } from '@/context/StudentsContext';
 import { useAgendaItemStudents } from '@/hooks/agenda/useAgendaItemStudents';
 import { deleteAbsenceNotice } from '@/lib/absence-notice/delete';
 import { absenceNoticeRangeEndMs } from '@/lib/absence-notice/utils';
-import { isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agenda/entryUtils';
+import {
+	isAbsenceNoticeEntry,
+	isLessonEntry,
+	isRegistrationEntry,
+	isReturnMeasureEntry,
+} from '@/lib/agenda/entryUtils';
 import { getAgendaItemInfo } from '@/lib/agenda/utils';
 import { eachDateKey, getDateKey } from '@/lib/shared/dateUtils';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
@@ -21,6 +27,7 @@ import type { Student } from '@/types/student.types';
 
 interface AgendaItemModalProps {
 	entry: AgendaEntry;
+	studentId?: number;
 	isOpen: boolean;
 	onClose: () => void;
 	onOpenStudent?: (student: Student) => void;
@@ -35,11 +42,23 @@ function resolveStandardModalTitle(entry: AgendaEntry): string {
 	return 'Agenda item';
 }
 
-export default function AgendaItemModal({ entry, isOpen, onClose, onOpenStudent }: AgendaItemModalProps) {
+export default function AgendaItemModal({ entry, studentId, isOpen, onClose, onOpenStudent }: AgendaItemModalProps) {
 	if (isReturnMeasureEntry(entry)) {
 		return (
 			<ReturnMeasureModal
 				measure={entry.measure}
+				isOpen={isOpen}
+				onClose={onClose}
+				onOpenStudent={onOpenStudent}
+			/>
+		);
+	}
+
+	if (isRegistrationEntry(entry)) {
+		return (
+			<RegistrationModal
+				entry={entry}
+				studentId={studentId}
 				isOpen={isOpen}
 				onClose={onClose}
 				onOpenStudent={onOpenStudent}

@@ -23,8 +23,11 @@ export function getAllLockers(): Locker[] {
 	return lockers.lockersDetails;
 }
 
-export function getAllAgendaItems(): Record<number, AgendaItem<Participant>[]> {
-	return agendaData as Record<number, AgendaItem<Participant>[]>;
+/** Monday-first lesson templates; index 0 is Monday through index 4 Friday. */
+export type WeeklyAgendaTemplates = AgendaItem<Participant>[][];
+
+export function getAllAgendaItems(): Record<number, WeeklyAgendaTemplates> {
+	return agendaData as Record<number, WeeklyAgendaTemplates>;
 }
 
 const RETURN_MEASURES_FILE_PATH = join(import.meta.dirname, '../../../data/return-measures.json');

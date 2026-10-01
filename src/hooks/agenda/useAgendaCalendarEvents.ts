@@ -19,6 +19,10 @@ import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import { getWeekDays, parseDateKey } from '@/lib/shared/dateUtils';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 
+function registrationKey(event: CalendarEvent): string {
+	return (event.registrations ?? []).map((entry) => `${entry.registration.id}:${entry.start}`).join(',');
+}
+
 function calendarEventsEqual(a: CalendarEvent[], b: CalendarEvent[]): boolean {
 	if (a.length !== b.length) return false;
 	return a.every((event, index) => {
@@ -31,7 +35,8 @@ function calendarEventsEqual(a: CalendarEvent[], b: CalendarEvent[]): boolean {
 			event.isDraft === other.isDraft &&
 			event.isHoverSlot === other.isHoverSlot &&
 			event.isBreak === other.isBreak &&
-			event.resource === other.resource
+			event.resource === other.resource &&
+			registrationKey(event) === registrationKey(other)
 		);
 	});
 }

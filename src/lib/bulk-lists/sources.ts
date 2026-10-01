@@ -1,6 +1,7 @@
 import { applyAbsenceNoticesToStudents } from '@/lib/absence-notice/apply';
 import { refreshAbsenceNoticesForDate } from '@/lib/absence-notice/fetch';
 import { type BulkListSource, createBulkListRegistry, defineBulkList } from '@/lib/bulk-lists/registry';
+import { applyRegistrationsToStudents } from '@/lib/registrations/apply';
 import { refreshRegistrations } from '@/lib/registrations/fetch';
 import { applyReturnMeasuresToStudents } from '@/lib/return-measure/apply';
 import { refreshReturnMeasuresForDate } from '@/lib/return-measure/fetch';
@@ -15,6 +16,7 @@ export const absenceNoticeBulkList = defineBulkList({
 export const registrationsBulkList = defineBulkList({
 	id: 'registrations',
 	fetch: refreshRegistrations,
+	applyToStudents: applyRegistrationsToStudents,
 });
 
 /** One call per month covers every student, so the agenda overlays and the tab share this list. */

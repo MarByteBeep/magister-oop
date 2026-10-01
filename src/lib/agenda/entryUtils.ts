@@ -1,12 +1,13 @@
 import { absenceNoticeRangeEndMs } from '@/lib/absence-notice/utils';
 import { isFullDayReturnMeasureEntry } from '@/lib/agenda/fullDayScheduleUtils';
-import { eachDateKey, getNow, parseDateKey, toISOFromDateKeyAndTime } from '@/lib/shared/dateUtils';
+import { eachDateKey, getDateKey, getNow, parseDateKey, toISOFromDateKeyAndTime } from '@/lib/shared/dateUtils';
 import type { AbsenceNotice } from '@/magister/response/absenceNotice.types';
 import type { AgendaItem, Participant } from '@/magister/response/agenda.types';
 import type {
 	AbsenceNoticeAgendaEntry,
 	AgendaEntry,
 	LessonAgendaEntry,
+	RegistrationAgendaEntry,
 	ReturnMeasureAgendaEntry,
 } from '@/magister/response/agendaEntry.types';
 import type { ScheduledReturnMeasure } from '@/magister/response/returnMeasure.types';
@@ -21,6 +22,10 @@ export function isReturnMeasureEntry(entry: AgendaEntry): entry is ReturnMeasure
 
 export function isAbsenceNoticeEntry(entry: AgendaEntry): entry is AbsenceNoticeAgendaEntry {
 	return entry.kind === 'absence-notice';
+}
+
+export function isRegistrationEntry(entry: AgendaEntry): entry is RegistrationAgendaEntry {
+	return entry.kind === 'registration';
 }
 
 export function lessonEntry(item: AgendaItem<Participant> | AgendaItem): LessonAgendaEntry {
@@ -39,6 +44,8 @@ function entrySourceId(entry: AgendaEntry): string | number {
 			return entry.measure.id;
 		case 'absence-notice':
 			return entry.notice.absenceNoticeId;
+		case 'registration':
+			return entry.registration.id;
 	}
 }
 
@@ -99,10 +106,16 @@ function sortAgendaEntries(entries: AgendaEntry[]): AgendaEntry[] {
 	return entries.sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
 }
 
+function isOnDateRange(iso: string, rangeStart: Date, rangeEnd: Date): boolean {
+	const key = getDateKey(new Date(iso));
+	return key >= getDateKey(rangeStart) && key <= getDateKey(rangeEnd);
+}
+
 export function buildAgendaEntries(
 	agendaItems: Array<AgendaItem<Participant> | AgendaItem>,
 	returnMeasures: ScheduledReturnMeasure[],
 	absenceNotices: AbsenceNotice[],
+	registrations: RegistrationAgendaEntry[],
 	rangeStart: Date,
 	rangeEnd: Date,
 ): AgendaEntry[] {
@@ -110,6 +123,7 @@ export function buildAgendaEntries(
 		...agendaItems.map(lessonEntry),
 		...returnMeasures.map(returnMeasureEntry),
 		...absenceNotices.flatMap((notice) => absenceNoticeEntries(notice, rangeStart, rangeEnd)),
+		...registrations.filter((entry) => isOnDateRange(entry.start, rangeStart, rangeEnd)),
 	]);
 }
 
@@ -124,6 +138,14 @@ export function replaceAbsenceNoticeEntries(
 		...dayEntries.filter((entry) => !isAbsenceNoticeEntry(entry)),
 		...notices.flatMap((notice) => absenceNoticeEntries(notice, day, day)),
 	]);
+}
+
+/** Swap one day's registration overlays, keeping lessons, absences, and return measures. */
+export function replaceRegistrationEntries(
+	dayEntries: AgendaEntry[],
+	registrations: RegistrationAgendaEntry[],
+): AgendaEntry[] {
+	return sortAgendaEntries([...dayEntries.filter((entry) => !isRegistrationEntry(entry)), ...registrations]);
 }
 
 /** Swap one day's return measure overlays for freshly fetched ones, keeping lessons and absences. */

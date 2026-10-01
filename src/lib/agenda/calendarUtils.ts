@@ -1,10 +1,17 @@
 import { hhmmToDate } from '@/lib/agenda/bigCalendarUtils';
-import { getAgendaEntryKey, isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agenda/entryUtils';
+import {
+	getAgendaEntryKey,
+	isAbsenceNoticeEntry,
+	isLessonEntry,
+	isRegistrationEntry,
+	isReturnMeasureEntry,
+} from '@/lib/agenda/entryUtils';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import { getAgendaItemInfo, getBreakPeriods } from '@/lib/agenda/utils';
+import { registrationMatchesLesson } from '@/lib/registrations/entries';
 import { getReturnMeasureDisplay } from '@/lib/return-measure/utils';
 import { getDateKey, parseDateKey } from '@/lib/shared/dateUtils';
-import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
+import type { AgendaEntry, RegistrationAgendaEntry } from '@/magister/response/agendaEntry.types';
 
 export type CalendarEvent = {
 	id: string;
@@ -12,6 +19,8 @@ export type CalendarEvent = {
 	start: Date;
 	end: Date;
 	resource?: AgendaEntry;
+	/** Registrations drawn inside this lesson, next to the subject and teacher. */
+	registrations?: RegistrationAgendaEntry[];
 	isDraft?: boolean;
 	isHoverSlot?: boolean;
 	isBreak?: boolean;
@@ -80,6 +89,7 @@ export function agendaEntryToCalendarEvent(entry: AgendaEntry): CalendarEvent {
 	const title = (() => {
 		if (isReturnMeasureEntry(entry)) return getReturnMeasureDisplay(entry.measure).primaryLabel;
 		if (isAbsenceNoticeEntry(entry)) return entry.notice.attendanceTypeDescription;
+		if (!isLessonEntry(entry)) return '';
 		const { courseDescriptions, subject } = getAgendaItemInfo(entry.item);
 		return courseDescriptions ?? subject ?? 'Les';
 	})();
@@ -94,7 +104,18 @@ export function agendaEntryToCalendarEvent(entry: AgendaEntry): CalendarEvent {
 }
 
 export function agendaEntriesToCalendarEvents(entries: AgendaEntry[]): CalendarEvent[] {
-	return entries.map(agendaEntryToCalendarEvent);
+	const registrations = entries.filter(isRegistrationEntry);
+
+	return entries.flatMap((entry) => {
+		if (isRegistrationEntry(entry)) return [];
+
+		const event = agendaEntryToCalendarEvent(entry);
+		if (!isLessonEntry(entry)) return [event];
+
+		const matched = registrations.filter((registration) => registrationMatchesLesson(registration, entry));
+		if (matched.length > 0) event.registrations = matched;
+		return [event];
+	});
 }
 
 /** Overlap packing for compact lesson UI; overlay entries are ignored. */

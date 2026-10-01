@@ -8,7 +8,10 @@ import { POST as createReturnMeasure } from './api/leerlingen/verantwoordingen/t
 import { GET as getSearchStudents } from './api/leerlingen/zoeken';
 import { GET as getReturnMeasures } from './api/m6/leerlingen/terugkomers';
 import { GET as getRegistrations } from './api/m6/verantwoordingen/ongeoorloofderegistraties';
-import { POST as createAccountability } from './api/medewerkers/afspraken/verantwoordingen';
+import {
+	POST as createAccountability,
+	DELETE as deleteRegistration,
+} from './api/medewerkers/afspraken/verantwoordingen';
 import { GET as getSearchStaff } from './api/medewerkers/zoeken';
 import { GET as getParentAddress } from './api/ouders/adresgegevens';
 import { GET as getParentContactDetails } from './api/ouders/contactgegevens';
@@ -93,6 +96,10 @@ api.get('/medewerkers/:id/foto', (c) => {
 api.post('/medewerkers/afspraken/:id/verantwoordingen', (c) => {
 	const id = Number.parseInt(c.req.param('id'), 10);
 	return createAccountability(c.req.raw, id);
+});
+api.delete('/medewerkers/afspraken/verantwoordingen/:id', (c) => {
+	const id = Number.parseInt(c.req.param('id'), 10);
+	return deleteRegistration(c.req.raw, id);
 });
 
 // Nested: terugkommaatregelen/:id/melding

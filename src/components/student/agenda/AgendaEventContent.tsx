@@ -1,14 +1,18 @@
 'use client';
 
-import type { CSSProperties, RefObject } from 'react';
+import type { CSSProperties, ReactNode, RefObject } from 'react';
 import { LuClock3, LuMapPin } from 'react-icons/lu';
+import RegistrationIcon from '@/components/registrations/RegistrationIcon';
+import AgendaTooltipContent from '@/components/student/agenda/AgendaTooltipContent';
 import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
 import { ReturnMeasureAlertBadge } from '@/components/student/agenda/ReturnMeasureAgendaLabels';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useFittingLineCount } from '@/hooks/shared/useFittingLineCount';
 import type { AgendaEventDisplay } from '@/lib/agenda/eventDisplay';
 import { getFullDayScheduleLabel } from '@/lib/agenda/fullDayScheduleUtils';
 import { formatTime } from '@/lib/shared/dateUtils';
 import { cn } from '@/lib/utils';
+import type { AgendaEntry, RegistrationAgendaEntry } from '@/magister/response/agendaEntry.types';
 
 const metaInfoClasses = 'absolute right-1.5 flex items-center gap-1 text-[9px] text-muted-foreground';
 const topMetaInfoClasses = `${metaInfoClasses} top-0.5`;
@@ -43,21 +47,11 @@ function gutterTitleClasses() {
 }
 
 function LessonHourBadgeSmall({ lessonBegin }: { lessonBegin: number }) {
-	return (
-		<LessonHourBadge
-			lessonInfo={{ status: 'lesson', lesson: lessonBegin }}
-			className="h-3.5 w-3.5 shrink-0 text-[0.55rem]"
-		/>
-	);
+	return <LessonHourBadge hour={lessonBegin} size="sm" />;
 }
 
 function LessonHourBadgeDefault({ lessonBegin }: { lessonBegin: number }) {
-	return (
-		<LessonHourBadge
-			lessonInfo={{ status: 'lesson', lesson: lessonBegin }}
-			className="h-4 w-4 text-[0.65rem] shrink-0"
-		/>
-	);
+	return <LessonHourBadge hour={lessonBegin} size="md" />;
 }
 
 export function FullDayReturnMeasureContent({ display }: { display: AgendaEventDisplay }) {
@@ -87,21 +81,88 @@ function GutterTitle({
 	);
 }
 
-function CompactLessonTitle({ display }: { display: AgendaEventDisplay }) {
+function LessonTextTooltip({
+	entry,
+	className,
+	children,
+}: {
+	entry: AgendaEntry;
+	className: string;
+	children: ReactNode;
+}) {
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<div className={className}>{children}</div>
+			</TooltipTrigger>
+			<TooltipContent>
+				<AgendaTooltipContent entry={entry} />
+			</TooltipContent>
+		</Tooltip>
+	);
+}
+
+function LessonRegistrationIcons({
+	registrations,
+	onSelectRegistration,
+}: {
+	registrations?: RegistrationAgendaEntry[];
+	onSelectRegistration?: (entry: RegistrationAgendaEntry) => void;
+}) {
+	if (!registrations?.length) return null;
+
+	return (
+		<span className="flex shrink-0 items-center gap-0.5">
+			{registrations.map((entry) => (
+				<RegistrationIcon
+					key={entry.registration.id}
+					registration={entry.registration}
+					start={entry.start}
+					end={entry.end}
+					onSelect={onSelectRegistration ? () => onSelectRegistration(entry) : undefined}
+				/>
+			))}
+		</span>
+	);
+}
+
+function CompactLessonTitle({
+	entry,
+	display,
+	registrations,
+	onSelectRegistration,
+}: {
+	entry: AgendaEntry;
+	display: AgendaEventDisplay;
+	registrations?: RegistrationAgendaEntry[];
+	onSelectRegistration?: (entry: RegistrationAgendaEntry) => void;
+}) {
 	return (
 		<>
-			<span className={titleClasses(display.canWrapTitle)}>{display.title}</span>
-			{display.teacherLabel && <span className="truncate text-muted-foreground">{display.teacherLabel}</span>}
+			<LessonTextTooltip entry={entry} className="flex min-w-0 items-center gap-1">
+				{display.lessonBegin && <LessonHourBadgeSmall lessonBegin={display.lessonBegin} />}
+				<span className={titleClasses(display.canWrapTitle)}>{display.title}</span>
+				{display.teacherLabel && (
+					<span className="min-w-0 truncate text-muted-foreground">{display.teacherLabel}</span>
+				)}
+			</LessonTextTooltip>
+			<LessonRegistrationIcons registrations={registrations} onSelectRegistration={onSelectRegistration} />
 		</>
 	);
 }
 
 export function CompactAgendaEventContent({
+	entry,
 	display,
 	gutterContentRef,
+	registrations,
+	onSelectRegistration,
 }: {
+	entry: AgendaEntry;
 	display: AgendaEventDisplay;
 	gutterContentRef: RefObject<HTMLDivElement | null>;
+	registrations?: RegistrationAgendaEntry[];
+	onSelectRegistration?: (entry: RegistrationAgendaEntry) => void;
 }) {
 	const showReturnMeasureBadge = display.returnMeasureDisplay?.hasBoth && display.isGutterOverlay;
 
@@ -119,18 +180,32 @@ export function CompactAgendaEventContent({
 					showReturnMeasureBadge && 'pl-3',
 				)}
 			>
-				{display.isLesson && display.lessonBegin && <LessonHourBadgeSmall lessonBegin={display.lessonBegin} />}
 				{display.isGutterOverlay ? (
 					<GutterTitle title={display.title} gutterContentRef={gutterContentRef} />
 				) : (
-					<CompactLessonTitle display={display} />
+					<CompactLessonTitle
+						entry={entry}
+						display={display}
+						registrations={registrations}
+						onSelectRegistration={onSelectRegistration}
+					/>
 				)}
 			</div>
 		</>
 	);
 }
 
-export function ExpandedAgendaEventContent({ display }: { display: AgendaEventDisplay }) {
+export function ExpandedAgendaEventContent({
+	entry,
+	display,
+	registrations,
+	onSelectRegistration,
+}: {
+	entry: AgendaEntry;
+	display: AgendaEventDisplay;
+	registrations?: RegistrationAgendaEntry[];
+	onSelectRegistration?: (entry: RegistrationAgendaEntry) => void;
+}) {
 	return (
 		<>
 			<div className={topMetaInfoClasses}>
@@ -148,11 +223,16 @@ export function ExpandedAgendaEventContent({ display }: { display: AgendaEventDi
 			)}
 
 			<div className={defaultContentClasses}>
-				{display.isLesson && display.lessonBegin && (
-					<LessonHourBadgeDefault lessonBegin={display.lessonBegin} />
-				)}
-				<span className={titleClasses(display.canWrapTitle)}>{display.title}</span>
-				{display.teacherLabel && <span className="truncate text-muted-foreground">{display.teacherLabel}</span>}
+				<LessonTextTooltip entry={entry} className="flex min-w-0 items-center gap-1">
+					{display.isLesson && display.lessonBegin && (
+						<LessonHourBadgeDefault lessonBegin={display.lessonBegin} />
+					)}
+					<span className={titleClasses(display.canWrapTitle)}>{display.title}</span>
+					{display.teacherLabel && (
+						<span className="min-w-0 truncate text-muted-foreground">{display.teacherLabel}</span>
+					)}
+				</LessonTextTooltip>
+				<LessonRegistrationIcons registrations={registrations} onSelectRegistration={onSelectRegistration} />
 			</div>
 		</>
 	);

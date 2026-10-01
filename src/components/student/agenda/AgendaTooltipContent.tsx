@@ -2,7 +2,7 @@
 
 import ReturnMeasureAgendaTooltip from '@/components/student/agenda/ReturnMeasureAgendaTooltip';
 import { expectedEndLabel } from '@/lib/absence-notice/utils';
-import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agenda/entryUtils';
+import { isAbsenceNoticeEntry, isLessonEntry, isReturnMeasureEntry } from '@/lib/agenda/entryUtils';
 import { getAgendaItemInfo } from '@/lib/agenda/utils';
 import { formatTime } from '@/lib/shared/dateUtils';
 import type { AbsenceNoticePerson } from '@/magister/response/absenceNotice.types';
@@ -67,6 +67,8 @@ function AgendaTooltipContent({ entry }: AgendaTooltipContentProps) {
 	if (isReturnMeasureEntry(entry)) {
 		return <ReturnMeasureAgendaTooltip measure={entry.measure} beginTime={beginTime} endTime={endTime} />;
 	}
+
+	if (!isLessonEntry(entry)) return null;
 
 	const { courseDescriptions, teachers, locations, subject } = getAgendaItemInfo(entry.item);
 

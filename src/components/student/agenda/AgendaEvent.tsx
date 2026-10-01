@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { resolveAgendaEventDisplay } from '@/lib/agenda/eventDisplay';
 import { absenceSurfaceClasses, returnMeasureSurfaceClasses } from '@/lib/agenda/kindStyles';
 import { cn, deepEqual } from '@/lib/utils';
-import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
+import type { AgendaEntry, RegistrationAgendaEntry } from '@/magister/response/agendaEntry.types';
 
 const agendaEventStyles = cva(
 	'relative h-full overflow-hidden cursor-pointer rounded-lg border text-[12px] text-foreground duration-150 focus-visible:outline-none',
@@ -58,35 +58,58 @@ const agendaEventStyles = cva(
 
 interface AgendaEventProps {
 	entry: AgendaEntry;
+	registrations?: RegistrationAgendaEntry[];
+	onSelectRegistration?: (entry: RegistrationAgendaEntry) => void;
 	isActive?: boolean;
 	isCompact?: boolean;
 }
 
-function AgendaEvent({ entry, isActive = false, isCompact = false }: AgendaEventProps) {
+function AgendaEvent({
+	entry,
+	registrations,
+	onSelectRegistration,
+	isActive = false,
+	isCompact = false,
+}: AgendaEventProps) {
 	const display = resolveAgendaEventDisplay(entry, isCompact, isActive);
 	const gutterContentRef = useRef<HTMLDivElement>(null);
 
+	const frame = (
+		<div
+			className={cn(
+				agendaEventStyles({
+					kind: display.kind,
+					active: display.isActiveStyle,
+					compact: display.isCompact,
+				}),
+			)}
+		>
+			{display.isFullDayReturnMeasure ? (
+				<FullDayReturnMeasureContent display={display} />
+			) : display.isCompact ? (
+				<CompactAgendaEventContent
+					entry={entry}
+					display={display}
+					gutterContentRef={gutterContentRef}
+					registrations={registrations}
+					onSelectRegistration={onSelectRegistration}
+				/>
+			) : (
+				<ExpandedAgendaEventContent
+					entry={entry}
+					display={display}
+					registrations={registrations}
+					onSelectRegistration={onSelectRegistration}
+				/>
+			)}
+		</div>
+	);
+
+	if (display.isLesson) return frame;
+
 	return (
 		<Tooltip>
-			<TooltipTrigger asChild>
-				<div
-					className={cn(
-						agendaEventStyles({
-							kind: display.kind,
-							active: display.isActiveStyle,
-							compact: display.isCompact,
-						}),
-					)}
-				>
-					{display.isFullDayReturnMeasure ? (
-						<FullDayReturnMeasureContent display={display} />
-					) : display.isCompact ? (
-						<CompactAgendaEventContent display={display} gutterContentRef={gutterContentRef} />
-					) : (
-						<ExpandedAgendaEventContent display={display} />
-					)}
-				</div>
-			</TooltipTrigger>
+			<TooltipTrigger asChild>{frame}</TooltipTrigger>
 			<TooltipContent>
 				<AgendaTooltipContent entry={entry} />
 			</TooltipContent>
@@ -97,5 +120,9 @@ function AgendaEvent({ entry, isActive = false, isCompact = false }: AgendaEvent
 export default memo(
 	AgendaEvent,
 	(prev, next) =>
-		prev.isCompact === next.isCompact && prev.isActive === next.isActive && deepEqual(prev.entry, next.entry),
+		prev.isCompact === next.isCompact &&
+		prev.isActive === next.isActive &&
+		prev.onSelectRegistration === next.onSelectRegistration &&
+		deepEqual(prev.registrations, next.registrations) &&
+		deepEqual(prev.entry, next.entry),
 );

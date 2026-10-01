@@ -44,6 +44,7 @@ export const endpoints = {
 	parentAddress: (id: number) => `/api/ouders/${id}/adresgegevens`,
 	unreadLog: (top: number, skip: number) => `/api/lvs/logboekformulieren/ongelezen?top=${top}&skip=${skip}`,
 	createAccountability: (appointmentId: number) => `/api/medewerkers/afspraken/${appointmentId}/verantwoordingen`,
+	deleteRegistration: (registrationId: number) => `/api/medewerkers/afspraken/verantwoordingen/${registrationId}`,
 	createReturnMeasure: (studentId: number) => `/api/leerlingen/${studentId}/verantwoordingen/terugkommaatregelen`,
 	returnMeasureReport: (measureId: number) => `/api/terugkommaatregelen/${measureId}/melding`,
 };

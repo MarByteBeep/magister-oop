@@ -8,15 +8,18 @@ import {
 	findStudentOverviewEntryOverlappingLessonRange,
 	isAbsenceNoticeEntry,
 	isLessonEntry,
+	isRegistrationEntry,
 	isReturnMeasureEntry,
 	lessonEntry,
 	replaceAbsenceNoticeEntries,
+	replaceRegistrationEntries,
 	returnMeasureEntry,
 } from '@/lib/agenda/entryUtils';
 import { scheduledReturnMeasure } from '@/lib/return-measure/fixtures';
 import { getDateKey, parseDateKey, toISOFromDateKeyAndTime } from '@/lib/shared/dateUtils';
 import type { AbsenceNotice } from '@/magister/response/absenceNotice.types';
 import type { AgendaItem } from '@/magister/response/agenda.types';
+import type { RegistrationAgendaEntry } from '@/magister/response/agendaEntry.types';
 
 const creator = {
 	accountId: '11111111-1111-4111-8111-111111111111',
@@ -277,6 +280,7 @@ test('buildAgendaEntries merges lessons, return measures, and notices', () => {
 		[lesson(lessonBegin, toISOFromDateKeyAndTime('2026-09-02', '11:30'))],
 		[returnMeasure(toISOFromDateKeyAndTime('2026-09-02', '08:00'), toISOFromDateKeyAndTime('2026-09-02', '16:00'))],
 		[notice({ startDateTime: mid, endDateTime: end })],
+		[],
 		parseDateKey('2026-09-02'),
 		parseDateKey('2026-09-02'),
 	);
@@ -298,6 +302,7 @@ test('replaceAbsenceNoticeEntries keeps lessons and swaps overlays', () => {
 				endDateTime: toISOFromDateKeyAndTime(day, '10:00'),
 			}),
 		],
+		[],
 		parseDateKey(day),
 		parseDateKey(day),
 	);
@@ -317,6 +322,50 @@ test('replaceAbsenceNoticeEntries keeps lessons and swaps overlays', () => {
 	expect(updated.filter(isLessonEntry)).toHaveLength(1);
 	expect(updated.filter(isAbsenceNoticeEntry)).toHaveLength(1);
 	expect(updated.find(isAbsenceNoticeEntry)?.notice.absenceNoticeId).toBe('new-notice');
+});
+
+function registration(id: number, start: string, end: string, code = 'U'): RegistrationAgendaEntry {
+	return {
+		kind: 'registration',
+		start,
+		end,
+		registration: {
+			id,
+			code,
+			description: 'Uitgestuurd',
+			tone: 'other',
+			isAuthorized: false,
+			comment: null,
+			appointmentDescription: 'Nederlands',
+			lessonHourStart: 3,
+			lessonHourEnd: 3,
+		},
+	};
+}
+
+test('buildAgendaEntries includes registrations that fall in the range', () => {
+	const start = toISOFromDateKeyAndTime('2026-09-02', '10:50');
+	const end = toISOFromDateKeyAndTime('2026-09-02', '11:30');
+	const outside = toISOFromDateKeyAndTime('2026-09-03', '10:50');
+	const merged = buildAgendaEntries(
+		[lesson(start, end)],
+		[],
+		[],
+		[registration(4, start, end), registration(5, outside, toISOFromDateKeyAndTime('2026-09-03', '11:30'))],
+		parseDateKey('2026-09-02'),
+		parseDateKey('2026-09-02'),
+	);
+	expect(merged.filter(isRegistrationEntry).map((entry) => entry.registration.id)).toEqual([4]);
+	expect(merged.filter(isLessonEntry)).toHaveLength(1);
+});
+
+test('replaceRegistrationEntries keeps lessons and swaps overlays', () => {
+	const start = toISOFromDateKeyAndTime('2026-09-02', '10:50');
+	const end = toISOFromDateKeyAndTime('2026-09-02', '11:30');
+	const existing = [lessonEntry(lesson(start, end)), registration(1, start, end)];
+	const updated = replaceRegistrationEntries(existing, [registration(9, start, end, 'A')]);
+	expect(updated.filter(isLessonEntry)).toHaveLength(1);
+	expect(updated.filter(isRegistrationEntry).map((entry) => entry.registration.code)).toEqual(['A']);
 });
 
 test('lessonEntry wraps agenda items without mutation', () => {

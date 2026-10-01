@@ -30,6 +30,7 @@ export default function AgendaViewDialogs({
 			{selectedEntry && (
 				<AgendaItemModal
 					entry={selectedEntry}
+					studentId={studentId}
 					isOpen={selectedEntry !== null}
 					onClose={onCloseEntry}
 					onOpenStudent={onOpenStudent}

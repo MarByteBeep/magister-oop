@@ -4,6 +4,7 @@ import { applyFetchResult, resetDays } from '@/lib/absence-notice/loadState';
 import { noticesForStudent, uniqueNotices } from '@/lib/absence-notice/utils';
 import { buildAgendaEntries } from '@/lib/agenda/entryUtils';
 import { mergeFetchedAgendaForRange } from '@/lib/agenda/loadUtils';
+import { loadRegistrationEntriesForStudent } from '@/lib/registrations/load';
 import { getReturnMeasuresForRange, invalidateReturnMeasureCache } from '@/lib/return-measure/fetch';
 import { scheduledReturnMeasuresForStudent } from '@/lib/return-measure/utils';
 import { eachDateKey, eachMonthKey, getDateKey } from '@/lib/shared/dateUtils';
@@ -76,7 +77,7 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<StudentWrit
 					const student = studentsRef.current.find((item) => item.id === studentId);
 					if (refresh) invalidateReturnMeasureCache(eachMonthKey(startDate, endDate));
 
-					const [data, allReturnMeasures, absenceNoticeResult] = await Promise.all([
+					const [data, allReturnMeasures, absenceNoticeResult, registrationEntries] = await Promise.all([
 						getJson<AgendaResponse>(
 							endpoints.agenda(studentId, startDateKey, endDateKey),
 							'include',
@@ -84,6 +85,7 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<StudentWrit
 						),
 						getReturnMeasuresForRange(startDate, endDate),
 						fetchAbsenceNoticesForStudent(student?.externeId, dateKeys, refresh),
+						loadRegistrationEntriesForStudent(studentId, dateKeys, student?.agenda, refresh),
 					]);
 					const returnMeasures = scheduledReturnMeasuresForStudent(
 						allReturnMeasures,
@@ -104,6 +106,7 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<StudentWrit
 						data.items,
 						returnMeasures,
 						absenceNoticeResult.notices,
+						registrationEntries,
 						startDate,
 						endDate,
 					);

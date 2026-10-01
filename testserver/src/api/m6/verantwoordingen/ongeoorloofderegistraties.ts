@@ -1,15 +1,33 @@
 import { timeTable } from '@/lib/agenda/utils';
+import { registrationDeleteId } from '@/lib/registrations/entries';
 import { getTodayKey } from '@/lib/shared/dateUtils';
 import type { RegistrationsResponse } from '@/magister/response/registrations.types';
 import { getAllStudents } from '../../utils/helpers';
 import { pickRandom } from '../../utils/random';
-import data from './ongeoorloofderegistraties.json' with { type: 'json' };
+import registrationsData from './ongeoorloofderegistraties.json' with { type: 'json' };
 
-// Convert CET time to UTC ISO string for a given date
-function cetToUtcISO(cetTime: string, date: string): string {
-	// CET is UTC+1 in winter
-	const cetDate = new Date(`${date}T${cetTime}:00+01:00`);
-	return cetDate.toISOString();
+const data = registrationsData as RegistrationsResponse;
+
+/** Local lesson-clock time on `date`, same conversion as generated agenda lessons. */
+function lessonTimeToIso(time: string, date: string): string {
+	const [hours, minutes] = time.split(':').map(Number);
+	const local = new Date(`${date}T00:00:00`);
+	local.setHours(hours, minutes, 0, 0);
+	return local.toISOString();
+}
+
+export function removeRegistration(registrationId: number): boolean {
+	let removed = false;
+	for (const item of data.items) {
+		for (const appointment of item.afspraken) {
+			const before = appointment.verantwoordingen.length;
+			appointment.verantwoordingen = appointment.verantwoordingen.filter(
+				(justification) => registrationDeleteId(justification) !== registrationId,
+			);
+			if (appointment.verantwoordingen.length !== before) removed = true;
+		}
+	}
+	return removed;
 }
 
 export async function GET(_req: Request): Promise<Response> {
@@ -38,8 +56,8 @@ export async function GET(_req: Request): Promise<Response> {
 				const startSlot = timeTable[lessonHourStart - 1];
 				const endSlot = timeTable[lessonHourEnd - 1];
 
-				appointment.begin = cetToUtcISO(startSlot.start, todayKey);
-				appointment.einde = cetToUtcISO(endSlot.end, todayKey);
+				appointment.begin = lessonTimeToIso(startSlot.start, todayKey);
+				appointment.einde = lessonTimeToIso(endSlot.end, todayKey);
 			}
 		}
 	}

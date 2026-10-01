@@ -2,10 +2,9 @@
 
 import AgendaTooltipContent from '@/components/student/agenda/AgendaTooltipContent';
 import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
-import { findLessonEntry, isLessonEntry } from '@/lib/agenda/entryUtils';
+import { resolveRegistrationLesson } from '@/lib/registrations/lessonMatch';
 import type { RegistrationRow } from '@/lib/registrations/utils';
-import { formatTime, getDateKey, parseOptionalDate } from '@/lib/shared/dateUtils';
-import type { LessonAgendaEntry } from '@/magister/response/agendaEntry.types';
+import { formatTime, parseOptionalDate } from '@/lib/shared/dateUtils';
 import type { Student } from '@/types/student.types';
 import LazyAvatar from '../LazyAvatar';
 import { Badge } from '../ui/badge';
@@ -19,34 +18,15 @@ function formatLessonRange(row: RegistrationRow) {
 	return '-';
 }
 
-function resolveAgendaEntry(student: Student, row: RegistrationRow): LessonAgendaEntry | null {
+function resolveAgendaEntry(student: Student, row: RegistrationRow) {
 	if (!row.start) return null;
 
-	const startDate = parseOptionalDate(row.start);
-	if (!startDate) return null;
-
-	const dateKey = getDateKey(startDate);
-	const agendaForDay = student.agenda?.[dateKey];
-	if (!agendaForDay?.length) return null;
-
-	const lessonEntries = agendaForDay.filter(isLessonEntry);
-
-	if (row.lessonHourStart) {
-		const lessonHourStart = row.lessonHourStart;
-		const lessonHourEnd = row.lessonHourEnd ?? lessonHourStart;
-		const byHour =
-			lessonEntries.find((entry) => entry.item.lesuur?.begin === lessonHourStart) ??
-			lessonEntries.find(
-				(entry) =>
-					entry.item.lesuur?.begin &&
-					entry.item.lesuur?.einde &&
-					entry.item.lesuur.begin <= lessonHourStart &&
-					entry.item.lesuur.einde >= lessonHourEnd,
-			);
-		if (byHour) return byHour;
-	}
-
-	return findLessonEntry(startDate, lessonEntries);
+	return resolveRegistrationLesson(student, {
+		start: row.start,
+		end: row.end,
+		lessonHourStart: row.lessonHourStart,
+		lessonHourEnd: row.lessonHourEnd,
+	});
 }
 
 function getInitials(studentName: string) {

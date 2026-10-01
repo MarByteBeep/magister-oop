@@ -17,6 +17,7 @@ import {
 	isSameAgendaEntryOccurrence,
 } from '@/lib/agenda/entryUtils';
 import { submitTardyAccountability } from '@/lib/agenda/tardyUtils';
+import { getNow } from '@/lib/shared/dateUtils';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 
@@ -48,10 +49,13 @@ export default function TardyModal({ student, isOpen, onClose }: TardyModalProps
 	const handleConfirm = async () => {
 		if (!selectedEntry || !isLessonEntry(selectedEntry) || !studentId) return;
 		const ok = await submitTardyAccountability(studentId, selectedEntry.item);
-		if (ok) {
-			setIsConfirmationOpen(false);
-			setSelectedEntry(null);
-		}
+		if (!ok) return;
+
+		const today = getNow();
+		await loadAgendaForStudent(studentId, today, today, { refresh: true });
+		setIsConfirmationOpen(false);
+		setSelectedEntry(null);
+		onClose();
 	};
 
 	const handleCancel = () => {

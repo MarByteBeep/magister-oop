@@ -85,9 +85,14 @@ export function useAgendaCalendar(
 				}),
 			dateCellWrapper: fullDayCreateEnabled ? AgendaFullDayShortcutCellWrapper : undefined,
 			event: (props: EventProps<CalendarEvent>) =>
-				createElement(AgendaCalendarEvent, { ...props, activeEntry: stableActiveEntry, overlappingEventIds }),
+				createElement(AgendaCalendarEvent, {
+					...props,
+					activeEntry: stableActiveEntry,
+					overlappingEventIds,
+					onSelectRegistration: onSelectEntry,
+				}),
 		}),
-		[stableActiveEntry, handleSelectFullDay, overlappingEventIds, fullDayCreateEnabled],
+		[stableActiveEntry, handleSelectFullDay, overlappingEventIds, fullDayCreateEnabled, onSelectEntry],
 	);
 
 	const views: View[] = view === 'work_week' ? ['work_week'] : ['day'];
