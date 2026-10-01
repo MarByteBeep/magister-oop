@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0 — 2026-10-01
+
+- Agenda: **Afwezigheid** aanmaken — reden, toelichting, intern
+- Agenda: **Afwezigheid verwijderen**
+- Agenda: **Ctrl** vasthouden voor nieuwe melding (terugkommaatregel / afwezigheid)
+- Agenda: **registraties** op lessen — openen, verwijderen
+- Agenda: te-laat **Afdrukken** vanuit registratie
+
 ## 1.3.0 — 2026-09-30
 
 - Terugkomers: **Gemeld** / **Niet gemeld**
