@@ -29,15 +29,12 @@ interface ReturnMeasureStatusBadgesProps {
 export default function ReturnMeasureStatusBadges({ reportStatus, planning }: ReturnMeasureStatusBadgesProps) {
 	// A missing report is the norm until a measure is handled, so only say so afterwards.
 	const showReportStatus = reportStatus !== 'none' || planning === 'handled';
-	// "Gemeld" already implies the measure was handled.
-	const showHandled = planning === 'handled' && reportStatus !== 'reported';
 
-	if (!showHandled && !showReportStatus) return null;
+	if (!showReportStatus) return null;
 
 	return (
 		<div className="flex items-center gap-1 shrink-0">
-			{showHandled && <Badge variant="outline">Afgehandeld</Badge>}
-			{showReportStatus && <ReportStatusBadge status={reportStatus} />}
+			<ReportStatusBadge status={reportStatus} />
 		</div>
 	);
 }
