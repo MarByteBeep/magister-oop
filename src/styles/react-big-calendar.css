@@ -89,6 +89,11 @@
 	overflow: hidden;
 }
 
+/* Nested planners (e.g. not-reported modal): keep a fixed frame and scroll the day grid. */
+.agenda-scroll-y .rbc-time-content {
+	overflow-y: auto;
+}
+
 .rbc-timeslot-group {
 	border-bottom: 1px solid var(--rbc-grid);
 	position: relative;
@@ -140,6 +145,24 @@
 	background: transparent;
 }
 
+.agenda-highlight-column {
+	background: color-mix(in oklch, var(--rbc-surface) 78%, var(--color-return-measure) 22%);
+}
+
+.dark .agenda-highlight-column {
+	background: color-mix(in oklch, var(--rbc-surface) 80%, var(--color-return-measure) 20%);
+}
+
+.agenda-highlight-column .rbc-time-slot,
+.agenda-highlight-column .rbc-timeslot-group {
+	background: transparent;
+}
+
+.agenda-highlight-header {
+	color: var(--color-return-measure);
+	font-weight: 600;
+}
+
 /* ── current-time indicator ───────────────────────────────────── */
 .rbc-current-time-indicator {
 	background-color: var(--rbc-now);
@@ -187,6 +210,35 @@
 	transition: opacity 120ms ease;
 }
 
+/* Brief pulse when a draft return measure appears so the new slot stands out. */
+@keyframes agenda-draft-appear {
+	0% {
+		opacity: 0.2;
+	}
+	35% {
+		opacity: 1;
+	}
+	55% {
+		opacity: 0.4;
+	}
+	75% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+.agenda-draft-appear {
+	animation: agenda-draft-appear 1.15s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.agenda-draft-appear {
+		animation: none;
+	}
+}
+
 /* Ctrl create mode: existing lessons and appointments step back so slots can be chosen through them. */
 .agenda-create-mode .rbc-day-slot {
 	cursor: pointer;
@@ -197,8 +249,21 @@
 	background-color: color-mix(in oklch, var(--rbc-surface) 88%, var(--primary) 12%);
 }
 
-.agenda-create-mode .rbc-day-slot .rbc-event:not(.agenda-break-band):not(.agenda-hover-slot):not(.agenda-draft-event) {
+/*
+ * Create + reschedule: fade lessons/absences and disable hit-testing so slots
+ * (including hours that already have a lesson) can be chosen through them.
+ */
+.agenda-create-mode
+	.rbc-day-slot
+	.rbc-event:not(.agenda-break-band):not(.agenda-hover-slot):not(.agenda-draft-event):not(
+		.agenda-return-measure-event
+	):not(.agenda-return-measure-gutter-event) {
 	opacity: 0.32;
+	pointer-events: none;
+}
+
+.agenda-create-mode .rbc-day-slot .rbc-event.agenda-return-measure-event,
+.agenda-create-mode .rbc-day-slot .rbc-event.agenda-return-measure-gutter-event {
 	pointer-events: none;
 }
 

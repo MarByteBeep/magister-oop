@@ -1,24 +1,18 @@
-import { createElement, useCallback, useMemo } from 'react';
-import type { EventProps, View } from 'react-big-calendar';
-import AgendaCalendarEvent from '@/components/student/agenda/AgendaCalendarEvent';
-import AgendaCalendarHeader from '@/components/student/agenda/AgendaCalendarHeader';
-import AgendaFullDayShortcutCellWrapper from '@/components/student/agenda/AgendaFullDayShortcutCellWrapper';
-import { firstLessonTime, lastLessonTime } from '@/components/student/agenda/agendaCalendarConfig';
-import {
-	calendarDayPropGetter,
-	calendarEventPropGetter,
-	calendarTooltipAccessor,
-	createCalendarSlotPropGetter,
-} from '@/hooks/agenda/agendaCalendarPropGetters';
+import { useMemo } from 'react';
+import type { View } from 'react-big-calendar';
+import { calendarEventPropGetter, calendarTooltipAccessor } from '@/hooks/agenda/agendaCalendarPropGetters';
+import type { AgendaSelectionMode } from '@/hooks/agenda/agendaSelectionMode';
+import { resolveAgendaHoverSelection } from '@/hooks/agenda/resolveAgendaHoverSelection';
+import { useAgendaCalendarChrome } from '@/hooks/agenda/useAgendaCalendarChrome';
 import { useAgendaCalendarEvents } from '@/hooks/agenda/useAgendaCalendarEvents';
-import { useAgendaCalendarSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
-import { useCreateAppointmentMode } from '@/hooks/agenda/useCreateAppointmentMode';
-import { useStableAgendaEntry } from '@/hooks/agenda/useStableAgendaEntries';
-import { hhmmToDate } from '@/lib/agenda/bigCalendarUtils';
+import { type TransformAgendaSelection, useAgendaCalendarSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
+import { useAgendaCreateMode } from '@/hooks/agenda/useAgendaCreateMode';
 import type { CalendarEvent } from '@/lib/agenda/calendarUtils';
 import { agendaDayLayoutAlgorithm } from '@/lib/agenda/dayLayout';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
+
+export type { AgendaSelectionMode } from '@/hooks/agenda/agendaSelectionMode';
 
 export function useAgendaCalendar(
 	entries: AgendaEntry[],
@@ -28,11 +22,24 @@ export function useAgendaCalendar(
 	onSelectEntry: (entry: AgendaEntry) => void,
 	options?: {
 		draftSelection?: AgendaSlotSelection | null;
+		draftLabel?: string | null;
 		onSelectSlot?: (selection: AgendaSlotSelection) => void;
+		selectionMode?: AgendaSelectionMode;
+		highlightDateKey?: string | null;
+		focusReturnMeasureId?: number | null;
+		transformSelection?: TransformAgendaSelection;
 	},
 ) {
-	const { draftSelection, onSelectSlot } = options ?? {};
-	const createMode = useCreateAppointmentMode(onSelectSlot !== undefined);
+	const {
+		draftSelection = null,
+		draftLabel = null,
+		onSelectSlot,
+		selectionMode = 'ctrl',
+		highlightDateKey,
+		focusReturnMeasureId = null,
+		transformSelection,
+	} = options ?? {};
+	const { slotSelectionEnabled, createMode } = useAgendaCreateMode(selectionMode, onSelectSlot);
 	const {
 		selectingPreview,
 		hoveredSlot,
@@ -41,78 +48,59 @@ export function useAgendaCalendar(
 		handleSelecting,
 		handleSelectFullDay,
 		handleSelectSlot,
-	} = useAgendaCalendarSelection(onSelectSlot, createMode);
+	} = useAgendaCalendarSelection(onSelectSlot, createMode, transformSelection);
 
-	const activePreview = draftSelection ?? selectingPreview;
+	// Slot getter already stores transformed times when transformSelection is set; resolve again for safety.
+	const hoverSelection = useMemo(
+		() => resolveAgendaHoverSelection(hoveredSlot, transformSelection),
+		[hoveredSlot, transformSelection],
+	);
 
 	const { calendarEvents, overlappingEventIds } = useAgendaCalendarEvents(
 		entries,
 		date,
 		view,
-		activePreview,
-		hoveredSlot,
+		selectingPreview,
+		draftSelection,
+		hoverSelection,
 		onSelectSlot,
+		draftLabel,
 	);
 
-	const dateTimestamp = date.getTime();
-	const min = useMemo(() => hhmmToDate(new Date(dateTimestamp), firstLessonTime), [dateTimestamp]);
-	const max = useMemo(() => hhmmToDate(new Date(dateTimestamp), lastLessonTime), [dateTimestamp]);
-
-	const handleSelectEvent = useCallback(
-		(ev: CalendarEvent) => {
-			if (ev.isDraft || ev.isHoverSlot || ev.isBreak || !ev.resource) return;
-			onSelectEntry(ev.resource);
-		},
-		[onSelectEntry],
-	);
-
-	const slotPropGetter = useMemo(
-		() =>
-			createCalendarSlotPropGetter(activePreview, createMode, onSelectSlot, setHoveredSlot, clearHoverTimeoutRef),
-		[activePreview, createMode, onSelectSlot, setHoveredSlot, clearHoverTimeoutRef],
-	);
-
-	const weekFullDayShortcut = view === 'work_week' && onSelectSlot !== undefined;
-	const fullDayCreateEnabled = weekFullDayShortcut && createMode;
-	const stableActiveEntry = useStableAgendaEntry(activeEntry);
-
-	const components = useMemo(
-		() => ({
-			header: (props: { date: Date; label: string }) =>
-				createElement(AgendaCalendarHeader, {
-					...props,
-					onSelectFullDay: fullDayCreateEnabled ? handleSelectFullDay : undefined,
-				}),
-			dateCellWrapper: fullDayCreateEnabled ? AgendaFullDayShortcutCellWrapper : undefined,
-			event: (props: EventProps<CalendarEvent>) =>
-				createElement(AgendaCalendarEvent, {
-					...props,
-					activeEntry: stableActiveEntry,
-					overlappingEventIds,
-					onSelectRegistration: onSelectEntry,
-				}),
-		}),
-		[stableActiveEntry, handleSelectFullDay, overlappingEventIds, fullDayCreateEnabled, onSelectEntry],
-	);
-
-	const views: View[] = view === 'work_week' ? ['work_week'] : ['day'];
+	const chrome = useAgendaCalendarChrome({
+		date,
+		view,
+		activeEntry,
+		onSelectEntry,
+		onSelectSlot,
+		createMode,
+		suppressHover: selectingPreview != null,
+		setHoveredSlot,
+		clearHoverTimeoutRef,
+		handleSelectFullDay,
+		overlappingEventIds,
+		highlightDateKey,
+		focusReturnMeasureId,
+		transformSelection,
+	});
 
 	return {
 		events: calendarEvents,
 		backgroundEvents: [] as CalendarEvent[],
-		min,
-		max,
-		handleSelectEvent,
+		min: chrome.min,
+		max: chrome.max,
+		handleSelectEvent: chrome.handleSelectEvent,
 		handleSelecting,
 		handleSelectSlot,
 		createMode,
-		slotSelectionEnabled: onSelectSlot !== undefined,
-		dayPropGetter: calendarDayPropGetter,
-		slotPropGetter,
+		rescheduleMode: focusReturnMeasureId != null,
+		slotSelectionEnabled,
+		dayPropGetter: chrome.dayPropGetter,
+		slotPropGetter: chrome.slotPropGetter,
 		eventPropGetter: calendarEventPropGetter,
 		tooltipAccessor: calendarTooltipAccessor,
-		components,
-		views,
+		components: chrome.components,
+		views: (view === 'work_week' ? ['work_week'] : ['day']) as View[],
 		dayLayoutAlgorithm: agendaDayLayoutAlgorithm,
 	};
 }

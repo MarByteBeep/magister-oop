@@ -22,7 +22,7 @@ export default function StudentDetailDialog({ student, onClose, initialTab, agen
 				open={studentId !== null && studentId !== undefined}
 				onOpenChange={(isOpen: boolean) => !isOpen && onClose()}
 			>
-				<DialogContent className="w-[1100px] h-[700px] flex flex-col">
+				<DialogContent className="w-[1200px] h-[700px] flex flex-col">
 					<StudentDetailContent
 						student={student ?? undefined}
 						onOpenStudent={setNestedStudent}

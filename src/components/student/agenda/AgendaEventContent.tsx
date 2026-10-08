@@ -5,7 +5,6 @@ import { LuClock3, LuMapPin } from 'react-icons/lu';
 import RegistrationIcon from '@/components/registrations/RegistrationIcon';
 import AgendaTooltipContent from '@/components/student/agenda/AgendaTooltipContent';
 import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
-import { ReturnMeasureAlertBadge } from '@/components/student/agenda/ReturnMeasureAgendaLabels';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useFittingLineCount } from '@/hooks/shared/useFittingLineCount';
 import type { AgendaEventDisplay } from '@/lib/agenda/eventDisplay';
@@ -16,15 +15,14 @@ import type { AgendaEntry, RegistrationAgendaEntry } from '@/magister/response/a
 
 const metaInfoClasses = 'absolute right-1.5 flex items-center gap-1 text-[9px] text-muted-foreground';
 const topMetaInfoClasses = `${metaInfoClasses} top-0.5`;
-const topLeftMetaInfoClasses = 'absolute left-1 top-0.5';
 const fullDayScheduleHeaderClasses =
 	'absolute left-1 top-0.5 z-10 flex max-w-[calc(100%-0.5rem)] items-center gap-1 text-[11px] font-semibold text-foreground';
 const bottomMetaInfoClasses = `${metaInfoClasses} bottom-0.5`;
 const metaIconClasses = 'h-2.5 w-2.5 shrink-0';
 const locationTextClasses = 'max-w-14 truncate';
-const compactContentClasses = 'flex h-full min-w-0 items-center gap-1';
+const compactContentClasses = 'flex h-full min-w-0 items-start gap-1';
 const gutterContentClasses = 'flex h-full min-w-0 flex-col justify-start overflow-hidden pt-0.5 pb-0.5';
-const defaultContentClasses = 'flex h-full min-w-0 items-center gap-1 pr-16';
+const defaultContentClasses = 'flex h-full min-w-0 items-start gap-1 pt-0.5 pr-16';
 
 function titleClasses(canWrapTitle: boolean) {
 	return cn(
@@ -58,7 +56,6 @@ export function FullDayReturnMeasureContent({ display }: { display: AgendaEventD
 	return (
 		<>
 			<div className={fullDayScheduleHeaderClasses}>
-				<ReturnMeasureAlertBadge />
 				<span className="truncate">{getFullDayScheduleLabel()}</span>
 			</div>
 			<span className="sr-only">{display.title ?? getFullDayScheduleLabel()}</span>
@@ -164,34 +161,22 @@ export function CompactAgendaEventContent({
 	registrations?: RegistrationAgendaEntry[];
 	onSelectRegistration?: (entry: RegistrationAgendaEntry) => void;
 }) {
-	const showReturnMeasureBadge = display.returnMeasureDisplay?.hasBoth && display.isGutterOverlay;
-
 	return (
-		<>
-			{showReturnMeasureBadge && (
-				<div className={topLeftMetaInfoClasses}>
-					<ReturnMeasureAlertBadge />
-				</div>
+		<div
+			ref={display.isGutterOverlay ? gutterContentRef : undefined}
+			className={display.isGutterOverlay ? gutterContentClasses : compactContentClasses}
+		>
+			{display.isGutterOverlay ? (
+				<GutterTitle title={display.title} gutterContentRef={gutterContentRef} />
+			) : (
+				<CompactLessonTitle
+					entry={entry}
+					display={display}
+					registrations={registrations}
+					onSelectRegistration={onSelectRegistration}
+				/>
 			)}
-			<div
-				ref={display.isGutterOverlay ? gutterContentRef : undefined}
-				className={cn(
-					display.isGutterOverlay ? gutterContentClasses : compactContentClasses,
-					showReturnMeasureBadge && 'pl-3',
-				)}
-			>
-				{display.isGutterOverlay ? (
-					<GutterTitle title={display.title} gutterContentRef={gutterContentRef} />
-				) : (
-					<CompactLessonTitle
-						entry={entry}
-						display={display}
-						registrations={registrations}
-						onSelectRegistration={onSelectRegistration}
-					/>
-				)}
-			</div>
-		</>
+		</div>
 	);
 }
 

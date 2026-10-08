@@ -1,10 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import ReturnMeasureReportConfirmModal from '@/components/return-measure/ReturnMeasureReportConfirmModal';
 import { Button } from '@/components/ui/button';
+import { useReturnMeasureReportConfirm } from '@/hooks/return-measure/useReturnMeasureReportConfirm';
 import type { ReturnMeasureReportStatus } from '@/lib/return-measure/overview';
-import { type ReturnMeasureReportAction, submitReturnMeasureReport } from '@/lib/return-measure/report';
 import {
 	notReportedHoverClasses,
 	notReportedSolidClasses,
@@ -30,23 +29,15 @@ export default function ReturnMeasureReportButtons({
 	studentName,
 	classLabel,
 }: ReturnMeasureReportButtonsProps) {
-	const photoUrl = student?.links.foto?.href ?? measure.leerling.links.foto?.href;
-	const [pendingAction, setPendingAction] = useState<ReturnMeasureReportAction | null>(null);
-	const [isSubmitting, setIsSubmitting] = useState(false);
+	const { setPendingAction, isSubmitting, modalProps } = useReturnMeasureReportConfirm(
+		measure,
+		student,
+		studentName,
+		classLabel,
+	);
 
 	const isReported = reportStatus === 'reported';
 	const isNotReported = reportStatus === 'not-reported';
-
-	async function confirmReport() {
-		if (pendingAction == null || isSubmitting) return;
-		setIsSubmitting(true);
-		try {
-			await submitReturnMeasureReport(measure, pendingAction);
-		} finally {
-			setIsSubmitting(false);
-			setPendingAction(null);
-		}
-	}
 
 	return (
 		<>
@@ -74,16 +65,7 @@ export default function ReturnMeasureReportButtons({
 					Niet gemeld
 				</Button>
 			</div>
-			<ReturnMeasureReportConfirmModal
-				action={pendingAction}
-				student={student}
-				studentName={studentName}
-				classLabel={classLabel ?? measure.leerling.stamklas.code}
-				photoUrl={photoUrl}
-				isSubmitting={isSubmitting}
-				onConfirm={() => void confirmReport()}
-				onCancel={() => setPendingAction(null)}
-			/>
+			<ReturnMeasureReportConfirmModal {...modalProps} />
 		</>
 	);
 }

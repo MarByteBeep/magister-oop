@@ -19,8 +19,8 @@ function App() {
 	useActionBadge(registrationCount);
 
 	return (
-		<main className="flex flex-col items-center w-full h-full p-4 min-h-[600px] mx-auto text-center">
-			<div className="w-full max-w-[1000px]">
+		<main className="flex flex-col items-center w-full h-full px-2 py-4 min-h-[600px] mx-auto text-center">
+			<div className="w-full max-w-[1200px]">
 				<Tabs defaultValue="students" className="flex flex-col h-full w-full">
 					<div className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-background">
 						<TabsList className="flex h-auto min-h-9 w-full shrink-0 flex-1 min-w-0 gap-2 rounded-none border-0 bg-transparent p-0 shadow-none">

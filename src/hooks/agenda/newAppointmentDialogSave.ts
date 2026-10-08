@@ -3,6 +3,7 @@ import { getAttendanceType } from '@/lib/absence-notice/attendanceTypes';
 import { submitAbsenceNotice } from '@/lib/absence-notice/create';
 import { buildAgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import { submitReturnMeasure } from '@/lib/return-measure/create';
+import { isReturnMeasureDateInPast } from '@/lib/return-measure/scheduleBounds';
 
 export function canSaveNewAppointment(input: {
 	mode: CreateMode;
@@ -19,6 +20,7 @@ export function canSaveNewAppointment(input: {
 	if (!slotSelection) return false;
 
 	if (input.mode === 'return-measure') {
+		if (isReturnMeasureDateInPast(input.dateKey)) return false;
 		const parsedDayCount = Number.parseInt(input.dayCount, 10);
 		return input.description.trim().length > 0 && Number.isFinite(parsedDayCount) && parsedDayCount >= 1;
 	}

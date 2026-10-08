@@ -1,5 +1,6 @@
 import { buildAgendaSlotSelection } from '@/lib/agenda/slotSelection';
-import { toISOFromDateKeyAndTime } from '@/lib/shared/dateUtils';
+import { isReturnMeasureDateInPast } from '@/lib/return-measure/scheduleBounds';
+import { getNow, toISOFromDateKeyAndTime } from '@/lib/shared/dateUtils';
 import type { CreateReturnMeasureRequest } from '@/magister/response/createReturnMeasure.types';
 
 export type CreateReturnMeasureFormInput = {
@@ -12,10 +13,12 @@ export type CreateReturnMeasureFormInput = {
 
 export function buildCreateReturnMeasureRequest(
 	input: CreateReturnMeasureFormInput,
+	now: Date = getNow(),
 ): CreateReturnMeasureRequest | null {
 	const selection = buildAgendaSlotSelection(input.dateKey, input.startTime, input.endTime);
 	if (
 		!selection ||
+		isReturnMeasureDateInPast(input.dateKey, now) ||
 		input.description.trim().length === 0 ||
 		!Number.isInteger(input.dayCount) ||
 		input.dayCount < 1

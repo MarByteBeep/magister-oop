@@ -14,6 +14,7 @@ interface WeeklyAgendaNavigationProps {
 	onPreviousWeek: () => void;
 	onNextWeek: () => void;
 	onCurrentWeek: () => void;
+	showCreateHint?: boolean;
 }
 
 export default function WeeklyAgendaNavigation({
@@ -25,6 +26,7 @@ export default function WeeklyAgendaNavigation({
 	onPreviousWeek,
 	onNextWeek,
 	onCurrentWeek,
+	showCreateHint = true,
 }: WeeklyAgendaNavigationProps) {
 	return (
 		<div className="flex items-center justify-between px-2 py-1 border-b shrink-0">
@@ -34,7 +36,7 @@ export default function WeeklyAgendaNavigation({
 
 			<div className="flex items-center gap-1.5">
 				<span className="text-sm font-medium">{weekRangeText}</span>
-				<AgendaCreateHint />
+				{showCreateHint && <AgendaCreateHint />}
 				{!isCurrentWeek && (
 					<Button variant="outline" size="sm" onClick={onCurrentWeek} className="text-xs h-7">
 						Vandaag

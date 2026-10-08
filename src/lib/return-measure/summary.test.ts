@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
-import { formatReturnMeasureSummary } from '@/lib/return-measure/summary';
+import { formatReturnMeasureSummary, formatReturnMeasureWhen } from '@/lib/return-measure/summary';
 
 function selection(start: string, end: string): AgendaSlotSelection {
 	return {
@@ -8,6 +8,14 @@ function selection(start: string, end: string): AgendaSlotSelection {
 		end: new Date(end),
 	};
 }
+
+describe('formatReturnMeasureWhen', () => {
+	test('formats a compact date and time range', () => {
+		expect(formatReturnMeasureWhen(selection('2026-10-09T08:00:00', '2026-10-09T08:30:00'))).toBe(
+			'vrijdag 9 oktober 2026 om 08:00 - 08:30',
+		);
+	});
+});
 
 describe('formatReturnMeasureSummary', () => {
 	test('formats a single-day summary', () => {

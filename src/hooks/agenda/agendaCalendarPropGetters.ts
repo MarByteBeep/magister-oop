@@ -1,3 +1,5 @@
+import { hoveredSlotFromSelection, resolveAgendaHoverSelection } from '@/hooks/agenda/resolveAgendaHoverSelection';
+import type { TransformAgendaSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
 import type { CalendarEvent } from '@/lib/agenda/calendarUtils';
 import { isSameCalendarDay } from '@/lib/agenda/calendarUtils';
 import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agenda/entryUtils';
@@ -7,8 +9,14 @@ import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import { getDateKey } from '@/lib/shared/dateUtils';
 import { cn } from '@/lib/utils';
 
-export function calendarDayPropGetter(d: Date) {
-	return { className: cn(isSameCalendarDay(d, new Date()) && 'agenda-today-column') };
+export function calendarDayPropGetter(d: Date, highlightDateKey?: string | null) {
+	const dateKey = getDateKey(d);
+	return {
+		className: cn(
+			isSameCalendarDay(d, new Date()) && 'agenda-today-column',
+			highlightDateKey != null && dateKey === highlightDateKey && 'agenda-highlight-column',
+		),
+	};
 }
 
 export function calendarEventPropGetter(event: CalendarEvent) {
@@ -19,16 +27,18 @@ export function calendarEventPropGetter(event: CalendarEvent) {
 		};
 	}
 	if (event.isHoverSlot) {
+		const isFullDayHover = isFullDayScheduleSelection(event);
 		return {
-			className: 'agenda-hover-slot',
-			style: { zIndex: 2, pointerEvents: 'none' as const },
+			className: cn('agenda-hover-slot', isFullDayHover && 'agenda-draft-full-day-event'),
+			// Above draft so a preview on another day stays readable next to the selection.
+			style: { zIndex: 4, pointerEvents: 'none' as const },
 		};
 	}
 	if (event.isDraft) {
 		const isFullDayDraft = isFullDayScheduleSelection(event);
 		return {
 			className: cn('agenda-draft-event', isFullDayDraft && 'agenda-draft-full-day-event'),
-			style: { zIndex: isFullDayDraft ? 1 : 3, pointerEvents: 'none' as const },
+			style: { zIndex: isFullDayDraft ? 2 : 3, pointerEvents: 'none' as const },
 		};
 	}
 
@@ -75,14 +85,15 @@ export function findHoveredAgendaSlotAtPoint(clientX: number, clientY: number): 
 }
 
 export function createCalendarSlotPropGetter(
-	activePreview: AgendaSlotSelection | null,
+	suppressHover: boolean,
 	createMode: boolean,
 	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
 	setHoveredSlot: (slot: HoveredAgendaSlot | null) => void,
 	clearHoverTimeoutRef: { current: number | undefined },
+	transformSelection?: TransformAgendaSelection,
 ) {
 	return (slotDate: Date) => {
-		if (!onSelectSlot || activePreview) return {};
+		if (!onSelectSlot || suppressHover) return {};
 
 		const appointmentSlot = findAppointmentSlotForDateTime(slotDate);
 		if (!appointmentSlot) return {};
@@ -101,7 +112,12 @@ export function createCalendarSlotPropGetter(
 			className: 'agenda-creatable-slot',
 			onMouseEnter: () => {
 				window.clearTimeout(clearHoverTimeoutRef.current);
-				setHoveredSlot(slot);
+				const resolved = resolveAgendaHoverSelection(slot, transformSelection);
+				if (!resolved) {
+					setHoveredSlot(null);
+					return;
+				}
+				setHoveredSlot(transformSelection ? hoveredSlotFromSelection(resolved) : slot);
 			},
 			onMouseLeave: () => {
 				window.clearTimeout(clearHoverTimeoutRef.current);

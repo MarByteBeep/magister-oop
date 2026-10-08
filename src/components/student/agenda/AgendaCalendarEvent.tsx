@@ -12,6 +12,8 @@ export interface AgendaCalendarEventProps extends EventProps<CalendarEvent> {
 	activeEntry?: AgendaEntry | null;
 	overlappingEventIds: Set<string>;
 	onSelectRegistration?: (entry: RegistrationAgendaEntry) => void;
+	ghostReturnMeasure?: boolean;
+	focusReturnMeasureId?: number | null;
 }
 
 function AgendaCalendarEvent({
@@ -19,6 +21,8 @@ function AgendaCalendarEvent({
 	activeEntry,
 	overlappingEventIds,
 	onSelectRegistration,
+	ghostReturnMeasure = false,
+	focusReturnMeasureId = null,
 }: AgendaCalendarEventProps) {
 	if (isBreakCalendarEvent(event)) {
 		return <AgendaBreakBand start={event.start} end={event.end} />;
@@ -41,6 +45,8 @@ function AgendaCalendarEvent({
 			onSelectRegistration={onSelectRegistration}
 			isActive={isSameAgendaEntryOccurrence(event.resource, activeEntry)}
 			isCompact={overlappingEventIds.has(event.id)}
+			ghostReturnMeasure={ghostReturnMeasure}
+			focusReturnMeasureId={focusReturnMeasureId}
 		/>
 	);
 }
@@ -51,5 +57,7 @@ export default memo(
 		prev.event === next.event &&
 		prev.activeEntry === next.activeEntry &&
 		prev.onSelectRegistration === next.onSelectRegistration &&
-		prev.overlappingEventIds === next.overlappingEventIds,
+		prev.overlappingEventIds === next.overlappingEventIds &&
+		prev.ghostReturnMeasure === next.ghostReturnMeasure &&
+		prev.focusReturnMeasureId === next.focusReturnMeasureId,
 );

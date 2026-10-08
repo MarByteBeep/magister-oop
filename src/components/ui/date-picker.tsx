@@ -1,5 +1,6 @@
 'use client';
 
+import type * as React from 'react';
 import { useState } from 'react';
 import { nl } from 'react-day-picker/locale';
 import { LuCalendar, LuChevronDown } from 'react-icons/lu';
@@ -17,6 +18,8 @@ interface DatePickerProps {
 	popoverContainer?: HTMLElement | null;
 	onOpenChange?: (open: boolean) => void;
 	className?: string;
+	/** When set, calendar days matching the matcher cannot be selected. */
+	disabled?: React.ComponentProps<typeof Calendar>['disabled'];
 }
 
 function formatPickerDate(date: Date): string {
@@ -35,6 +38,7 @@ export function DatePicker({
 	popoverContainer,
 	onOpenChange,
 	className,
+	disabled,
 }: DatePickerProps) {
 	const [open, setOpen] = useState(false);
 
@@ -71,6 +75,7 @@ export function DatePicker({
 					locale={nl}
 					selected={value}
 					defaultMonth={value}
+					disabled={disabled}
 					onSelect={(date) => {
 						if (!date) return;
 						onChange(date);

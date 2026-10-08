@@ -34,6 +34,13 @@ function formatReturnDateRange(start: Date, end: Date): string {
 	return `${formatSingleReturnDate(start)} - ${formatSingleReturnDate(end)}`;
 }
 
+/** Compact when-label: "vrijdag 9 oktober 2026 om 08:00 - 08:30". */
+export function formatReturnMeasureWhen(selection: AgendaSlotSelection): string {
+	const startTime = formatTime(selection.start);
+	const endTime = formatTime(selection.end);
+	return `${formatSingleReturnDate(selection.start)} om ${startTime} - ${endTime}`;
+}
+
 export function formatReturnMeasureSummary(selection: AgendaSlotSelection, dayCount: number): string {
 	const startDate = selection.start;
 	const endDate = addSchoolDays(startDate, dayCount);

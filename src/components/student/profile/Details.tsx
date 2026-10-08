@@ -37,7 +37,7 @@ export default function Details({ student, onOpenStudent }: DetailsProps) {
 		<>
 			{error && <p className="text-red-500 text-center my-4">{error}</p>}
 			{student && (
-				<div className="grid gap-4 md:grid-cols-3 grid-rows-[120px_auto]">
+				<div className="grid gap-4 md:grid-cols-[1fr_1fr_1.5fr] grid-rows-[120px_auto]">
 					<StudentProfileCard
 						student={student}
 						fullName={fullName}

@@ -45,7 +45,8 @@ export function partitionAgendaEvents(events: CalendarEvent[]): PartitionedAgend
 
 	for (const event of events) {
 		if (isBackgroundOverlayCalendarEvent(event)) {
-			if (event.isDraft && isFullDayScheduleSelection(event)) {
+			// Draft and hover overlays share the same full-day layout path (vierkant ghost).
+			if (isFullDayScheduleSelection(event)) {
 				buckets.fullDayDraftEvents.push(event);
 			} else {
 				buckets.partialDraftEvents.push(event);

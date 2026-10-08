@@ -1,5 +1,6 @@
 import { LuClock3 } from 'react-icons/lu';
 
+import { agendaHatchOverlayClasses } from '@/lib/agenda/kindStyles';
 import { formatTime } from '@/lib/shared/dateUtils';
 
 interface AgendaBreakBandProps {
@@ -13,7 +14,7 @@ export default function AgendaBreakBand({ start, end }: AgendaBreakBandProps) {
 
 	return (
 		<div className="relative mx-1 box-border h-full overflow-hidden rounded-lg border border-border/45 bg-muted/30 dark:bg-muted/20">
-			<div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(-45deg,transparent,transparent_4px,color-mix(in_oklch,var(--foreground)_5%,transparent)_4px,color-mix(in_oklch,var(--foreground)_5%,transparent)_5px)]" />
+			<div className={agendaHatchOverlayClasses} />
 			<div className="absolute right-1.5 top-0.5 z-10 flex items-center gap-1 text-[9px] text-muted-foreground">
 				<LuClock3 className="h-2.5 w-2.5 shrink-0" />
 				<span>

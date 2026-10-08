@@ -2,21 +2,29 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { LuClock3 } from 'react-icons/lu';
 
 import LessonHourBadge from '@/components/student/agenda/LessonHourBadge';
-import { ReturnMeasureAlertBadge } from '@/components/student/agenda/ReturnMeasureAgendaLabels';
 import { getFullDayScheduleLabel, isFullDayScheduleSelection } from '@/lib/agenda/fullDayScheduleUtils';
-import { returnMeasureSurfaceClasses } from '@/lib/agenda/kindStyles';
+import {
+	agendaDraftOverlayBadgeClasses,
+	agendaDraftOverlaySurfaceClasses,
+	agendaHoverOverlayBadgeClasses,
+	agendaHoverOverlaySurfaceClasses,
+} from '@/lib/agenda/kindStyles';
 import { getLessonHourBadgePlacements } from '@/lib/agenda/lessonHours';
 import { formatTime } from '@/lib/shared/dateUtils';
 import { cn } from '@/lib/utils';
 
+/**
+ * Overlay ghosts (selection vs hover). Existing return measures use
+ * {@link returnMeasureGhostSurfaceClasses} on AgendaEvent — same hue, ghosted.
+ */
 const agendaSlotGhostStyles = cva('relative h-full overflow-hidden rounded-lg border', {
 	variants: {
 		variant: {
-			hover: 'mx-1 border-dashed border-primary/40 bg-primary/8 dark:border-primary/45 dark:bg-primary/8',
-			draft: 'mx-1 border-primary/55 bg-primary/10 shadow-sm shadow-black/8 dark:border-primary/70 dark:bg-primary/22 dark:shadow-black/20',
+			hover: cn('mx-1', agendaHoverOverlaySurfaceClasses),
+			draft: cn('mx-1', agendaDraftOverlaySurfaceClasses),
 		},
 		fullDay: {
-			true: cn('mx-0 border-dashed', returnMeasureSurfaceClasses),
+			true: 'mx-0',
 			false: '',
 		},
 	},
@@ -29,8 +37,8 @@ const agendaSlotGhostStyles = cva('relative h-full overflow-hidden rounded-lg bo
 const ghostLessonBadgeStyles = cva('border font-bold', {
 	variants: {
 		variant: {
-			hover: 'border-primary/30 bg-primary/15 text-primary dark:bg-primary/20',
-			draft: 'border-primary/40 bg-primary/25 text-primary dark:bg-primary/30',
+			hover: agendaHoverOverlayBadgeClasses,
+			draft: agendaDraftOverlayBadgeClasses,
 		},
 	},
 	defaultVariants: {
@@ -39,29 +47,51 @@ const ghostLessonBadgeStyles = cva('border font-bold', {
 });
 
 interface AgendaSlotGhostProps extends VariantProps<typeof agendaSlotGhostStyles> {
-	selection: { start: Date; end: Date };
+	selection: { start: Date; end: Date; title?: string };
+	/** One-shot appear pulse for drafts; omit on remounts after the first claim. */
+	playAppear?: boolean;
 }
 
-export default function AgendaSlotGhost({ variant, selection }: AgendaSlotGhostProps) {
+export default function AgendaSlotGhost({ variant, selection, playAppear = false }: AgendaSlotGhostProps) {
 	const isFullDay = isFullDayScheduleSelection(selection);
 	const placements = isFullDay ? [] : getLessonHourBadgePlacements(selection);
 	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
 	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
+	const label = selection.title?.trim() || null;
+	const fullDayHeading = label ?? getFullDayScheduleLabel();
 
 	return (
-		<div className={cn(agendaSlotGhostStyles({ variant, fullDay: isFullDay }))}>
+		<div
+			className={cn(
+				agendaSlotGhostStyles({ variant, fullDay: isFullDay }),
+				variant === 'draft' && playAppear && 'agenda-draft-appear',
+			)}
+		>
 			{isFullDay ? (
 				<div className="absolute left-1 top-0.5 z-10 flex max-w-[calc(100%-0.5rem)] items-center gap-1 text-[11px] font-semibold text-foreground">
-					<ReturnMeasureAlertBadge />
-					<span className="truncate">{getFullDayScheduleLabel()}</span>
+					<span className="truncate">{fullDayHeading}</span>
 				</div>
 			) : (
-				<div className="absolute right-1.5 top-0.5 z-10 flex items-center gap-1 text-[9px] text-muted-foreground">
-					<LuClock3 className="h-2.5 w-2.5 shrink-0" />
-					<span>
-						{formatTime(rangeStart)} - {formatTime(rangeEnd)}
-					</span>
-				</div>
+				<>
+					<div className="absolute right-1.5 top-0.5 z-10 flex items-center gap-1 text-[9px] text-muted-foreground">
+						<LuClock3 className="h-2.5 w-2.5 shrink-0" />
+						<span>
+							{formatTime(rangeStart)} - {formatTime(rangeEnd)}
+						</span>
+					</div>
+					{label ? (
+						<div
+							className={cn(
+								'flex h-full min-w-0 items-center',
+								placements.length > 0 ? 'pl-6 pr-16' : 'px-1.5 pr-16',
+							)}
+						>
+							<span className="min-w-0 truncate text-[12px] font-semibold leading-tight text-foreground">
+								{label}
+							</span>
+						</div>
+					) : null}
+				</>
 			)}
 			{placements.map((placement) => (
 				<div

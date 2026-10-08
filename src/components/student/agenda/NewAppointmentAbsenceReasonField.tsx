@@ -23,6 +23,7 @@ interface NewAppointmentAbsenceReasonFieldProps {
 	selectedType: AttendanceType | undefined;
 	onSelect: (type: AttendanceType | null) => void;
 	reasonRef: RefObject<HTMLInputElement | null>;
+	popoverContainer?: HTMLElement | null;
 	onOpenChange?: (open: boolean) => void;
 }
 
@@ -31,6 +32,7 @@ export default function NewAppointmentAbsenceReasonField({
 	selectedType,
 	onSelect,
 	reasonRef,
+	popoverContainer,
 	onOpenChange,
 }: NewAppointmentAbsenceReasonFieldProps) {
 	const selectedTypeRef = useRef(selectedType);
@@ -83,7 +85,7 @@ export default function NewAppointmentAbsenceReasonField({
 					placeholder="Selecteer of zoek een reden"
 					onFocus={clearForSearch}
 				/>
-				<ComboboxContent>
+				<ComboboxContent container={popoverContainer}>
 					<ComboboxEmpty>Geen reden gevonden.</ComboboxEmpty>
 					<ComboboxList>
 						{(type) => (

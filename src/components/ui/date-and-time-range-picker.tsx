@@ -1,5 +1,6 @@
 'use client';
 
+import type * as React from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +18,7 @@ interface DateAndTimeRangePickerProps {
 	endTimeId?: string;
 	popoverContainer?: HTMLElement | null;
 	onDatePickerOpenChange?: (open: boolean) => void;
+	disabledDates?: React.ComponentProps<typeof DatePicker>['disabled'];
 }
 
 export function DateAndTimeRangePicker({
@@ -31,6 +33,7 @@ export function DateAndTimeRangePicker({
 	endTimeId = 'schedule-end-time',
 	popoverContainer,
 	onDatePickerOpenChange,
+	disabledDates,
 }: DateAndTimeRangePickerProps) {
 	const selectedDate = dateKey ? parseDateKey(dateKey) : undefined;
 
@@ -46,6 +49,7 @@ export function DateAndTimeRangePicker({
 					onChange={(date) => onDateKeyChange(getDateKey(date))}
 					popoverContainer={popoverContainer}
 					onOpenChange={onDatePickerOpenChange}
+					disabled={disabledDates}
 				/>
 			</div>
 

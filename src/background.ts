@@ -12,6 +12,9 @@ import {
 } from './popup-utils/tabs';
 
 const POPUP_WINDOW_ID_KEY = 'popupWindowId';
+/** Matches app `max-w-[1200px]` plus side margins and chrome; Chrome has no maxWidth for popups. */
+const POPUP_WINDOW_WIDTH = 1320;
+const POPUP_WINDOW_HEIGHT = 900;
 
 const DEFAULT_ICONS = {
 	16: 'icons/icon16.png',
@@ -192,8 +195,8 @@ function createPopupWindow(): Promise<void> {
 			{
 				url: chrome.runtime.getURL('index.html'),
 				type: 'popup',
-				width: 1300,
-				height: 900,
+				width: POPUP_WINDOW_WIDTH,
+				height: POPUP_WINDOW_HEIGHT,
 				left: 100,
 				top: 100,
 			},

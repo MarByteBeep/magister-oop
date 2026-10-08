@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { buildAgendaSlotSelection } from '@/lib/agenda/slotSelection';
+import { isReturnMeasureDateInPast } from '@/lib/return-measure/scheduleBounds';
 import { formatReturnMeasureSummary } from '@/lib/return-measure/summary';
 
 interface NewAppointmentReturnMeasureFormProps {
@@ -61,6 +62,7 @@ export default function NewAppointmentReturnMeasureForm({
 				endTimeId="return-measure-end-time"
 				popoverContainer={popoverContainer}
 				onDatePickerOpenChange={onDatePickerOpenChange}
+				disabledDates={isReturnMeasureDateInPast}
 			/>
 
 			<Field>

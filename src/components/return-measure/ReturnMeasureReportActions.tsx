@@ -1,11 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import { LuCheck, LuX } from 'react-icons/lu';
 import ReturnMeasureReportConfirmModal from '@/components/return-measure/ReturnMeasureReportConfirmModal';
 import { Button } from '@/components/ui/button';
+import { useReturnMeasureReportConfirm } from '@/hooks/return-measure/useReturnMeasureReportConfirm';
 import { returnMeasurePlanning, returnMeasureReportStatus } from '@/lib/return-measure/overview';
-import { type ReturnMeasureReportAction, submitReturnMeasureReport } from '@/lib/return-measure/report';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import type { Student } from '@/types/student.types';
 
@@ -22,22 +21,9 @@ export default function ReturnMeasureReportActions({
 	studentName,
 	classLabel,
 }: ReturnMeasureReportActionsProps) {
-	const photoUrl = student?.links.foto?.href ?? measure.leerling.links.foto?.href;
-	const [pendingAction, setPendingAction] = useState<ReturnMeasureReportAction | null>(null);
-	const [isSubmitting, setIsSubmitting] = useState(false);
+	const { setPendingAction, modalProps } = useReturnMeasureReportConfirm(measure, student, studentName, classLabel);
 
 	if (returnMeasurePlanning(measure) !== 'open' || returnMeasureReportStatus(measure) !== 'none') return null;
-
-	async function confirmReport() {
-		if (pendingAction == null || isSubmitting) return;
-		setIsSubmitting(true);
-		try {
-			await submitReturnMeasureReport(measure, pendingAction);
-		} finally {
-			setIsSubmitting(false);
-			setPendingAction(null);
-		}
-	}
 
 	return (
 		<>
@@ -66,16 +52,7 @@ export default function ReturnMeasureReportActions({
 					<LuX className="h-4 w-4" />
 				</Button>
 			</fieldset>
-			<ReturnMeasureReportConfirmModal
-				action={pendingAction}
-				student={student}
-				studentName={studentName}
-				classLabel={classLabel ?? measure.leerling.stamklas.code}
-				photoUrl={photoUrl}
-				isSubmitting={isSubmitting}
-				onConfirm={() => void confirmReport()}
-				onCancel={() => setPendingAction(null)}
-			/>
+			<ReturnMeasureReportConfirmModal {...modalProps} />
 		</>
 	);
 }

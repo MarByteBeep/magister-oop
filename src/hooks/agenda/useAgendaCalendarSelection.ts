@@ -1,14 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SlotInfo } from 'react-big-calendar';
 import { findHoveredAgendaSlotAtPoint } from '@/hooks/agenda/agendaCalendarPropGetters';
+import { hoveredSlotFromSelection, resolveAgendaHoverSelection } from '@/hooks/agenda/resolveAgendaHoverSelection';
 import { getFullDayScheduleSelection } from '@/lib/agenda/fullDayScheduleUtils';
 import { type HoveredAgendaSlot, snapSelectionToLessonHours } from '@/lib/agenda/lessonHours';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import { isAllDaySlotSelection, slotInfoToSelection } from '@/lib/agenda/slotSelection';
 
+export type TransformAgendaSelection = (selection: AgendaSlotSelection) => AgendaSlotSelection | null;
+
+function applyTransform(
+	selection: AgendaSlotSelection | null,
+	transformSelection?: TransformAgendaSelection,
+): AgendaSlotSelection | null {
+	if (!selection) return null;
+	if (!transformSelection) return selection;
+	return transformSelection(selection);
+}
+
 export function useAgendaCalendarSelection(
 	onSelectSlot?: (selection: AgendaSlotSelection) => void,
 	createMode = false,
+	transformSelection?: TransformAgendaSelection,
 ) {
 	const [selectingPreview, setSelectingPreview] = useState<AgendaSlotSelection | null>(null);
 	const [hoveredSlot, setHoveredSlot] = useState<HoveredAgendaSlot | null>(null);
@@ -17,14 +30,17 @@ export function useAgendaCalendarSelection(
 	const clearHoverTimeoutRef = useRef<number | undefined>(undefined);
 	const pointerRef = useRef<{ x: number; y: number } | null>(null);
 	const createModeRef = useRef(createMode);
+	const transformRef = useRef(transformSelection);
 	createModeRef.current = createMode;
+	transformRef.current = transformSelection;
 
 	const handleSelecting = useCallback((range: { start: Date; end: Date }): boolean | undefined => {
 		if (!createModeRef.current) return false;
 		isSelectingRef.current = true;
 		selectionCompletedRef.current = false;
 		setHoveredSlot(null);
-		setSelectingPreview(snapSelectionToLessonHours(range));
+		const snapped = snapSelectionToLessonHours(range);
+		setSelectingPreview(applyTransform(snapped, transformRef.current));
 		return undefined;
 	}, []);
 
@@ -33,7 +49,8 @@ export function useAgendaCalendarSelection(
 			if (!onSelectSlot || !createModeRef.current) return;
 			setSelectingPreview(null);
 			setHoveredSlot(null);
-			onSelectSlot(getFullDayScheduleSelection(day));
+			const selection = applyTransform(getFullDayScheduleSelection(day), transformRef.current);
+			if (selection) onSelectSlot(selection);
 		},
 		[onSelectSlot],
 	);
@@ -49,8 +66,9 @@ export function useAgendaCalendarSelection(
 			const snapped = isAllDaySlotSelection(slotInfo)
 				? getFullDayScheduleSelection(slotInfo.start)
 				: snapSelectionToLessonHours(slotInfoToSelection(slotInfo));
-			if (!snapped) return;
-			onSelectSlot(snapped);
+			const selection = applyTransform(snapped, transformRef.current);
+			if (!selection) return;
+			onSelectSlot(selection);
 		},
 		[onSelectSlot],
 	);
@@ -77,7 +95,10 @@ export function useAgendaCalendarSelection(
 		const point = pointerRef.current;
 		if (!point) return;
 		const slot = findHoveredAgendaSlotAtPoint(point.x, point.y);
-		if (slot) setHoveredSlot(slot);
+		if (!slot) return;
+		const resolved = resolveAgendaHoverSelection(slot, transformRef.current);
+		if (!resolved) return;
+		setHoveredSlot(transformRef.current ? hoveredSlotFromSelection(resolved) : slot);
 	}, [createMode]);
 
 	useEffect(() => {

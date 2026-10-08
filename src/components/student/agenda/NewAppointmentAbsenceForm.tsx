@@ -82,6 +82,7 @@ export default function NewAppointmentAbsenceForm({
 				selectedType={selectedType}
 				onSelect={handleReasonSelect}
 				reasonRef={reasonRef}
+				popoverContainer={popoverContainer}
 				onOpenChange={onReasonComboboxOpenChange}
 			/>
 

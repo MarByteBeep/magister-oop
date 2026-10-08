@@ -6,9 +6,16 @@ interface AgendaFullDayShortcutCellWrapperProps {
 	value: Date;
 	range: Date[];
 	children: ReactNode;
+	/** When false, keep the day shortcut without the create-mode tooltip. */
+	showCreateTooltip?: boolean;
 }
 
-export default function AgendaFullDayShortcutCellWrapper({ children }: AgendaFullDayShortcutCellWrapperProps) {
+export default function AgendaFullDayShortcutCellWrapper({
+	children,
+	showCreateTooltip = true,
+}: AgendaFullDayShortcutCellWrapperProps) {
+	if (!showCreateTooltip) return children;
+
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>{children}</TooltipTrigger>
