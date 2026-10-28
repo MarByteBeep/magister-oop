@@ -2,12 +2,11 @@ import { useCallback, useMemo } from 'react';
 import { firstLessonTime, lastLessonTime } from '@/components/student/agenda/agendaCalendarConfig';
 import { buildAgendaCalendarComponents } from '@/hooks/agenda/agendaCalendarComponents';
 import { calendarDayPropGetter, createCalendarSlotPropGetter } from '@/hooks/agenda/agendaCalendarPropGetters';
-import type { TransformAgendaSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
+import type { AgendaSelectSlotHandler, TransformAgendaSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
 import { useStableAgendaEntry } from '@/hooks/agenda/useStableAgendaEntries';
 import { hhmmToDate } from '@/lib/agenda/bigCalendarUtils';
 import type { CalendarEvent } from '@/lib/agenda/calendarUtils';
 import type { HoveredAgendaSlot } from '@/lib/agenda/lessonHours';
-import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 
 interface AgendaCalendarChromeInput {
@@ -15,7 +14,7 @@ interface AgendaCalendarChromeInput {
 	view: string;
 	activeEntry: AgendaEntry | null | undefined;
 	onSelectEntry: (entry: AgendaEntry) => void;
-	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined;
+	onSelectSlot: AgendaSelectSlotHandler | undefined;
 	createMode: boolean;
 	suppressHover: boolean;
 	setHoveredSlot: (slot: HoveredAgendaSlot | null) => void;

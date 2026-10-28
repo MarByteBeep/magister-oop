@@ -79,11 +79,6 @@ export function overlappingLessonSubjects(
 	return subjects;
 }
 
-/** True when the pick overlaps a lesson (allowed, but the UI should warn). */
-export function selectionOverlapsLesson(selection: AgendaSlotSelection, dayEntries: readonly AgendaEntry[]): boolean {
-	return overlappingLessonSubjects(selection, dayEntries).length > 0;
-}
-
 function isBlockedByReturnMeasure(selection: AgendaSlotSelection, dayEntries: readonly AgendaEntry[]): boolean {
 	return returnMeasuresOccupySlot(dayEntries, selectionSlot(selection));
 }

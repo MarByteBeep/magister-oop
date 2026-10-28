@@ -1,26 +1,22 @@
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
-import { selectionToFormValues } from '@/lib/agenda/slotSelection';
-import type { CreateReturnMeasureFormInput } from '@/lib/return-measure/createRequest';
 import { nextSchoolDay, selectionDateKey } from '@/lib/return-measure/reschedule';
+import { buildReschedulePlans, mergeContiguousSelections } from '@/lib/return-measure/rescheduleSelections';
 import { getDateKey } from '@/lib/shared/dateUtils';
 
-export function buildReschedulePlan(
-	selection: AgendaSlotSelection | null,
-	description: string,
-): CreateReturnMeasureFormInput | null {
-	if (!selection || description.trim().length === 0) return null;
+export function buildReschedulePlanParts(selections: AgendaSlotSelection[], description: string) {
+	const parts = mergeContiguousSelections(selections);
 	return {
-		...selectionToFormValues(selection),
-		description,
-		dayCount: 1,
+		parts,
+		plans: buildReschedulePlans(parts, description),
 	};
 }
 
 export function rescheduleHighlightDateKey(
-	selection: AgendaSlotSelection | null,
+	selections: AgendaSlotSelection[],
 	bounds: { start: Date; end: Date } | null,
 ): string | null {
-	if (selection) return selectionDateKey(selection);
+	const first = selections[0];
+	if (first) return selectionDateKey(first);
 	if (bounds) return getDateKey(nextSchoolDay(bounds.start));
 	return null;
 }

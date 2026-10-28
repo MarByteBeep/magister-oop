@@ -70,10 +70,10 @@ export function hoverLessonSlotToBackgroundEvent(selection: AgendaSlotSelection)
 
 export function draftSelectionToBackgroundEvent(
 	selection: AgendaSlotSelection,
-	options?: { title?: string },
+	options?: { title?: string; id?: string },
 ): CalendarEvent {
 	return {
-		id: 'draft-return-measure',
+		id: options?.id ?? `draft-return-measure-${selection.start.getTime()}-${selection.end.getTime()}`,
 		title: options?.title ?? 'Nieuwe terugkommaatregel',
 		start: selection.start,
 		end: selection.end,

@@ -32,7 +32,7 @@ describe('buildAgendaOverlayEvents', () => {
 	test('keeps the draft selected while hovering another day', () => {
 		const draft = selection('2026-10-08', '08:00', '16:00');
 		const hover = selection('2026-10-09', '08:00', '16:00');
-		const overlays = buildAgendaOverlayEvents(null, draft, hover, onSelectSlot);
+		const overlays = buildAgendaOverlayEvents(null, [draft], hover, onSelectSlot);
 		expect(overlays).toHaveLength(2);
 		expect(overlays[0]?.isDraft).toBe(true);
 		expect(overlays[1]?.isHoverSlot).toBe(true);
@@ -42,14 +42,14 @@ describe('buildAgendaOverlayEvents', () => {
 
 	test('does not stack an identical hover on top of the draft', () => {
 		const draft = selection('2026-10-08', '08:00', '16:00');
-		const overlays = buildAgendaOverlayEvents(null, draft, draft, onSelectSlot);
+		const overlays = buildAgendaOverlayEvents(null, [draft], draft, onSelectSlot);
 		expect(overlays).toHaveLength(1);
 		expect(overlays[0]?.isDraft).toBe(true);
 	});
 
 	test('shows only hover when nothing is selected yet', () => {
 		const hover = selection('2026-10-08', '08:00', '16:00');
-		const overlays = buildAgendaOverlayEvents(null, null, hover, onSelectSlot);
+		const overlays = buildAgendaOverlayEvents(null, [], hover, onSelectSlot);
 		expect(overlays).toHaveLength(1);
 		expect(overlays[0]?.isHoverSlot).toBe(true);
 	});
@@ -58,7 +58,7 @@ describe('buildAgendaOverlayEvents', () => {
 		const draft = selection('2026-10-08', '08:00', '16:00');
 		const hover = selection('2026-10-09', '08:00', '16:00');
 		const preview = selection('2026-10-10', '08:00', '16:00');
-		const overlays = buildAgendaOverlayEvents(preview, draft, hover, onSelectSlot);
+		const overlays = buildAgendaOverlayEvents(preview, [draft], hover, onSelectSlot);
 		expect(overlays).toHaveLength(1);
 		expect(overlays[0]?.isDraft).toBe(true);
 		expect(overlays[0]?.start.getTime()).toBe(preview.start.getTime());
@@ -66,8 +66,26 @@ describe('buildAgendaOverlayEvents', () => {
 
 	test('uses draftLabel as the draft title when provided', () => {
 		const draft = selection('2026-10-08', '08:00', '16:00');
-		const overlays = buildAgendaOverlayEvents(null, draft, null, onSelectSlot, 'Niet gemeld op 24/06/2026');
+		const overlays = buildAgendaOverlayEvents(null, [draft], null, onSelectSlot, 'Niet gemeld op 24/06/2026');
 		expect(overlays).toHaveLength(1);
 		expect(overlays[0]?.title).toBe('Niet gemeld op 24/06/2026');
+	});
+
+	test('renders multiple drafts with unique ids', () => {
+		const first = selection('2026-10-08', '08:00', '08:45');
+		const second = selection('2026-10-09', '09:00', '09:45');
+		const overlays = buildAgendaOverlayEvents(null, [first, second], null, onSelectSlot);
+		expect(overlays).toHaveLength(2);
+		expect(overlays[0]?.isDraft).toBe(true);
+		expect(overlays[1]?.isDraft).toBe(true);
+		expect(overlays[0]?.id).not.toBe(overlays[1]?.id);
+	});
+
+	test('suppresses hover that matches any draft in a multi-select', () => {
+		const first = selection('2026-10-08', '08:00', '08:45');
+		const second = selection('2026-10-09', '09:00', '09:45');
+		const overlays = buildAgendaOverlayEvents(null, [first, second], second, onSelectSlot);
+		expect(overlays).toHaveLength(2);
+		expect(overlays.every((event) => event.isDraft)).toBe(true);
 	});
 });

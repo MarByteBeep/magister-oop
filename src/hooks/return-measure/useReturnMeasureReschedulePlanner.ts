@@ -12,7 +12,7 @@ import {
 	rescheduleReturnMeasureDescription,
 	returnMeasureScheduleKind,
 } from '@/lib/return-measure/reschedule';
-import { buildReschedulePlan, rescheduleHighlightDateKey } from '@/lib/return-measure/reschedulePlan';
+import { buildReschedulePlanParts, rescheduleHighlightDateKey } from '@/lib/return-measure/reschedulePlan';
 import { getDateKey, getNow } from '@/lib/shared/dateUtils';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 
@@ -31,7 +31,7 @@ export function useReturnMeasureReschedulePlanner(measure: ReturnMeasureStudent,
 		bounds,
 		kind,
 		userPicked: session.userPicked,
-		hasSelection: session.selection != null,
+		hasSelection: session.selections.length > 0,
 		agenda: student?.agenda,
 		weekDays: week.weekDays,
 		selectedWeekDate: week.selectedWeekDate,
@@ -41,7 +41,10 @@ export function useReturnMeasureReschedulePlanner(measure: ReturnMeasureStudent,
 		sessionKey: `${enabled}:${measure.begin}:${measure.einde}`,
 	});
 
-	const plan = useMemo(() => buildReschedulePlan(session.selection, description), [session.selection, description]);
+	const { parts, plans } = useMemo(
+		() => buildReschedulePlanParts(session.selections, description),
+		[session.selections, description],
+	);
 
 	const dayEntriesForDate = useCallback(
 		(date: Date) => {
@@ -67,20 +70,16 @@ export function useReturnMeasureReschedulePlanner(measure: ReturnMeasureStudent,
 		[bounds, kind, dayEntriesForDate],
 	);
 
-	const selectionDayEntries = useMemo(
-		() => (session.selection ? dayEntriesForDate(session.selection.start) : null),
-		[session.selection, dayEntriesForDate],
-	);
-
 	return {
 		studentId,
 		bounds,
 		kind,
 		description,
-		selection: session.selection,
-		selectionDayEntries,
-		plan,
-		highlightDateKey: rescheduleHighlightDateKey(session.selection, bounds),
+		selections: session.selections,
+		parts,
+		plans,
+		dayEntriesForDate,
+		highlightDateKey: rescheduleHighlightDateKey(parts, bounds),
 		handleSelectSlot: session.selectSlot,
 		transformSelection,
 		...week,

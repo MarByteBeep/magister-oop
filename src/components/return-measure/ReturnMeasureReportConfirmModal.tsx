@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import ReturnMeasureReschedulePlanner from '@/components/return-measure/ReturnMeasureReschedulePlanner';
+import ReturnMeasureNotReportedConfirmBody from '@/components/return-measure/ReturnMeasureNotReportedConfirmBody';
+import ReturnMeasureReportedConfirmBody from '@/components/return-measure/ReturnMeasureReportedConfirmBody';
 import StudentItem from '@/components/student/StudentItem';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogFooter } from '@/components/ui/dialog';
+import { useReturnMeasureReportConfirmPlan } from '@/hooks/return-measure/useReturnMeasureReportConfirmPlan';
 import type { CreateReturnMeasureFormInput } from '@/lib/return-measure/createRequest';
 import type { ReturnMeasureReportAction } from '@/lib/return-measure/report';
 import { cn } from '@/lib/utils';
@@ -31,8 +30,15 @@ interface ReturnMeasureReportConfirmModalProps {
 	classLabel?: string;
 	photoUrl?: string;
 	isSubmitting: boolean;
-	onConfirm: (plan: CreateReturnMeasureFormInput | null) => void;
+	onConfirm: (plans: CreateReturnMeasureFormInput[]) => void;
 	onCancel: () => void;
+}
+
+function confirmDialogClassName(showPlanner: boolean): string {
+	return cn(
+		'!flex flex-col gap-3',
+		showPlanner ? 'max-h-[90vh] w-[min(1100px,calc(100vw-2rem))] max-w-[1100px] overflow-y-auto' : 'max-w-[500px]',
+	);
 }
 
 export default function ReturnMeasureReportConfirmModal({
@@ -47,18 +53,7 @@ export default function ReturnMeasureReportConfirmModal({
 	onCancel,
 }: ReturnMeasureReportConfirmModalProps) {
 	const copy = action == null ? null : CONFIRM_COPY[action];
-	const isNotReported = action === 'not-reported';
-	const [planEnabled, setPlanEnabled] = useState(true);
-	const [plan, setPlan] = useState<CreateReturnMeasureFormInput | null>(null);
-
-	useEffect(() => {
-		if (action == null) {
-			setPlanEnabled(true);
-			setPlan(null);
-		}
-	}, [action]);
-
-	const canConfirm = !isNotReported || !planEnabled || plan != null;
+	const plan = useReturnMeasureReportConfirmPlan(action);
 
 	const studentChip = (
 		<StudentItem
@@ -71,62 +66,32 @@ export default function ReturnMeasureReportConfirmModal({
 		/>
 	);
 
-	const showPlanner = isNotReported && planEnabled;
-
 	return (
 		<Dialog open={action != null} onOpenChange={(open) => !open && !isSubmitting && onCancel()}>
-			<DialogContent
-				className={cn(
-					'!flex flex-col gap-3',
-					showPlanner
-						? 'max-h-[90vh] w-[min(1100px,calc(100vw-2rem))] max-w-[1100px] overflow-y-auto'
-						: 'max-w-[500px]',
-				)}
-			>
-				{isNotReported ? (
-					<>
-						<DialogHeader className="shrink-0 space-y-2 pr-8 text-left">
-							<DialogTitle className="text-xl">{copy?.title}</DialogTitle>
-							{studentChip}
-						</DialogHeader>
-
-						<div className="flex shrink-0 items-center gap-2">
-							<Checkbox
-								id="plan-new-return-measure"
-								checked={planEnabled}
-								disabled={isSubmitting}
-								onCheckedChange={(checked) => {
-									const next = checked === true;
-									setPlanEnabled(next);
-									if (!next) setPlan(null);
-								}}
-							/>
-							<Label htmlFor="plan-new-return-measure" className="text-sm font-medium">
-								Nieuwe terugkommaatregel plannen
-							</Label>
-						</div>
-
-						{showPlanner ? (
-							<ReturnMeasureReschedulePlanner measure={measure} enabled onPlanChange={setPlan} />
-						) : null}
-					</>
+			<DialogContent className={confirmDialogClassName(plan.showPlanner)}>
+				{plan.isNotReported ? (
+					<ReturnMeasureNotReportedConfirmBody
+						title={copy?.title ?? ''}
+						studentChip={studentChip}
+						measure={measure}
+						planEnabled={plan.planEnabled}
+						isSubmitting={isSubmitting}
+						onPlanEnabledChange={plan.setPlanEnabledAndClear}
+						onPlansChange={plan.setPlans}
+					/>
 				) : (
-					<>
-						<DialogHeader>
-							<DialogTitle>{copy?.title}</DialogTitle>
-						</DialogHeader>
-						<div className="space-y-3">
-							{copy?.body ? <p className="text-sm text-muted-foreground">{copy.body}</p> : null}
-							{studentChip}
-						</div>
-					</>
+					<ReturnMeasureReportedConfirmBody
+						title={copy?.title ?? ''}
+						body={copy?.body}
+						studentChip={studentChip}
+					/>
 				)}
 
 				<DialogFooter className="shrink-0">
 					<Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
 						Annuleren
 					</Button>
-					<Button onClick={() => onConfirm(showPlanner ? plan : null)} disabled={isSubmitting || !canConfirm}>
+					<Button onClick={() => onConfirm(plan.confirmPlans)} disabled={isSubmitting || !plan.canConfirm}>
 						OK
 					</Button>
 				</DialogFooter>

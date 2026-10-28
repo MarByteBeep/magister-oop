@@ -1,10 +1,10 @@
 import type { AgendaSelectionMode } from '@/hooks/agenda/agendaSelectionMode';
+import type { AgendaSelectSlotHandler } from '@/hooks/agenda/useAgendaCalendarSelection';
 import { useCreateAppointmentMode } from '@/hooks/agenda/useCreateAppointmentMode';
-import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 
 export function useAgendaCreateMode(
 	selectionMode: AgendaSelectionMode,
-	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
+	onSelectSlot: AgendaSelectSlotHandler | undefined,
 ) {
 	const slotSelectionEnabled = onSelectSlot !== undefined;
 	const ctrlCreateMode = useCreateAppointmentMode(slotSelectionEnabled && selectionMode === 'ctrl');

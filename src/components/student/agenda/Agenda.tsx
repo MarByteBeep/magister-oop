@@ -15,6 +15,7 @@ function Agenda({
 	onSelectEntry,
 	onSelectSlot,
 	draftSelection,
+	draftSelections,
 	draftLabel,
 	selectionMode,
 	highlightDateKey,
@@ -23,6 +24,7 @@ function Agenda({
 }: AgendaProps) {
 	const calendar = useAgendaCalendar(entries, date, view, activeEntry, onSelectEntry, {
 		draftSelection,
+		draftSelections,
 		draftLabel,
 		onSelectSlot,
 		selectionMode,

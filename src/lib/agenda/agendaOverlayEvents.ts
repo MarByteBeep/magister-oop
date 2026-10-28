@@ -25,24 +25,27 @@ function draftOverlayEvent(selection: AgendaSlotSelection, draftLabel?: string |
 	return draftSelectionToBackgroundEvent(selection, { title });
 }
 
+function matchesAnyDraft(hover: AgendaSlotSelection, drafts: AgendaSlotSelection[]): boolean {
+	return drafts.some((draft) => agendaSlotSelectionsEqual(hover, draft));
+}
+
 /**
- * Keep the committed selection visible while hovering another slot.
- * Hover replaces draft only when it matches the same range (no double ghost).
+ * Keep committed draft selections visible while hovering another slot.
+ * Hover is omitted when it matches any draft range (no double ghost).
  */
 export function buildAgendaOverlayEvents(
 	selectingPreview: AgendaSlotSelection | null,
-	draftSelection: AgendaSlotSelection | null,
+	draftSelections: AgendaSlotSelection[],
 	hoverSelection: AgendaSlotSelection | null,
 	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
 	draftLabel?: string | null,
 ): CalendarEvent[] {
 	if (selectingPreview) return [draftOverlayEvent(selectingPreview, draftLabel)];
 
-	const overlays: CalendarEvent[] = [];
-	if (draftSelection) overlays.push(draftOverlayEvent(draftSelection, draftLabel));
+	const overlays: CalendarEvent[] = draftSelections.map((draft) => draftOverlayEvent(draft, draftLabel));
 
 	const showHover =
-		hoverSelection != null && onSelectSlot != null && !agendaSlotSelectionsEqual(hoverSelection, draftSelection);
+		hoverSelection != null && onSelectSlot != null && !matchesAnyDraft(hoverSelection, draftSelections);
 	if (showHover && hoverSelection) overlays.push(hoverLessonSlotToBackgroundEvent(hoverSelection));
 
 	return overlays;

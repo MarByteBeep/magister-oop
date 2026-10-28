@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { LuTriangleAlert } from 'react-icons/lu';
 import ReturnMeasureRescheduleLegend from '@/components/return-measure/ReturnMeasureRescheduleLegend';
 import Agenda from '@/components/student/agenda/Agenda';
@@ -23,7 +23,7 @@ import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.typ
 interface ReturnMeasureReschedulePlannerProps {
 	measure: ReturnMeasureStudent;
 	enabled: boolean;
-	onPlanChange: (plan: CreateReturnMeasureFormInput | null) => void;
+	onPlanChange: (plans: CreateReturnMeasureFormInput[]) => void;
 }
 
 function scheduleKindLabel(kind: ReturnMeasureScheduleKind): string {
@@ -50,6 +50,11 @@ function overrideAlertMessage(alert: RescheduleOverrideAlert): string {
 	}
 }
 
+const multiSelectHint = 'Ctrl (Windows) of Cmd (Mac) + klik om momenten toe te voegen of te verwijderen.';
+
+const selectionHint =
+	'Kies een moment in de agenda. Suggestie volgt de oorspronkelijke vorm; je mag overriden (ander uur, duur, of over een les).';
+
 export default function ReturnMeasureReschedulePlanner({
 	measure,
 	enabled,
@@ -57,17 +62,18 @@ export default function ReturnMeasureReschedulePlanner({
 }: ReturnMeasureReschedulePlannerProps) {
 	const planner = useReturnMeasureReschedulePlanner(measure, enabled);
 	const stableEntries = useStableAgendaEntries(planner.calendarItems);
-	const calendarDate = useMemo(() => getStartOfWeek(planner.selectedWeekDate), [planner.selectedWeekDate]);
+	const calendarDate = getStartOfWeek(planner.selectedWeekDate);
 	const onPlanChangeRef = useRef(onPlanChange);
 	onPlanChangeRef.current = onPlanChange;
 
 	useEffect(() => {
-		onPlanChangeRef.current(planner.plan);
-	}, [planner.plan]);
+		onPlanChangeRef.current(planner.plans);
+	}, [planner.plans]);
 
 	if (!enabled) return null;
 
-	if (!planner.bounds) {
+	const { bounds } = planner;
+	if (!bounds) {
 		return (
 			<p className="text-sm text-muted-foreground">
 				Deze maatregel heeft geen gepland tijdstip; kies zelf een nieuw moment in de agenda.
@@ -75,19 +81,7 @@ export default function ReturnMeasureReschedulePlanner({
 		);
 	}
 
-	const whenLabel = planner.selection ? formatReturnMeasureWhen(planner.selection) : null;
-	const overrideAlerts =
-		planner.selection == null
-			? []
-			: listRescheduleOverrideAlerts(
-					planner.bounds.start,
-					planner.bounds.end,
-					planner.selection,
-					planner.selectionDayEntries,
-				);
-
-	const selectionHint =
-		'Kies een moment in de agenda. Suggestie volgt de oorspronkelijke vorm; je mag overriden (ander uur, duur, of over een les).';
+	const hasParts = planner.parts.length > 0;
 
 	return (
 		<div className="flex flex-col gap-2">
@@ -115,7 +109,7 @@ export default function ReturnMeasureReschedulePlanner({
 								view="work_week"
 								onSelectEntry={() => {}}
 								onSelectSlot={planner.handleSelectSlot}
-								draftSelection={planner.selection}
+								draftSelections={planner.parts}
 								draftLabel={planner.description}
 								selectionMode="always"
 								highlightDateKey={planner.highlightDateKey}
@@ -128,18 +122,37 @@ export default function ReturnMeasureReschedulePlanner({
 				<ReturnMeasureRescheduleLegend />
 			</div>
 
-			{whenLabel ? (
-				<div className="space-y-1.5 rounded-md bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-					<p>
-						Nieuwe terugkommaatregel:{' '}
-						<span className={cn('font-medium', returnMeasureTextClasses)}>{whenLabel}</span>
-					</p>
-					{overrideAlerts.map((alert) => (
-						<p key={alert.type} className="flex items-start gap-2 text-amber-700 dark:text-amber-400">
-							<LuTriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-							<span>{overrideAlertMessage(alert)}</span>
-						</p>
-					))}
+			<p className="text-xs text-muted-foreground">{multiSelectHint}</p>
+
+			{hasParts ? (
+				<div className="space-y-2 rounded-md bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+					{planner.parts.map((part) => {
+						const whenLabel = formatReturnMeasureWhen(part);
+						const overrideAlerts = listRescheduleOverrideAlerts(
+							bounds.start,
+							bounds.end,
+							part,
+							planner.dayEntriesForDate(part.start),
+						);
+						const partKey = `${part.start.getTime()}-${part.end.getTime()}`;
+						return (
+							<div key={partKey} className="space-y-1.5">
+								<p>
+									Nieuwe terugkommaatregel:{' '}
+									<span className={cn('font-medium', returnMeasureTextClasses)}>{whenLabel}</span>
+								</p>
+								{overrideAlerts.map((alert) => (
+									<p
+										key={`${partKey}-${alert.type}`}
+										className="flex items-start gap-2 text-amber-700 dark:text-amber-400"
+									>
+										<LuTriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+										<span>{overrideAlertMessage(alert)}</span>
+									</p>
+								))}
+							</div>
+						);
+					})}
 				</div>
 			) : (
 				<p className="text-sm text-muted-foreground">{selectionHint}</p>

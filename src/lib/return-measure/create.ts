@@ -6,7 +6,16 @@ import { returnMeasureSpanMonthKeys } from '@/lib/return-measure/utils';
 import { postJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 
-export async function submitReturnMeasure(studentId: number, input: CreateReturnMeasureFormInput): Promise<boolean> {
+export type SubmitReturnMeasureOptions = {
+	/** When false, skip the success toast (caller shows a batch summary). Errors still toast. */
+	successToast?: boolean;
+};
+
+export async function submitReturnMeasure(
+	studentId: number,
+	input: CreateReturnMeasureFormInput,
+	options?: SubmitReturnMeasureOptions,
+): Promise<boolean> {
 	const payload = buildCreateReturnMeasureRequest(input);
 	if (!payload) {
 		toast.error('Controleer de ingevulde gegevens');
@@ -27,7 +36,9 @@ export async function submitReturnMeasure(studentId: number, input: CreateReturn
 			monthKeys.map((monthKey) => bulkListRegistry.refresh('return-measures', `${monthKey}-01`, 'background')),
 		);
 
-		toast.success('Terugkommaatregel succesvol aangemaakt');
+		if (options?.successToast !== false) {
+			toast.success('Terugkommaatregel succesvol aangemaakt');
+		}
 		return true;
 	} catch (err) {
 		toast.error('Fout bij het aanmaken van de terugkommaatregel', {

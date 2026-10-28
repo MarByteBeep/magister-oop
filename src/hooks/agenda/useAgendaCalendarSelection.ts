@@ -9,6 +9,10 @@ import { isAllDaySlotSelection, slotInfoToSelection } from '@/lib/agenda/slotSel
 
 export type TransformAgendaSelection = (selection: AgendaSlotSelection) => AgendaSlotSelection | null;
 
+export type AgendaSelectSlotMeta = { additive?: boolean };
+
+export type AgendaSelectSlotHandler = (selection: AgendaSlotSelection, meta?: AgendaSelectSlotMeta) => void;
+
 function applyTransform(
 	selection: AgendaSlotSelection | null,
 	transformSelection?: TransformAgendaSelection,
@@ -19,7 +23,7 @@ function applyTransform(
 }
 
 export function useAgendaCalendarSelection(
-	onSelectSlot?: (selection: AgendaSlotSelection) => void,
+	onSelectSlot?: AgendaSelectSlotHandler,
 	createMode = false,
 	transformSelection?: TransformAgendaSelection,
 ) {
@@ -29,6 +33,7 @@ export function useAgendaCalendarSelection(
 	const selectionCompletedRef = useRef(false);
 	const clearHoverTimeoutRef = useRef<number | undefined>(undefined);
 	const pointerRef = useRef<{ x: number; y: number } | null>(null);
+	const modifierRef = useRef(false);
 	const createModeRef = useRef(createMode);
 	const transformRef = useRef(transformSelection);
 	createModeRef.current = createMode;
@@ -50,7 +55,7 @@ export function useAgendaCalendarSelection(
 			setSelectingPreview(null);
 			setHoveredSlot(null);
 			const selection = applyTransform(getFullDayScheduleSelection(day), transformRef.current);
-			if (selection) onSelectSlot(selection);
+			if (selection) onSelectSlot(selection, { additive: modifierRef.current });
 		},
 		[onSelectSlot],
 	);
@@ -68,7 +73,9 @@ export function useAgendaCalendarSelection(
 				: snapSelectionToLessonHours(slotInfoToSelection(slotInfo));
 			const selection = applyTransform(snapped, transformRef.current);
 			if (!selection) return;
-			onSelectSlot(selection);
+			// Drag (action select) always replaces; Ctrl/Cmd+click toggles additively.
+			const additive = modifierRef.current && slotInfo.action === 'click';
+			onSelectSlot(selection, { additive });
 		},
 		[onSelectSlot],
 	);
@@ -78,10 +85,17 @@ export function useAgendaCalendarSelection(
 
 		const trackPointer = (event: PointerEvent) => {
 			pointerRef.current = { x: event.clientX, y: event.clientY };
+			modifierRef.current = event.ctrlKey || event.metaKey;
 		};
 
 		window.addEventListener('pointermove', trackPointer, { passive: true });
-		return () => window.removeEventListener('pointermove', trackPointer);
+		window.addEventListener('pointerdown', trackPointer, { passive: true });
+		window.addEventListener('pointerup', trackPointer, { passive: true });
+		return () => {
+			window.removeEventListener('pointermove', trackPointer);
+			window.removeEventListener('pointerdown', trackPointer);
+			window.removeEventListener('pointerup', trackPointer);
+		};
 	}, [onSelectSlot]);
 
 	useEffect(() => {

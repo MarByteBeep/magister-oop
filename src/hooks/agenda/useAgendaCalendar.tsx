@@ -5,7 +5,11 @@ import type { AgendaSelectionMode } from '@/hooks/agenda/agendaSelectionMode';
 import { resolveAgendaHoverSelection } from '@/hooks/agenda/resolveAgendaHoverSelection';
 import { useAgendaCalendarChrome } from '@/hooks/agenda/useAgendaCalendarChrome';
 import { useAgendaCalendarEvents } from '@/hooks/agenda/useAgendaCalendarEvents';
-import { type TransformAgendaSelection, useAgendaCalendarSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
+import {
+	type AgendaSelectSlotHandler,
+	type TransformAgendaSelection,
+	useAgendaCalendarSelection,
+} from '@/hooks/agenda/useAgendaCalendarSelection';
 import { useAgendaCreateMode } from '@/hooks/agenda/useAgendaCreateMode';
 import type { CalendarEvent } from '@/lib/agenda/calendarUtils';
 import { agendaDayLayoutAlgorithm } from '@/lib/agenda/dayLayout';
@@ -13,6 +17,15 @@ import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 
 export type { AgendaSelectionMode } from '@/hooks/agenda/agendaSelectionMode';
+
+function normalizeDraftSelections(
+	draftSelection: AgendaSlotSelection | null | undefined,
+	draftSelections: AgendaSlotSelection[] | undefined,
+): AgendaSlotSelection[] {
+	if (draftSelections) return draftSelections;
+	if (draftSelection) return [draftSelection];
+	return [];
+}
 
 export function useAgendaCalendar(
 	entries: AgendaEntry[],
@@ -22,8 +35,9 @@ export function useAgendaCalendar(
 	onSelectEntry: (entry: AgendaEntry) => void,
 	options?: {
 		draftSelection?: AgendaSlotSelection | null;
+		draftSelections?: AgendaSlotSelection[];
 		draftLabel?: string | null;
-		onSelectSlot?: (selection: AgendaSlotSelection) => void;
+		onSelectSlot?: AgendaSelectSlotHandler;
 		selectionMode?: AgendaSelectionMode;
 		highlightDateKey?: string | null;
 		focusReturnMeasureId?: number | null;
@@ -32,6 +46,7 @@ export function useAgendaCalendar(
 ) {
 	const {
 		draftSelection = null,
+		draftSelections,
 		draftLabel = null,
 		onSelectSlot,
 		selectionMode = 'ctrl',
@@ -39,6 +54,10 @@ export function useAgendaCalendar(
 		focusReturnMeasureId = null,
 		transformSelection,
 	} = options ?? {};
+	const resolvedDrafts = useMemo(
+		() => normalizeDraftSelections(draftSelection, draftSelections),
+		[draftSelection, draftSelections],
+	);
 	const { slotSelectionEnabled, createMode } = useAgendaCreateMode(selectionMode, onSelectSlot);
 	const {
 		selectingPreview,
@@ -61,7 +80,7 @@ export function useAgendaCalendar(
 		date,
 		view,
 		selectingPreview,
-		draftSelection,
+		resolvedDrafts,
 		hoverSelection,
 		onSelectSlot,
 		draftLabel,

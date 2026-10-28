@@ -1,11 +1,10 @@
 import { hoveredSlotFromSelection, resolveAgendaHoverSelection } from '@/hooks/agenda/resolveAgendaHoverSelection';
-import type { TransformAgendaSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
+import type { AgendaSelectSlotHandler, TransformAgendaSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
 import type { CalendarEvent } from '@/lib/agenda/calendarUtils';
 import { isSameCalendarDay } from '@/lib/agenda/calendarUtils';
 import { isAbsenceNoticeEntry, isReturnMeasureEntry } from '@/lib/agenda/entryUtils';
 import { isFullDayReturnMeasureEntry, isFullDayScheduleSelection } from '@/lib/agenda/fullDayScheduleUtils';
 import { findAppointmentSlotForDateTime, type HoveredAgendaSlot } from '@/lib/agenda/lessonHours';
-import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import { getDateKey } from '@/lib/shared/dateUtils';
 import { cn } from '@/lib/utils';
 
@@ -87,7 +86,7 @@ export function findHoveredAgendaSlotAtPoint(clientX: number, clientY: number): 
 export function createCalendarSlotPropGetter(
 	suppressHover: boolean,
 	createMode: boolean,
-	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
+	onSelectSlot: AgendaSelectSlotHandler | undefined,
 	setHoveredSlot: (slot: HoveredAgendaSlot | null) => void,
 	clearHoverTimeoutRef: { current: number | undefined },
 	transformSelection?: TransformAgendaSelection,

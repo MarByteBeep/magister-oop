@@ -1,5 +1,6 @@
 import { useMemo, useRef } from 'react';
 import type { View } from 'react-big-calendar';
+import type { AgendaSelectSlotHandler } from '@/hooks/agenda/useAgendaCalendarSelection';
 import { buildAgendaOverlayEvents } from '@/lib/agenda/agendaOverlayEvents';
 import {
 	agendaEntriesToCalendarEvents,
@@ -48,9 +49,9 @@ export function useAgendaCalendarEvents(
 	date: Date,
 	view: View,
 	selectingPreview: AgendaSlotSelection | null,
-	draftSelection: AgendaSlotSelection | null,
+	draftSelections: AgendaSlotSelection[],
 	hoverSelection: AgendaSlotSelection | null,
-	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
+	onSelectSlot: AgendaSelectSlotHandler | undefined,
 	draftLabel?: string | null,
 ) {
 	const dateTimestamp = date.getTime();
@@ -61,15 +62,15 @@ export function useAgendaCalendarEvents(
 	}, [dateTimestamp, view]);
 	const breakEvents = useMemo(() => breakPeriodsToCalendarEvents(visibleDates), [visibleDates]);
 	const hadDraftRef = useRef(false);
-	if (draftSelection == null && selectingPreview == null) {
+	if (draftSelections.length === 0 && selectingPreview == null) {
 		if (hadDraftRef.current) clearDraftAppearClaims();
 		hadDraftRef.current = false;
 	} else {
 		hadDraftRef.current = true;
 	}
 	const overlayEvents = useMemo(
-		() => buildAgendaOverlayEvents(selectingPreview, draftSelection, hoverSelection, onSelectSlot, draftLabel),
-		[selectingPreview, draftSelection, hoverSelection, onSelectSlot, draftLabel],
+		() => buildAgendaOverlayEvents(selectingPreview, draftSelections, hoverSelection, onSelectSlot, draftLabel),
+		[selectingPreview, draftSelections, hoverSelection, onSelectSlot, draftLabel],
 	);
 	const calendarEventsRef = useRef<CalendarEvent[]>([]);
 	const calendarEvents = useMemo(() => {

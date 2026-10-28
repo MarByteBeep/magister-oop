@@ -1,6 +1,6 @@
 import type { View } from 'react-big-calendar';
 import type { AgendaSelectionMode } from '@/hooks/agenda/agendaSelectionMode';
-import type { TransformAgendaSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
+import type { AgendaSelectSlotHandler, TransformAgendaSelection } from '@/hooks/agenda/useAgendaCalendarSelection';
 import { agendaEntriesEqual, isSameAgendaEntryOccurrence } from '@/lib/agenda/entryUtils';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
@@ -11,8 +11,11 @@ export interface AgendaProps {
 	view: View;
 	activeEntry?: AgendaEntry | null;
 	onSelectEntry: (entry: AgendaEntry) => void;
-	onSelectSlot?: (selection: AgendaSlotSelection) => void;
+	onSelectSlot?: AgendaSelectSlotHandler;
+	/** Single draft (create flow). Ignored when `draftSelections` is set. */
 	draftSelection?: AgendaSlotSelection | null;
+	/** Multiple drafts (reschedule multi-select). */
+	draftSelections?: AgendaSlotSelection[];
 	/** Label shown on the draft overlay (e.g. reschedule description). */
 	draftLabel?: string | null;
 	selectionMode?: AgendaSelectionMode;
@@ -24,6 +27,7 @@ export interface AgendaProps {
 
 export function agendaPropsEqual(prev: AgendaProps, next: AgendaProps): boolean {
 	if (prev.view !== next.view || prev.draftSelection !== next.draftSelection) return false;
+	if (prev.draftSelections !== next.draftSelections) return false;
 	if (prev.draftLabel !== next.draftLabel) return false;
 	if (prev.focusReturnMeasureId !== next.focusReturnMeasureId) return false;
 	if (prev.selectionMode !== next.selectionMode || prev.highlightDateKey !== next.highlightDateKey) return false;

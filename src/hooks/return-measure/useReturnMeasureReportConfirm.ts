@@ -15,11 +15,11 @@ export function useReturnMeasureReportConfirm(
 	const [pendingAction, setPendingAction] = useState<ReturnMeasureReportAction | null>(null);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	async function confirmReport(plan: CreateReturnMeasureFormInput | null) {
+	async function confirmReport(plans: CreateReturnMeasureFormInput[]) {
 		if (pendingAction == null || isSubmitting) return;
 		setIsSubmitting(true);
 		try {
-			await confirmReturnMeasureReport(measure, pendingAction, plan);
+			await confirmReturnMeasureReport(measure, pendingAction, plans);
 		} finally {
 			setIsSubmitting(false);
 			setPendingAction(null);
@@ -40,7 +40,7 @@ export function useReturnMeasureReportConfirm(
 			classLabel: classLabel ?? measure.leerling.stamklas.code,
 			photoUrl,
 			isSubmitting,
-			onConfirm: (plan: CreateReturnMeasureFormInput | null) => void confirmReport(plan),
+			onConfirm: (plans: CreateReturnMeasureFormInput[]) => void confirmReport(plans),
 			onCancel: () => setPendingAction(null),
 		},
 	};
