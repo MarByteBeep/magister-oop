@@ -1,6 +1,6 @@
 import { fakerNL as faker } from '@faker-js/faker';
 import type { StaffMember } from '@/magister/response/staffMember.types';
-import { downloadEntityPhoto } from './shared';
+import { generateEntityLinks } from './shared';
 
 export async function generateDummyStaffMember(id: number): Promise<StaffMember> {
 	faker.seed(id);
@@ -10,13 +10,7 @@ export async function generateDummyStaffMember(id: number): Promise<StaffMember>
 	const phone = faker.helpers.replaceSymbols('06-########');
 	const email = faker.internet.email({ firstName, lastName });
 
-	const hasPhoto = Math.random() > 0.05;
-
-	let photoHref: string | undefined;
-	if (hasPhoto) {
-		const fakerImageUrl = faker.image.urlLoremFlickr({ category: 'people', width: 192, height: 192 });
-		photoHref = await downloadEntityPhoto(id, fakerImageUrl, `/api/medewerkers/${id}/foto`);
-	}
+	const links = await generateEntityLinks(id, `/api/medewerkers/${id}`);
 
 	return {
 		id: id,
@@ -27,15 +21,6 @@ export async function generateDummyStaffMember(id: number): Promise<StaffMember>
 		achternaam: lastName,
 		emailadres: email,
 		telefoonnummer: phone,
-		links: {
-			self: {
-				href: `/api/medewerkers/${id}`,
-			},
-			...(photoHref && {
-				foto: {
-					href: photoHref,
-				},
-			}),
-		},
+		links,
 	};
 }

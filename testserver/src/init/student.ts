@@ -1,6 +1,6 @@
 import { fakerNL as faker } from '@faker-js/faker';
 import type { StudentBase } from '@/magister/response/student.types';
-import { downloadEntityPhoto } from './shared';
+import { generateEntityLinks } from './shared';
 
 export async function generateDummyStudent(id: number): Promise<StudentBase> {
 	faker.seed(id);
@@ -78,13 +78,7 @@ export async function generateDummyStudent(id: number): Promise<StudentBase> {
 			? [faker.helpers.arrayElement(matchingClasses)]
 			: [faker.helpers.arrayElement(classOptions)];
 
-	const hasPhoto = Math.random() > 0.05;
-
-	let photoHref: string | undefined;
-	if (hasPhoto) {
-		const fakerImageUrl = faker.image.urlLoremFlickr({ category: 'cat', width: 192, height: 192 });
-		photoHref = await downloadEntityPhoto(id, fakerImageUrl, `/api/leerlingen/${id}/foto`);
-	}
+	const links = await generateEntityLinks(id, `/api/leerlingen/${id}`);
 
 	return {
 		id: id,
@@ -99,15 +93,6 @@ export async function generateDummyStudent(id: number): Promise<StudentBase> {
 		klassen: classes,
 		studies: studies,
 		externeId: externalId,
-		links: {
-			self: {
-				href: `/api/leerlingen/${id}`,
-			},
-			...(photoHref && {
-				foto: {
-					href: photoHref,
-				},
-			}),
-		},
+		links,
 	};
 }

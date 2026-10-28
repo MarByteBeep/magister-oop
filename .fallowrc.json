@@ -1,9 +1,16 @@
 {
 	"$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
 	"entry": ["src/main.tsx", "src/background.ts", "vite.config.ts", "vite-plugin-api.ts"],
+	"framework": [
+		{
+			"name": "testserver",
+			"enablers": ["hono"],
+			"entryPoints": ["testserver/src/app.ts"],
+			"entryPointRole": "support"
+		}
+	],
 	"ignorePatterns": [".cursor/**"],
 	"ignoreExportsUsedInFile": true,
-	"ignoreDependencies": ["hono"],
 	"ignoreExports": [
 		{
 			"file": "testserver/src/api/**",

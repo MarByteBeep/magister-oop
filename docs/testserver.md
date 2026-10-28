@@ -6,18 +6,6 @@ De testserver is een lokale mock van de Magister-API. Hiermee kun je de extensie
 
 Bij **`bun run dev`** draait de mock-API **geïntegreerd** in de Vite dev-server. Je hoeft geen aparte testserver te starten: één proces, één poort. De extensie praat dan met `/api` op dezelfde origin.
 
-## Standalone testserver (optioneel)
-
-Wil je de API apart draaien (bijv. om alleen de endpoints te testen), dan:
-
-- In de **projectroot** een bestand `.env` aanmaken met de poort:
-
-  ```env
-  VITE_TESTSERVER_PORT=3000
-  ```
-
-- Starten met: **`bun run testserver:standalone`**. De extensie gebruikt in dev nu de geïntegreerde API; voor standalone moet je handmatig de extensie configureren om naar die poort te gaan (of gebruik de geïntegreerde variant).
-
 ## Data initialiseren (init)
 
 De testserver leest data uit JSON-bestanden in de map `testserver/data/`. Die map en bestanden bestaan niet standaard; je moet ze eenmalig laten aanmaken met het **init**-script.
@@ -27,14 +15,7 @@ De testserver leest data uit JSON-bestanden in de map `testserver/data/`. Die ma
 Vanuit de projectroot:
 
 ```sh
-cd testserver
-bun run init
-```
-
-Of in één keer:
-
-```sh
-bun run --cwd testserver init
+bun run testserver:init
 ```
 
 Het init-script (`testserver/src/init/init.ts`):
@@ -58,19 +39,11 @@ De gegenereerde IDs zijn deterministisch (Faker wordt per ID geseed), zodat je e
 
 ### Init opnieuw draaien
 
-Je kunt `bun run init` gerust vaker uitvoeren. Het script wist elke keer de bestaande bestanden en genereert opnieuw. Handig als je de structuur van de init-scripts hebt aangepast of een schone set testdata wilt.
+Je kunt `bun run testserver:init` gerust vaker uitvoeren. Het script wist elke keer de bestaande bestanden en genereert opnieuw. Handig als je de structuur van de init-scripts hebt aangepast of een schone set testdata wilt.
 
-## Testserver standalone starten
+## Wat de testserver doet
 
-Vanuit de projectroot:
-
-```sh
-bun run testserver:standalone
-```
-
-Dit start de Bun-server op de poort uit `.env` (bijv. 3000). Alleen nodig als je de API los van de Vite dev-server wilt draaien.
-
-De server:
+De testserver:
 
 - **Leest** de JSON-bestanden uit `testserver/data/` (via de helpers in `api/utils/helpers.ts`).
 - **Serveert** API-endpoints die de Magister-URLs van de extensie nabootsen (leerlingen zoeken, agenda, lockers, foto’s, verantwoordingen, etc.).
@@ -80,11 +53,9 @@ Zonder eerst `init` te draaien ontbreken de data-bestanden en kunnen requests fa
 
 ## Gebruik in de praktijk
 
-1. **Eenmalig (of wanneer je schone data wilt):** `cd testserver && bun run init`.
+1. **Eenmalig (of wanneer je schone data wilt):** `bun run testserver:init`.
 2. **Development:** alleen **`bun run dev`** — de extensie en de mock-API draaien samen op één poort.
 3. Je opent de extensie (popup/venster) en gebruikt de app; de data komen van de geïntegreerde test-API.
-
-Optioneel: voor alleen de API apart, `.env` met `VITE_TESTSERVER_PORT=3000` en `bun run testserver:standalone`.
 
 In productie (`bun run build`) wordt geen testserver gebruikt; dan praat de extensie alleen met Magister.
 
@@ -92,14 +63,12 @@ In productie (`bun run build`) wordt geen testserver gebruikt; dan praat de exte
 
 | Actie                    | Commando                            |
 |--------------------------|-------------------------------------|
-| Data genereren           | `cd testserver && bun run init`     |
+| Data genereren           | `bun run testserver:init`           |
 | Dev (app + API in één)   | `bun run dev` (uit root)            |
-| Alleen testserver (Bun)  | `bun run testserver:standalone`     |
 
 ## Mapstructuur (testserver)
 
-- `testserver/src/app.ts` — Hono-app: routing voor alle API-endpoints, CORS en 404. Wordt gebruikt door zowel de Vite-middleware als de standalone Bun-server.
-- `testserver/src/server.ts` — Bun-server voor standalone (`bun run testserver:standalone`); roept `app.fetch` aan.
+- `testserver/src/app.ts` — Hono-app: routing voor alle API-endpoints, CORS en 404. Wordt door `vite-plugin-api.ts` als middleware in de Vite dev-server geladen.
 - `testserver/src/init/init.ts` — Init-script (aanmaken en vullen van `data/`).
 - `testserver/src/init/leerling.ts`, `medewerker.ts`, `locker.ts`, `agenda.ts` — Generatoren voor dummy-data.
 - `testserver/src/api/` — API-handlers per endpoint (o.a. `leerlingen/zoeken`, `leerlingen/{id}/afspraken`, `v1/lockers/details`). Exporteren `GET(req)` of `GET(req, id)`; de routing staat in `app.ts`.

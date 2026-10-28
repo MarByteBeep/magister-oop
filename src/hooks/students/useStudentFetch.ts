@@ -1,7 +1,7 @@
 import { type Dispatch, type SetStateAction, useCallback } from 'react';
 import { clearStudentStore } from '@/hooks/students/useStudentStore';
 import { ensureAttendanceTypes } from '@/lib/absence-notice/attendanceTypes';
-import { mergeStudent } from '@/lib/students/mergeStudent';
+import { mergeDeep } from '@/lib/shared/objectUtils';
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { LockersResponse } from '@/magister/response/locker.types';
@@ -15,7 +15,7 @@ export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>
 			setStudents((prev) =>
 				prev.map((s) => {
 					const locker = data.lockersDetails.find((l) => l.rentalPeriod?.student?.personId === s.id);
-					return locker ? mergeStudent(s, { lockerCode: locker.lockerCode }) : s;
+					return locker ? mergeDeep(s, { lockerCode: locker.lockerCode }) : s;
 				}),
 			);
 		} catch (e) {
@@ -36,7 +36,7 @@ export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>
 				const merged = [...prev];
 				for (const s of data.items) {
 					const idx = merged.findIndex((st) => st.id === s.id);
-					if (idx >= 0) merged[idx] = mergeStudent(merged[idx], s);
+					if (idx >= 0) merged[idx] = mergeDeep(merged[idx], s);
 					else merged.push(s);
 				}
 				return merged;

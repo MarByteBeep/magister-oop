@@ -33,7 +33,7 @@ Vite bouwt de extensie en houdt bestanden in de gaten.
 
 ## Lokaal testen zonder Magister
 
-Bij `bun run dev` draait de mock-API mee in dezelfde server; je hebt geen aparte testserver nodig. Eén keer data genereren: `cd testserver && bun run init`. Zie **[docs/testserver.md](testserver.md)** voor details.
+Bij `bun run dev` draait de mock-API mee in dezelfde server; je hebt geen aparte testserver nodig. Eén keer data genereren: `bun run testserver:init`. Zie **[docs/testserver.md](testserver.md)** voor details.
 
 ## Lint en typecheck
 
