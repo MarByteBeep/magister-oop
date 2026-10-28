@@ -42,8 +42,8 @@ export function useAutoLoadAgenda(
 				inFlightStudentIdsRef.current.add(student.id);
 				loadAgendaRef
 					.current(student.id, start, end)
-					.catch((err) => {
-						console.error(`Failed to auto-refresh week agenda for student ${student.id}`, err);
+					.catch(() => {
+						// useAgendaLoader already logs real failures.
 					})
 					.finally(() => {
 						inFlightStudentIdsRef.current.delete(student.id);

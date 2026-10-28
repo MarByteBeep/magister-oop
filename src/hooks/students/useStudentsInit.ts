@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 import type { MagisterSessionStatus } from '@/lib/session/magisterSession';
 import { loadStudentDataFromSession } from '@/lib/students/dataStorePersistence';
 
-const LOGIN_CANCELLED_MESSAGE = 'Inloggen op Magister is afgebroken. Klik opnieuw op het extensie-icoon.';
-
 export function useStudentsInit(
 	session: MagisterSessionStatus,
 	fetchStudentsPaginated: () => Promise<void>,
@@ -17,16 +15,7 @@ export function useStudentsInit(
 		async function init() {
 			setLoading(true);
 			await loadStudentDataFromSession();
-
-			if (session !== 'ready') {
-				if (session === 'connecting') {
-					setError(null);
-				} else if (session === 'cancelled') {
-					setError(LOGIN_CANCELLED_MESSAGE);
-					setLoading(false);
-				}
-				return;
-			}
+			if (session !== 'ready') return;
 
 			setError(null);
 			await fetchStudentsPaginated().catch((err) => setError(err instanceof Error ? err.message : String(err)));

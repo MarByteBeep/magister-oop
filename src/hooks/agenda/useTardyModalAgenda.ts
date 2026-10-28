@@ -39,9 +39,8 @@ export function useTardyModalAgenda(
 				.then(({ entries }) => {
 					if (!cancelled) setAgendaEntries(agendaEntriesForDate(entries, todayKey));
 				})
-				.catch((err) => {
+				.catch(() => {
 					if (!cancelled) {
-						console.error('Failed to load agenda:', err);
 						setAgendaEntries([]);
 					}
 				})

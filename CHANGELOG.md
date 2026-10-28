@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.1 — 2026-10-28
+
+- Privacy: leerlinggegevens **verborgen** zodra de Magister-sessie verloopt
+- Sessie verlopen: **Magister-tab** opent direct om opnieuw in te loggen; daarna gegevens meteen terug
+- Terugkomers: label **Afgehandeld** weggehaald
+
 ## 1.4.0 — 2026-10-01
 
 - Agenda: **Afwezigheid** aanmaken of verwijderen

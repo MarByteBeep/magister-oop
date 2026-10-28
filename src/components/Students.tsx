@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import { SearchAndFiltersBar } from '@/components/SearchAndFiltersBar';
 import StudentsTable from '@/components/StudentsTable';
-import { useMagisterSession } from '@/context/MagisterSessionContext';
 import { useStudentsContext } from '@/context/StudentsContext';
 import { useCurrentTime } from '@/hooks/shared/useCurrentTime';
 import { type SortColumn, type SortDirection, useStudentListFilters } from '@/hooks/students/useStudentListFilters';
@@ -39,7 +38,6 @@ function Students() {
 		currentLessonInfo,
 		nextLessonInfo,
 	} = useStudentsContext();
-	const session = useMagisterSession();
 	const currentTime = useCurrentTime();
 	const [searchTerm, setSearchTerm] = useState('');
 	const { sortColumn, sortDirection, handleSort } = useStudentsSortState();
@@ -69,7 +67,7 @@ function Students() {
 		[uniqueStudies],
 	);
 
-	const loadingTooltip = studentsLoadingTooltip(session, studentsNeedingAgendaCount);
+	const loadingTooltip = studentsLoadingTooltip(studentsNeedingAgendaCount);
 
 	return (
 		<div className="w-full">

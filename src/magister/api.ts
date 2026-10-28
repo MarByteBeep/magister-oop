@@ -1,8 +1,15 @@
+import { requestMagisterSessionVerification } from '@/lib/session/magisterSession';
 import { jsonCacheGet, jsonCacheSet, loadJsonCache } from '@/lib/shared/cache';
 import { fetchBlobInMagisterTab } from '@/magister/fetchBlobInMagisterTab';
 import { magisterTabJsonInPage } from '@/magister/magisterTabJsonInPage';
-import { MAGISTER_SESSION_EXPIRED_MESSAGE, schoolApiHttpErrorMessage } from '@/magister/schoolApiHttpError';
+import { schoolApiHttpErrorMessage } from '@/magister/schoolApiHttpError';
 import { type SendJsonMethod, type SendJsonResult, sendJsonResponseToResult } from '@/magister/sendJsonResult';
+import {
+	isMagisterUnavailableError,
+	MAGISTER_SESSION_EXPIRED_MESSAGE,
+	MAGISTER_TAB_UNAVAILABLE_MESSAGE,
+	MAGISTER_TOKEN_MISSING_MESSAGE,
+} from '@/magister/sessionErrors';
 import { findSchoolSessionTab, isSchoolSessionUrl } from '@/popup-utils/tabs';
 
 type CredentialsOption = 'include' | 'omit' | 'same-origin';
@@ -164,37 +171,46 @@ async function executeScriptInTab<T, Args extends unknown[]>(
 	}
 }
 
+const TAB_UNAVAILABLE: ScriptError = { ok: false, error: MAGISTER_TAB_UNAVAILABLE_MESSAGE };
+
+/** Chrome errors when the tab closed, reloaded, or navigated off Magister between lookup and injection. */
+const TAB_GONE_ERROR_PARTS = ['No tab with id', 'Frame with ID', 'Cannot access contents of'];
+
+/** A school 404 also maps to the expired message; the background re-check makes that harmless. */
 async function executeInActiveMagisterTab<T, Args extends unknown[]>(
 	func: (...args: Args) => Promise<T>,
 	args: Args,
 ): Promise<T | ScriptError> {
+	const result = await executeWithTabRetry(func, args);
+	if (isScriptError(result) && isMagisterUnavailableError(result.error)) requestMagisterSessionVerification();
+	return result;
+}
+
+async function executeWithTabRetry<T, Args extends unknown[]>(
+	func: (...args: Args) => Promise<T>,
+	args: Args,
+): Promise<T | ScriptError> {
 	const tabId = await resolveActiveMagisterTabId();
-	if (tabId === undefined) return { ok: false, error: 'no active magister tab' };
+	if (tabId === undefined) return TAB_UNAVAILABLE;
 	await sleep(Math.random() * 250);
 
 	const first = await executeScriptInTab(tabId, func, args);
-	if (!isMissingTabError(first)) return first;
+	if (!isTabGoneError(first)) return first;
 
 	await chrome.storage.session.remove('activeTabId');
 	const retryId = await resolveActiveMagisterTabId();
-	if (retryId === undefined) return { ok: false, error: 'no active magister tab' };
-	return executeScriptInTab(retryId, func, args);
+	if (retryId === undefined) return TAB_UNAVAILABLE;
+	const retry = await executeScriptInTab(retryId, func, args);
+	return isTabGoneError(retry) ? TAB_UNAVAILABLE : retry;
 }
 
-function isMissingTabError<T>(result: T | ScriptError): result is ScriptError {
-	return (
-		typeof result === 'object' &&
-		result !== null &&
-		'ok' in result &&
-		result.ok === false &&
-		result.error.includes('No tab with id')
-	);
+function isScriptError<T>(result: T | ScriptError): result is ScriptError {
+	return typeof result === 'object' && result !== null && 'ok' in result && result.ok === false;
 }
 
-/** Shown when the Magister tab holds no OIDC access token for the platform APIs. */
-const MAGISTER_TOKEN_MISSING_MESSAGE =
-	'Geen Magister-token gevonden in de geopende Magister-tab. ' +
-	'Ververs de Magister-tab en open daarna deze extensie opnieuw.';
+function isTabGoneError<T>(result: T | ScriptError): result is ScriptError {
+	return isScriptError(result) && TAB_GONE_ERROR_PARTS.some((part) => result.error.includes(part));
+}
 
 await loadJsonCache();
 

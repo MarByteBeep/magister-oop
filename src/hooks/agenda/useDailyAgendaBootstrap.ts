@@ -40,7 +40,9 @@ export function useDailyAgendaBootstrap(
 			.then(({ entries }) => {
 				if (!cancelled) setBootstrapAgenda(agendaEntriesForDate(entries, todayKey));
 			})
-			.catch((err) => console.error('Failed to load agenda:', err))
+			.catch(() => {
+				// useAgendaLoader already logs real failures.
+			})
 			.finally(() => {
 				if (!cancelled) setIsLoading(false);
 			});

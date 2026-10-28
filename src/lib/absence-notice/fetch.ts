@@ -1,6 +1,7 @@
 import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { AbsenceNotice, AbsenceNoticesResponse } from '@/magister/response/absenceNotice.types';
+import { isMagisterUnavailableError } from '@/magister/sessionErrors';
 
 const cache = new Map<string, AbsenceNotice[]>();
 const inflight = new Map<string, Promise<AbsenceNotice[]>>();
@@ -28,7 +29,8 @@ export async function getAbsenceNoticesForDate(dateKey: string): Promise<Absence
 			if (inflight.get(dateKey) === request) cache.set(dateKey, items);
 			return items;
 		} catch (error) {
-			console.error('Failed to fetch absence notices for', dateKey, error);
+			if (!isMagisterUnavailableError(error))
+				console.error('Failed to fetch absence notices for', dateKey, error);
 			throw error;
 		} finally {
 			if (inflight.get(dateKey) === request) inflight.delete(dateKey);

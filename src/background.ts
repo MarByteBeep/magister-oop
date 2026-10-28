@@ -1,5 +1,5 @@
 import { applyActionBadgeText } from './lib/extension/actionBadge';
-import { MAGISTER_SESSION_KEY } from './lib/session/magisterSession';
+import { MAGISTER_SESSION_KEY, VERIFY_MAGISTER_SESSION_MESSAGE } from './lib/session/magisterSession';
 import {
 	clearLoginTabId,
 	findReadySchoolSessionTab,
@@ -13,18 +13,15 @@ import {
 
 const POPUP_WINDOW_ID_KEY = 'popupWindowId';
 
-const DEFAULT_ICONS = {
-	16: 'icons/icon16.png',
-	32: 'icons/icon32.png',
-	48: 'icons/icon48.png',
-	128: 'icons/icon128.png',
-};
-
 chrome.runtime.onInstalled.addListener(() => {
 	console.log('Chrome extension installed');
 });
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+	if (message.type === VERIFY_MAGISTER_SESSION_MESSAGE) {
+		void verifyMagisterSession();
+		return undefined;
+	}
 	if (message.type !== 'syncActionBadge') return undefined;
 
 	const text = typeof message.text === 'string' ? message.text : '';
@@ -36,26 +33,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 	return true;
 });
 
-void resetToolbarAction();
 void resumeConnectingSession();
-
-/** Re-enable the toolbar action and restore the default icon on every open tab. */
-async function resetToolbarAction() {
-	await chrome.action.setIcon({ path: DEFAULT_ICONS });
-	await chrome.action.enable();
-
-	const tabs = await chrome.tabs.query({});
-	await Promise.all(
-		tabs.flatMap((tab) => {
-			if (tab.id === undefined) return [];
-			return [chrome.action.enable(tab.id), chrome.action.setIcon({ tabId: tab.id, path: DEFAULT_ICONS })];
-		}),
-	);
-}
 
 let popupWindowId: number | undefined;
 let connecting: Promise<void> | undefined;
 let connectAbort: AbortController | undefined;
+let verifying: Promise<void> | undefined;
 
 chrome.action.onClicked.addListener(async () => {
 	// Always surface the popup first — never no-op while a prior connect is hanging.
@@ -93,7 +76,37 @@ async function ensurePopupVisible() {
 		await chrome.windows.update(openPopupId, { focused: true });
 		return;
 	}
+	await markSessionUnverified();
 	await createPopupWindow();
+}
+
+/** A new popup must not show cached student data before the session is re-checked. */
+async function markSessionUnverified() {
+	const stored = await chrome.storage.session.get(MAGISTER_SESSION_KEY);
+	if (stored[MAGISTER_SESSION_KEY] !== 'ready') return;
+	await chrome.storage.session.set({ [MAGISTER_SESSION_KEY]: 'checking' });
+}
+
+function verifyMagisterSession(): Promise<void> {
+	verifying ??= recheckReadySession().finally(() => {
+		verifying = undefined;
+	});
+	return verifying;
+}
+
+/** Leaves `ready` as soon as Magister drops the session, and brings the login tab to the front. */
+async function recheckReadySession() {
+	const stored = await chrome.storage.session.get(MAGISTER_SESSION_KEY);
+	if (stored[MAGISTER_SESSION_KEY] !== 'ready') return;
+
+	const readyTab = await findReadySchoolSessionTab();
+	if (readyTab?.id) {
+		await markSessionReady(readyTab);
+		return;
+	}
+
+	await chrome.storage.session.set({ [MAGISTER_SESSION_KEY]: 'connecting' });
+	void startConnecting();
 }
 
 async function startConnecting() {

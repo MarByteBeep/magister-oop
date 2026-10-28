@@ -9,8 +9,6 @@ import { useStudentStore } from '@/hooks/students/useStudentStore';
 import { useStudentsNeedingAgendaCount } from '@/hooks/students/useStudentsNeedingAgendaCount';
 import { useStudentsSideEffects } from '@/hooks/students/useStudentsSideEffects';
 import { registerLoadAgendaForStudent } from '@/lib/agenda/loadForStudentRegistry';
-import { isStudentsLoading } from '@/lib/students/loadingState';
-
 export function useStudents() {
 	const session = useMagisterSession();
 	const [students, setStudents] = useStudentStore();
@@ -47,7 +45,7 @@ export function useStudents() {
 
 	return {
 		students,
-		loading: isStudentsLoading(session, loading, studentsNeedingAgendaCount),
+		loading: loading || studentsNeedingAgendaCount > 0,
 		studentsNeedingAgendaCount,
 		error,
 		refresh,

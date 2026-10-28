@@ -56,7 +56,9 @@ export function useWeeklyAgendaLoader(
 
 		loadAgendaRef
 			.current(currentStudent.id, monday, friday)
-			.catch((err) => console.error('Failed to load week agenda:', err))
+			.catch(() => {
+				// useAgendaLoader already logs real failures.
+			})
 			.finally(() => setIsLoading(false));
 	}, [studentId, weekKey, selectedWeekDate, setIsLoading]);
 }

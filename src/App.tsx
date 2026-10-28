@@ -1,3 +1,4 @@
+import { MagisterSessionNotice } from '@/components/MagisterSessionNotice';
 import Occupancy from '@/components/occupancy/Occupancy';
 import Registrations from '@/components/Registrations';
 import ReturnMeasures from '@/components/ReturnMeasures';
@@ -11,10 +12,20 @@ import { useRegistrationsContext } from '@/context/RegistrationsContext';
 import { useReturnMeasuresContext } from '@/context/ReturnMeasuresContext';
 import { useActionBadge } from '@/hooks/shared/useActionBadge';
 
+function TabCountBadge({ count }: { count: number }) {
+	if (count <= 0) return null;
+	return (
+		<Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs">
+			{count}
+		</Badge>
+	);
+}
+
 function App() {
 	const { registrationCount } = useRegistrationsContext();
 	const { openTodayCount } = useReturnMeasuresContext();
 	const session = useMagisterSession();
+	const ready = session === 'ready';
 
 	useActionBadge(registrationCount);
 
@@ -31,19 +42,11 @@ function App() {
 							<TabsTrigger value="occupancy">Bezetting</TabsTrigger>
 							<TabsTrigger value="registrations">
 								Registraties
-								{registrationCount > 0 && (
-									<Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs">
-										{registrationCount}
-									</Badge>
-								)}
+								<TabCountBadge count={ready ? registrationCount : 0} />
 							</TabsTrigger>
 							<TabsTrigger value="return-measures">
 								Terugkomers
-								{openTodayCount > 0 && (
-									<Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs">
-										{openTodayCount}
-									</Badge>
-								)}
+								<TabCountBadge count={ready ? openTodayCount : 0} />
 							</TabsTrigger>
 						</TabsList>
 						<div className="shrink-0">
@@ -51,35 +54,27 @@ function App() {
 						</div>
 					</div>
 
-					{session === 'connecting' && (
-						<p className="text-sm text-muted-foreground text-left py-2 px-1">
-							Wachten tot Magister is ingelogd… Log in in de geopende tab; de gegevens verschijnen daarna
-							automatisch.
-						</p>
+					{ready ? (
+						<div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-2">
+							<TabsContent value="students">
+								<Students />
+							</TabsContent>
+							<TabsContent value="staff">
+								<p>coming soon...</p>
+							</TabsContent>
+							<TabsContent value="occupancy">
+								<Occupancy />
+							</TabsContent>
+							<TabsContent value="registrations">
+								<Registrations />
+							</TabsContent>
+							<TabsContent value="return-measures">
+								<ReturnMeasures />
+							</TabsContent>
+						</div>
+					) : (
+						<MagisterSessionNotice session={session} />
 					)}
-					{session === 'cancelled' && (
-						<p className="text-sm text-destructive text-left py-2 px-1">
-							Inloggen op Magister is afgebroken. Klik opnieuw op het extensie-icoon.
-						</p>
-					)}
-
-					<div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-2">
-						<TabsContent value="students">
-							<Students />
-						</TabsContent>
-						<TabsContent value="staff">
-							<p>coming soon...</p>
-						</TabsContent>
-						<TabsContent value="occupancy">
-							<Occupancy />
-						</TabsContent>
-						<TabsContent value="registrations">
-							<Registrations />
-						</TabsContent>
-						<TabsContent value="return-measures">
-							<ReturnMeasures />
-						</TabsContent>
-					</div>
 				</Tabs>
 			</div>
 			<ThemedToaster />

@@ -14,6 +14,7 @@ import { getJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 import type { AbsenceNotice } from '@/magister/response/absenceNotice.types';
 import type { AgendaResponse } from '@/magister/response/agenda.types';
+import { isMagisterUnavailableError } from '@/magister/sessionErrors';
 import type { Student } from '@/types/student.types';
 import type { StudentWrite } from '@/types/studentStore.types';
 import type { LoadAgendaForStudentFn } from '@/types/students.types';
@@ -148,7 +149,8 @@ export function useAgendaLoader(setStudents: Dispatch<SetStateAction<StudentWrit
 					});
 					return { entries, changed: agendaChanged };
 				} catch (e) {
-					console.error('Failed to fetch agenda for student', studentId, e);
+					if (!isMagisterUnavailableError(e))
+						console.error('Failed to fetch agenda for student', studentId, e);
 					throw e;
 				} finally {
 					if (inflightAgendaLoads.get(key) === loadPromise) {

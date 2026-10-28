@@ -1,3 +1,4 @@
+import { sendRuntimeMessage } from '@/lib/extension/runtimeMessage';
 import { destructiveColor, destructiveForegroundColor } from '@/lib/theme/colors';
 
 export function formatActionBadgeText(count: number): string {
@@ -11,13 +12,7 @@ function extensionApi(): typeof chrome | undefined {
 }
 
 export function syncActionBadge(count: number): void {
-	try {
-		const sendMessage = extensionApi()?.runtime?.sendMessage;
-		if (typeof sendMessage !== 'function') return;
-		sendMessage({ type: 'syncActionBadge', text: formatActionBadgeText(count) });
-	} catch {
-		// Extension APIs are unavailable outside the extension context.
-	}
+	sendRuntimeMessage({ type: 'syncActionBadge', text: formatActionBadgeText(count) });
 }
 
 export async function applyActionBadgeText(text: string): Promise<void> {

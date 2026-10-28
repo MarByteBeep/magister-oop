@@ -54,8 +54,8 @@ export function useAgendaItemDisplay(
 			const { entries } = await loadAgendaForStudent(student.id, start, end);
 			setAgendaEntry(findRelevantAgendaEntry(agendaEntriesForDate(entries, getDateKey(now)), now));
 			setHasFetchedForToday(true);
-		} catch (error) {
-			console.error('Failed to load agenda:', error);
+		} catch {
+			// useAgendaLoader already logs real failures.
 		} finally {
 			setIsLoadingAgenda(false);
 		}
