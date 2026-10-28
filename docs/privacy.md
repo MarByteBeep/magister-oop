@@ -6,7 +6,7 @@ Deze pagina legt uit hoe de Magister OOP-extensie omgaat met gegevens en waarom 
 
 De extensie verwerkt leerling- en persoonsgegevens alleen in jouw browser. Er zijn geen eigen servers; alle communicatie gaat rechtstreeks naar Magister. Leerlingdata wordt niet permanent opgeslagen. Alleen jouw voorkeuren (filters, gekozen locaties) blijven bewaard in local storage.
 
-**Zodra je de browser afsluit en het extensievenster sluit, zijn alle gecachte persoonsgegevens verloren.** Er blijft dan niets van leerling- of roosterdata over op je apparaat.
+**Zodra je de browser afsluit, zijn alle gecachte persoonsgegevens verloren.** Er blijft dan niets van leerling- of roosterdata over op je apparaat.
 
 ## Geen externe servers
 
@@ -22,16 +22,16 @@ Er wordt zuinig omgegaan met aanroepen naar de Magister-API. Waar mogelijk wordt
 
 ## Niet-persistente cache
 
-Om het aantal API-calls te beperken wordt een lokale cache gebruikt. Die cache staat in **session storage** en is **niet persistent**: zodra je de browser of het extensievenster sluit, wordt de cache gewist. Binnen een sessie worden eerder opgehaalde antwoorden (bijv. roosters, leerlinglijsten) hergebruikt waar dat kan. De cache bevat geen extra kopieën van data die langer blijven bestaan dan je sessie.
+Om het aantal API-calls te beperken wordt een lokale cache gebruikt. Die cache staat in **session storage** en is **niet persistent**: zodra je de browser afsluit, wordt de cache gewist. Het sluiten van alleen het extensievenster wist de cache niet; bij opnieuw openen worden de gegevens hergebruikt. Binnen een sessie worden eerder opgehaalde antwoorden (bijv. roosters, leerlinglijsten) hergebruikt waar dat kan. De cache bevat geen extra kopieën van data die langer blijven bestaan dan je sessie.
 
 ## Geen leerlingdata in local storage
 
 Leerlinggegevens (namen, roosters, absenties, foto’s, enz.) worden **niet** in local storage weggeschreven. Ze bestaan alleen:
 
 - in het geheugen van de extensie tijdens gebruik;
-- in session storage (tot je de browser of het extensievenster sluit).
+- in session storage (tot je de browser afsluit).
 
-Na het sluiten verdwijnt die data. Er is geen permanente opslag van leerling- of persoonsgegevens op je apparaat.
+Na het afsluiten van de browser verdwijnt die data. Er is geen permanente opslag van leerling- of persoonsgegevens op je apparaat.
 
 ## Local storage alleen voor voorkeuren
 
@@ -45,7 +45,7 @@ Dit zijn geen persoonsgegevens. Het zijn voorkeuren die het gebruik van de exten
 
 ## Wat wordt waar bewaard?
 
-| Soort gegevens              | Session storage | Local storage | Na sluiten |
+| Soort gegevens              | Session storage | Local storage | Na afsluiten browser |
 |----------------------------|-----------------|---------------|------------|
 | Leerlinglijsten, roosters  | Ja (tijdelijk)  | Nee           | Verdwijnt  |
 | API-cache (roosters, etc.) | Ja (tijdelijk)  | Nee           | Verdwijnt  |
@@ -65,7 +65,7 @@ Deze aanpak sluit aan bij:
 
 ## Verwijderen van gegevens
 
-- **Session storage** — Sluit de browser of het extensievenster; de tijdelijke data verdwijnt automatisch.
+- **Session storage** — Sluit de browser af; de tijdelijke data verdwijnt automatisch. Herladen of uitschakelen van de extensie wist deze data ook.
 - **Local storage** — Verwijder de extensie in Chrome (`chrome://extensions/` → Verwijderen) om ook je opgeslagen voorkeuren te wissen. Je kunt ook handmatig de extensiegegevens wissen via de Chrome-instellingen.
 
 ## Vragen
