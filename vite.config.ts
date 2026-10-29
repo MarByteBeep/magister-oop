@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-import { apiPlugin } from './vite-plugin-api';
+import { apiPlugin } from './vitePluginApi';
 
 function manifestVersionFromPackage(): Plugin {
 	return {

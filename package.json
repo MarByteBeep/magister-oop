@@ -16,9 +16,9 @@
 		"build": "bun test && bun run check && bunx vite build && bun run check",
 		"preview": "vite preview",
 		"format": "bunx @biomejs/biome format --write",
-		"check": "bunx @biomejs/biome check --write",
+		"check": "bunx @biomejs/biome check --write --error-on-warnings",
 		"check:fallow": "fallow --fail-on-issues",
-		"check:ci": "bunx @biomejs/biome ci && bunx tsc -b --noEmit && bun run check:fallow && echo 'no errors'",
+		"check:ci": "bunx @biomejs/biome ci --error-on-warnings && bunx tsc -b --noEmit && bun run check:fallow && echo 'no errors'",
 		"testserver:init": "bun run ./testserver/src/init/init.ts",
 		"anon": "bun run ./anonymizer/index.ts"
 	},
