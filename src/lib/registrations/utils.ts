@@ -28,7 +28,10 @@ function normalizeKey(s: string) {
 
 export function buildFilterPairs(data: RegistrationsResponse) {
 	const filters = data.filters?.types ?? [];
-	const filterPairs = filters.map((f) => ({ key: normalizeKey(f.name), label: f.name }));
+	const filterPairs = filters.map((f) => ({
+		key: normalizeKey(f.name),
+		label: f.name,
+	}));
 
 	filterPairs.sort((a, b) => {
 		const aIsAbsent = a.label.toLowerCase() === 'absent';
@@ -51,6 +54,49 @@ function reasonLabelForKey(
 
 type RegistrationItem = NonNullable<RegistrationsResponse['items']>[number];
 
+type RegistrationAccountability = NonNullable<
+	NonNullable<RegistrationItem['afspraken']>[number]['verantwoordingen']
+>[number];
+type RegistrationAppointment = NonNullable<RegistrationItem['afspraken']>[number];
+
+function registrationRowFromAccountability(
+	item: RegistrationItem,
+	appointment: RegistrationAppointment,
+	accountability: RegistrationAccountability,
+	filterPairs: { key: string; label: string }[],
+	studentName: string,
+	classCode: string | undefined,
+): RegistrationRow {
+	const reasonKey = normalizeKey(accountability.reden?.type ?? 'unknown');
+	return {
+		id: accountability.id,
+		reasonKey,
+		reasonLabel: reasonLabelForKey(reasonKey, filterPairs, accountability.reden?.type),
+		studentId: item.id,
+		studentName,
+		classCode,
+		lessonHourStart: appointment.lesuurBegin,
+		lessonHourEnd: appointment.lesuurEinde,
+		start: appointment.begin,
+		end: appointment.einde,
+	};
+}
+
+function pushRowsFromAppointment(
+	rows: RegistrationRow[],
+	item: RegistrationItem,
+	appointment: RegistrationAppointment,
+	filterPairs: { key: string; label: string }[],
+	studentName: string,
+	classCode: string | undefined,
+): void {
+	for (const accountability of appointment.verantwoordingen ?? []) {
+		rows.push(
+			registrationRowFromAccountability(item, appointment, accountability, filterPairs, studentName, classCode),
+		);
+	}
+}
+
 function collectRegistrationRowsForItem(
 	item: RegistrationItem,
 	filterPairs: { key: string; label: string }[],
@@ -60,21 +106,7 @@ function collectRegistrationRowsForItem(
 	const classCode = item.stamklas?.code;
 
 	for (const appointment of item.afspraken ?? []) {
-		for (const v of appointment.verantwoordingen ?? []) {
-			const reasonKey = normalizeKey(v.reden?.type ?? 'unknown');
-			rows.push({
-				id: v.id,
-				reasonKey,
-				reasonLabel: reasonLabelForKey(reasonKey, filterPairs, v.reden?.type),
-				studentId: item.id,
-				studentName,
-				classCode,
-				lessonHourStart: appointment.lesuurBegin,
-				lessonHourEnd: appointment.lesuurEinde,
-				start: appointment.begin,
-				end: appointment.einde,
-			});
-		}
+		pushRowsFromAppointment(rows, item, appointment, filterPairs, studentName, classCode);
 	}
 
 	return rows;
@@ -152,22 +184,40 @@ export function buildOrderedReasons(
 
 	return [
 		...filterPairs.filter((p) => byReason.has(p.key)),
-		...extraKeys.map((k) => ({ key: k, label: (byReason.get(k)?.[0]?.reasonLabel ?? k) as string })),
+		...extraKeys.map((k) => ({
+			key: k,
+			label: (byReason.get(k)?.[0]?.reasonLabel ?? k) as string,
+		})),
 	];
+}
+
+function isAbsentAccountability(accountability: RegistrationAccountability): boolean {
+	const type = accountability.reden?.type;
+	if (!type) return false;
+	return type.toLowerCase() === 'absent';
+}
+
+function countAbsentInAppointment(appointment: RegistrationAppointment): number {
+	let count = 0;
+	for (const accountability of appointment.verantwoordingen ?? []) {
+		if (isAbsentAccountability(accountability)) count++;
+	}
+	return count;
+}
+
+function countAbsentInItem(item: RegistrationItem): number {
+	let count = 0;
+	for (const appointment of item.afspraken ?? []) {
+		count += countAbsentInAppointment(appointment);
+	}
+	return count;
 }
 
 export function countAbsentRegistrations(data: RegistrationsResponse, isVisible: StudentVisibility) {
 	let count = 0;
 	for (const item of data.items ?? []) {
 		if (!isVisible(item.id)) continue;
-
-		for (const appointment of item.afspraken ?? []) {
-			for (const v of appointment.verantwoordingen ?? []) {
-				if (v.reden?.type?.toLowerCase() === 'absent') {
-					count++;
-				}
-			}
-		}
+		count += countAbsentInItem(item);
 	}
 	return count;
 }

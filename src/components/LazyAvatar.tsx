@@ -3,7 +3,7 @@ import Avatar from '@/components/ui/avatar';
 import { useLazyBlobUrl } from '@/hooks/shared/useLazyBlobUrl';
 import { cn } from '@/lib/utils';
 
-interface LazyAvatarProps {
+export interface LazyAvatarProps {
 	src?: string;
 	alt: string;
 	initials: string;

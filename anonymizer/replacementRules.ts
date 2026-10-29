@@ -9,6 +9,7 @@ const ID_TOKEN_SCAN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 const URL_PATTERN = /^(\/|https?:\/\/)/i;
 const NUMERIC_SEGMENT_PATTERN = /^[1-9][0-9]*$/;
 const DATE_OR_TIME_PATTERN = /^\d{4}-\d{2}-\d{2}([T ].*)?$|^\d{1,2}:\d{2}(:\d{2})?$/;
+const DIGITS_ONLY = /^[0-9]+$/;
 
 export type ReplacementMap = {
 	stringMap: Map<string, string>;
@@ -44,8 +45,14 @@ function keyIncludes(key: string, ...parts: string[]) {
 	return parts.some((part) => lower.includes(part));
 }
 
+function isNonEmptyString(value: unknown): value is string {
+	if (typeof value !== 'string') return false;
+	return value.length > 0;
+}
+
 function isUuidLike(value: string) {
-	return DASHED_UUID_PATTERN.test(value) || COMPACT_UUID_PATTERN.test(value);
+	if (DASHED_UUID_PATTERN.test(value)) return true;
+	return COMPACT_UUID_PATTERN.test(value);
 }
 
 function toDashedUuid(compact: string) {
@@ -65,110 +72,180 @@ function mapUuid(rep: ReplacementMap, value: string) {
 
 function pathOf(url: string) {
 	const queryStart = url.search(/[?#]/);
-	return queryStart === -1 ? url : url.slice(0, queryStart);
+	if (queryStart === -1) return url;
+	return url.slice(0, queryStart);
+}
+
+function mapUrlSegment(segment: string, rep: ReplacementMap) {
+	if (NUMERIC_SEGMENT_PATTERN.test(segment)) {
+		mapNumber(rep, Number(segment));
+		return;
+	}
+	if (!isUuidLike(segment)) return;
+	mapUuid(rep, segment);
 }
 
 /** Ids that exist nowhere else in the payload: `/api/leerlingen/13511/foto`. */
 function collectUrlIds(url: string, rep: ReplacementMap) {
 	for (const segment of pathOf(url).split('/')) {
-		if (NUMERIC_SEGMENT_PATTERN.test(segment)) {
-			mapNumber(rep, Number(segment));
-		} else if (isUuidLike(segment)) {
-			mapUuid(rep, segment);
-		}
+		mapUrlSegment(segment, rep);
 	}
+}
+
+function matchesTextField(key: string, value: unknown): boolean {
+	if (!isNonEmptyString(value)) return false;
+	return keyIncludes(
+		key,
+		'comment',
+		'omschrijving',
+		'desc',
+		'description',
+		'titel',
+		'title',
+		'onderwerp',
+		'subject',
+		'reason',
+		'reden',
+		'tekst',
+		'text',
+	);
+}
+
+function matchesFirstName(key: string, value: unknown): boolean {
+	if (!isNonEmptyString(value)) return false;
+	return keyIncludes(key, 'firstname', 'voornaam', 'roepnaam');
+}
+
+function matchesLastName(key: string, value: unknown): boolean {
+	if (!isNonEmptyString(value)) return false;
+	return keyIncludes(key, 'lastname', 'achternaam');
+}
+
+function matchesMentor(key: string, value: unknown): boolean {
+	if (!isNonEmptyString(value)) return false;
+	return keyIncludes(key, 'mentor');
+}
+
+function matchesInitials(key: string, value: unknown): boolean {
+	if (!isNonEmptyString(value)) return false;
+	return keyIncludes(key, 'initials', 'initialen', 'voorletters');
+}
+
+function matchesInfix(key: string, value: unknown): boolean {
+	if (!isNonEmptyString(value)) return false;
+	const lower = key.toLowerCase();
+	if (lower === 'infix') return true;
+	return lower.includes('tussenvoegsel');
+}
+
+function matchesEmail(key: string, value: unknown): boolean {
+	if (typeof value !== 'string') return false;
+	if (!value.includes('@')) return false;
+	return keyIncludes(key, 'email', 'mail');
+}
+
+function matchesPhone(key: string, value: unknown): boolean {
+	if (!isNonEmptyString(value)) return false;
+	return keyIncludes(key, 'telefoon', 'phone', 'mobiel');
+}
+
+function matchesUuidId(key: string, value: unknown): boolean {
+	if (typeof value !== 'string') return false;
+	if (!isUuidLike(value)) return false;
+	return keyIncludes(key, 'id');
+}
+
+function matchesNumericId(key: string, value: unknown): boolean {
+	if (typeof value !== 'number') return false;
+	return keyIncludes(key, 'id');
+}
+
+function matchesNumericNumber(key: string, value: unknown): boolean {
+	if (typeof value !== 'number') return false;
+	return keyIncludes(key, 'number', 'nummer');
+}
+
+function isNumericStringId(value: unknown): value is string {
+	if (typeof value !== 'string') return false;
+	return NUMERIC_SEGMENT_PATTERN.test(value);
+}
+
+function matchesStringIdCode(key: string, value: unknown): boolean {
+	if (!isNumericStringId(value)) return false;
+	if (keyIncludes(key, 'telefoon', 'phone', 'mobiel')) return false;
+	return keyIncludes(key, 'id', 'number', 'nummer', 'code');
+}
+
+function matchesUrl(_key: string, value: unknown): boolean {
+	if (typeof value !== 'string') return false;
+	return URL_PATTERN.test(value);
+}
+
+function matchesDashedUuidScan(_key: string, value: unknown): boolean {
+	if (typeof value !== 'string') return false;
+	return value.includes('-');
 }
 
 const FIELD_RULES: FieldRule[] = [
 	{
-		matches: (key, value) =>
-			keyIncludes(
-				key,
-				'comment',
-				'omschrijving',
-				'desc',
-				'description',
-				'titel',
-				'title',
-				'onderwerp',
-				'subject',
-				'reason',
-				'reden',
-				'tekst',
-				'text',
-			) &&
-			typeof value === 'string' &&
-			value.length > 0,
+		matches: matchesTextField,
 		apply: (value, rep) => mapString(rep, value as string, faker.lorem.sentence()),
 	},
 	{
 		// Empty strings must stay empty: stringMap is applied to every string value, so mapping
 		// "" would rewrite blank fields across the whole payload.
-		matches: (key, value) =>
-			keyIncludes(key, 'firstname', 'voornaam', 'roepnaam') && typeof value === 'string' && value.length > 0,
+		matches: matchesFirstName,
 		apply: (value, rep) => mapString(rep, value as string, faker.person.firstName()),
 	},
 	{
-		matches: (key, value) =>
-			keyIncludes(key, 'lastname', 'achternaam') && typeof value === 'string' && value.length > 0,
+		matches: matchesLastName,
 		apply: (value, rep) => mapString(rep, value as string, faker.person.lastName()),
 	},
 	{
-		matches: (key, value) => keyIncludes(key, 'mentor') && typeof value === 'string' && value.length > 0,
+		matches: matchesMentor,
 		apply: (value, rep) => mapString(rep, value as string, faker.person.fullName()),
 	},
 	{
-		matches: (key, value) =>
-			keyIncludes(key, 'initials', 'initialen', 'voorletters') && typeof value === 'string' && value.length > 0,
+		matches: matchesInitials,
 		apply: (value, rep) => mapString(rep, value as string, faker.string.alpha({ casing: 'upper', length: 2 })),
 	},
 	{
-		matches: (key, value) => {
-			const lower = key.toLowerCase();
-			return (
-				(lower === 'infix' || lower.includes('tussenvoegsel')) && typeof value === 'string' && value.length > 0
-			);
-		},
+		matches: matchesInfix,
 		apply: (value, rep) => mapString(rep, value as string, faker.helpers.arrayElement(['de', 'von', 'st', 'le'])),
 	},
 	{
-		matches: (key, value) => keyIncludes(key, 'email', 'mail') && typeof value === 'string' && value.includes('@'),
+		matches: matchesEmail,
 		apply: (value, rep) => mapString(rep, value as string, faker.internet.email()),
 	},
 	{
 		// Phone numbers come in too many shapes (+31, spaces, parentheses) to
 		// rewrite digit by digit, so the whole value is thrown away.
-		matches: (key, value) =>
-			keyIncludes(key, 'telefoon', 'phone', 'mobiel') && typeof value === 'string' && value.length > 0,
+		matches: matchesPhone,
 		apply: (value, rep) => mapString(rep, value as string, faker.phone.number()),
 	},
 	{
-		matches: (key, value) => keyIncludes(key, 'id') && typeof value === 'string' && isUuidLike(value),
+		matches: matchesUuidId,
 		apply: (value, rep) => mapUuid(rep, value as string),
 	},
 	{
-		matches: (key, value) => keyIncludes(key, 'id') && typeof value === 'number',
+		matches: matchesNumericId,
 		apply: (value, rep) => mapNumber(rep, value as number),
 	},
 	{
-		matches: (key, value) => keyIncludes(key, 'number', 'nummer') && typeof value === 'number',
+		matches: matchesNumericNumber,
 		apply: (value, rep) => mapNumber(rep, value as number),
 	},
 	{
 		// Ids kept as text: "stamnummer": "51155", "code": "537457".
-		matches: (key, value) =>
-			keyIncludes(key, 'id', 'number', 'nummer', 'code') &&
-			!keyIncludes(key, 'telefoon', 'phone', 'mobiel') &&
-			typeof value === 'string' &&
-			NUMERIC_SEGMENT_PATTERN.test(value),
+		matches: matchesStringIdCode,
 		apply: (value, rep) => mapNumber(rep, Number(value)),
 	},
 	{
-		matches: (_key, value) => typeof value === 'string' && URL_PATTERN.test(value),
+		matches: matchesUrl,
 		apply: (value, rep) => collectUrlIds(value as string, rep),
 	},
 	{
-		matches: (_key, value) => typeof value === 'string' && value.includes('-'),
+		matches: matchesDashedUuidScan,
 		apply: (value, rep) => {
 			for (const match of (value as string).matchAll(DASHED_UUID_SCAN)) {
 				mapUuid(rep, match[0]);
@@ -185,17 +262,23 @@ export function collectFieldReplacement(key: string, value: unknown, rep: Replac
 	}
 }
 
-function replaceIdToken(token: string, rep: ReplacementMap): string {
-	if (!/^[0-9]+$/.test(token)) {
-		return rep.stringMap.get(token.toLowerCase()) ?? token;
-	}
+function replaceUuidToken(token: string, rep: ReplacementMap): string {
+	return rep.stringMap.get(token.toLowerCase()) ?? token;
+}
 
+function replaceNumericIdToken(token: string, rep: ReplacementMap): string {
 	const numeric = Number(token);
 	// Leading zeros mark a formatted fragment (lesson hour, time), never an id.
 	if (String(numeric) !== token) return token;
 
 	const replacement = rep.numberMap.get(numeric);
-	return replacement == null ? token : String(replacement);
+	if (replacement === undefined) return token;
+	return String(replacement);
+}
+
+function replaceIdToken(token: string, rep: ReplacementMap): string {
+	if (!DIGITS_ONLY.test(token)) return replaceUuidToken(token, rep);
+	return replaceNumericIdToken(token, rep);
 }
 
 /** Single pass, so a replacement value can never be rewritten again by a later mapping. */
@@ -203,18 +286,21 @@ function replaceIdTokens(value: string, rep: ReplacementMap): string {
 	return value.replace(ID_TOKEN_SCAN, (token) => replaceIdToken(token, rep));
 }
 
-export function replaceStringValue(value: string, rep: ReplacementMap): string {
-	const mapped = rep.stringMap.get(value);
-	if (mapped != null) return mapped;
+function replaceUrlValue(value: string, rep: ReplacementMap): string {
+	// Query strings hold dates and paging values; only the path carries ids.
+	const path = pathOf(value);
+	return replaceIdTokens(path, rep) + value.slice(path.length);
+}
 
-	if (URL_PATTERN.test(value)) {
-		// Query strings hold dates and paging values; only the path carries ids.
-		const path = pathOf(value);
-		return replaceIdTokens(path, rep) + value.slice(path.length);
-	}
-
+function replaceUnmappedStringValue(value: string, rep: ReplacementMap): string {
+	if (URL_PATTERN.test(value)) return replaceUrlValue(value, rep);
 	// Digits inside a timestamp are not ids; rewriting them would break the date.
 	if (DATE_OR_TIME_PATTERN.test(value)) return value;
-
 	return replaceIdTokens(value, rep);
+}
+
+export function replaceStringValue(value: string, rep: ReplacementMap): string {
+	const mapped = rep.stringMap.get(value);
+	if (mapped !== undefined) return mapped;
+	return replaceUnmappedStringValue(value, rep);
 }

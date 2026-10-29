@@ -82,15 +82,30 @@ export function findImplicitMismatchRules(shell: ShellType, command: string): Im
 
 export const WINDOWS_HARD_RULES: Rule[] = [
 	{ re: /(^|\s)sudo(\s|$)/i, reason: 'Uses `sudo` (bash/Unix idiom).' },
-	{ re: /(^|\s)(apt-get|apt|yum|dnf|apk|pacman|brew)\b/i, reason: 'Uses a Linux package manager.' },
+	{
+		re: /(^|\s)(apt-get|apt|yum|dnf|apk|pacman|brew)\b/i,
+		reason: 'Uses a Linux package manager.',
+	},
 	{ re: /<<\s*[-\w]+/i, reason: 'Uses heredoc (`<<`) syntax.' },
-	{ re: /(^|\s)(chmod|chown)\b/i, reason: 'Uses `chmod`/`chown` (Unix permissions).' },
-	{ re: /\/(tmp|var|etc|home|root)\//i, reason: 'Uses Unix absolute paths (`/tmp`, `/etc`, ...).' },
+	{
+		re: /(^|\s)(chmod|chown)\b/i,
+		reason: 'Uses `chmod`/`chown` (Unix permissions).',
+	},
+	{
+		re: /\/(tmp|var|etc|home|root)\//i,
+		reason: 'Uses Unix absolute paths (`/tmp`, `/etc`, ...).',
+	},
 ];
 
 export const WINDOWS_SOFT_RULES: Rule[] = [
-	{ re: /\b(cat|grep|sed|awk|tail|head)\b/i, reason: 'Uses common Unix text tools.' },
-	{ re: /\b(export|source)\b/i, reason: 'Uses shell builtins (`export`, `source`).' },
+	{
+		re: /\b(cat|grep|sed|awk|tail|head)\b/i,
+		reason: 'Uses common Unix text tools.',
+	},
+	{
+		re: /\b(export|source)\b/i,
+		reason: 'Uses shell builtins (`export`, `source`).',
+	},
 ];
 
 export const RULES: Record<ShellType, { hard: Rule[]; soft: Rule[] }> = {
@@ -98,19 +113,37 @@ export const RULES: Record<ShellType, { hard: Rule[]; soft: Rule[] }> = {
 	cmd: { hard: WINDOWS_HARD_RULES, soft: WINDOWS_SOFT_RULES },
 	bash: {
 		hard: [
-			{ re: /\b(pwsh|powershell|cmd\.exe|cmd\s*\/c)\b/i, reason: 'Invokes PowerShell/CMD from bash.' },
-			{ re: /(?<![a-zA-Z])[a-zA-Z]:\\/i, reason: 'Uses Windows drive paths (`C:\\...`).' },
-			{ re: /\\\\[^\\]+\\[^\\]+/m, reason: 'Uses UNC paths (`\\\\server\\share`).' },
+			{
+				re: /\b(pwsh|powershell|cmd\.exe|cmd\s*\/c)\b/i,
+				reason: 'Invokes PowerShell/CMD from bash.',
+			},
+			{
+				re: /(?<![a-zA-Z])[a-zA-Z]:\\/i,
+				reason: 'Uses Windows drive paths (`C:\\...`).',
+			},
+			{
+				re: /\\\\[^\\]+\\[^\\]+/m,
+				reason: 'Uses UNC paths (`\\\\server\\share`).',
+			},
 		],
 		soft: [
 			{ re: /\bdir\b/i, reason: 'Uses `dir` (Windows shell idiom).' },
-			{ re: /\b(copy|move|del|rmdir)\b/i, reason: 'Uses Windows file commands (copy/move/del/rmdir).' },
+			{
+				re: /\b(copy|move|del|rmdir)\b/i,
+				reason: 'Uses Windows file commands (copy/move/del/rmdir).',
+			},
 		],
 	},
 	unknown: {
 		hard: [
-			{ re: UNIX_FILE_OP_AS_COMMAND, reason: 'Uses `rm`/`cp`/`mv` with Unix-style invocation.' },
-			{ re: /(^|\s)(apt-get|apt|yum|dnf|apk|pacman|brew)\b/i, reason: 'Uses a Linux package manager.' },
+			{
+				re: UNIX_FILE_OP_AS_COMMAND,
+				reason: 'Uses `rm`/`cp`/`mv` with Unix-style invocation.',
+			},
+			{
+				re: /(^|\s)(apt-get|apt|yum|dnf|apk|pacman|brew)\b/i,
+				reason: 'Uses a Linux package manager.',
+			},
 			{ re: /<<\s*[-\w]+/i, reason: 'Uses heredoc (`<<`) syntax.' },
 		],
 		soft: [
@@ -118,7 +151,10 @@ export const RULES: Record<ShellType, { hard: Rule[]; soft: Rule[] }> = {
 				re: /\b(pwsh|powershell|cmd\.exe|cmd\s*\/c)\b/i,
 				reason: 'Looks like PowerShell/CMD, but shell is unknown.',
 			},
-			{ re: /^[a-zA-Z]:\\/m, reason: 'Looks like a Windows path, but shell is unknown.' },
+			{
+				re: /^[a-zA-Z]:\\/m,
+				reason: 'Looks like a Windows path, but shell is unknown.',
+			},
 		],
 	},
 };

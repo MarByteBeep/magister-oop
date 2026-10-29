@@ -1,6 +1,7 @@
 import { describe, expect, mock, test } from 'bun:test';
 import { fetchBlobInMagisterTab } from '@/magister/fetchBlobInMagisterTab';
 import { magisterTabJsonInPage } from '@/magister/magisterTabJsonInPage';
+import { readOidcAccessTokenInPage } from '@/magister/oidcAccessTokenInPage';
 import { checkSchoolSessionReadyInPage } from '@/popup-utils/tabs';
 
 /** Mimics chrome.scripting.executeScript: only the function source travels to the page. */
@@ -36,6 +37,7 @@ describe('injected script functions', () => {
 				url: 'https://school.magister.net/api/test',
 				credentials: 'include',
 				auth: 'cookies',
+				accessToken: '',
 				body: null,
 				sessionExpiredMessage: 'session expired',
 				tokenMissingMessage: 'token missing',
@@ -47,14 +49,10 @@ describe('injected script functions', () => {
 		}
 	});
 
-	test('magisterTabJsonInPage GET bearer auth reads OIDC token from storage', async () => {
+	test('magisterTabJsonInPage GET bearer auth uses the pre-read access token', async () => {
 		const originalFetch = globalThis.fetch;
-		const originalWindow = globalThis.window;
-		globalThis.fetch = mockFetch(new Response(JSON.stringify({ value: 2 }), { status: 200 }));
-		globalThis.window = {
-			sessionStorage: createOidcStorage('test-token'),
-			localStorage: createOidcStorage(null),
-		} as Window & typeof globalThis;
+		const fetchMock = mockFetch(new Response(JSON.stringify({ value: 2 }), { status: 200 }));
+		globalThis.fetch = fetchMock;
 
 		try {
 			const result = await invokeAsInjectedScript(magisterTabJsonInPage, {
@@ -62,34 +60,45 @@ describe('injected script functions', () => {
 				url: 'https://platform.magister.net/api/test',
 				credentials: 'omit',
 				auth: 'bearer',
+				accessToken: 'test-token',
 				body: null,
 				sessionExpiredMessage: 'session expired',
 				tokenMissingMessage: 'token missing',
 			});
 
 			expect(result).toEqual({ ok: true, status: 200, data: { value: 2 } });
+			const call = (fetchMock as unknown as { mock: { calls: unknown[][] } }).mock.calls[0];
+			const init = call[1] as RequestInit;
+			expect((init.headers as Record<string, string>).Authorization).toBe('Bearer test-token');
 		} finally {
 			globalThis.fetch = originalFetch;
-			globalThis.window = originalWindow;
 		}
 	});
 
-	test('checkSchoolSessionReadyInPage requires an OIDC token', async () => {
-		const originalFetch = globalThis.fetch;
+	test('readOidcAccessTokenInPage returns empty when storage has no token', async () => {
 		const originalWindow = globalThis.window;
-		const fetchMock = mockFetch(new Response(JSON.stringify({ ok: true }), { status: 200 }));
-		globalThis.fetch = fetchMock;
 		globalThis.window = {
 			sessionStorage: createOidcStorage(null),
 			localStorage: createOidcStorage(null),
 		} as Window & typeof globalThis;
 
 		try {
-			const ready = await invokeAsInjectedScript(checkSchoolSessionReadyInPage);
-			expect(ready).toBe(false);
-			expect(fetchMock).not.toHaveBeenCalled();
+			expect(await invokeAsInjectedScript(readOidcAccessTokenInPage)).toBe('');
 		} finally {
-			globalThis.fetch = originalFetch;
+			globalThis.window = originalWindow;
+		}
+	});
+
+	test('readOidcAccessTokenInPage reads the access token from session storage', async () => {
+		const originalWindow = globalThis.window;
+		globalThis.window = {
+			sessionStorage: createOidcStorage('test-token'),
+			localStorage: createOidcStorage(null),
+		} as Window & typeof globalThis;
+
+		try {
+			expect(await invokeAsInjectedScript(readOidcAccessTokenInPage)).toBe('test-token');
+		} finally {
 			globalThis.window = originalWindow;
 		}
 	});
@@ -104,6 +113,7 @@ describe('injected script functions', () => {
 				url: 'https://school.magister.net/api/test',
 				credentials: 'include',
 				auth: 'cookies',
+				accessToken: '',
 				body: { value: 1 },
 				sessionExpiredMessage: 'session expired',
 				tokenMissingMessage: 'token missing',
@@ -125,6 +135,7 @@ describe('injected script functions', () => {
 				url: 'https://school.magister.net/api/test',
 				credentials: 'include',
 				auth: 'cookies',
+				accessToken: '',
 				body: {},
 				sessionExpiredMessage: 'session expired',
 				tokenMissingMessage: 'token missing',
@@ -136,15 +147,10 @@ describe('injected script functions', () => {
 		}
 	});
 
-	test('magisterTabJsonInPage DELETE bearer auth reads OIDC token from storage', async () => {
+	test('magisterTabJsonInPage DELETE bearer auth uses the pre-read access token', async () => {
 		const originalFetch = globalThis.fetch;
-		const originalWindow = globalThis.window;
 		const fetchMock = mock(() => Promise.resolve(new Response(null, { status: 204 }))) as unknown as typeof fetch;
 		globalThis.fetch = fetchMock;
-		globalThis.window = {
-			sessionStorage: createOidcStorage('test-token'),
-			localStorage: createOidcStorage(null),
-		} as Window & typeof globalThis;
 
 		try {
 			const result = await invokeAsInjectedScript(magisterTabJsonInPage, {
@@ -152,6 +158,7 @@ describe('injected script functions', () => {
 				url: 'https://attendance.magister.net/api/v2/student/x/absence-notices/y',
 				credentials: 'omit',
 				auth: 'bearer',
+				accessToken: 'test-token',
 				body: null,
 				sessionExpiredMessage: 'session expired',
 				tokenMissingMessage: 'token missing',
@@ -166,7 +173,6 @@ describe('injected script functions', () => {
 			expect((init.headers as Record<string, string>).Authorization).toBe('Bearer test-token');
 		} finally {
 			globalThis.fetch = originalFetch;
-			globalThis.window = originalWindow;
 		}
 	});
 
@@ -190,21 +196,15 @@ describe('injected script functions', () => {
 		}
 	});
 
-	test('checkSchoolSessionReadyInPage succeeds with token and valid session', async () => {
+	test('checkSchoolSessionReadyInPage succeeds with a valid cookie session', async () => {
 		const originalFetch = globalThis.fetch;
-		const originalWindow = globalThis.window;
 		globalThis.fetch = mockFetch(new Response(JSON.stringify({ ok: true }), { status: 200 }));
-		globalThis.window = {
-			sessionStorage: createOidcStorage('test-token'),
-			localStorage: createOidcStorage(null),
-		} as Window & typeof globalThis;
 
 		try {
 			const ready = await invokeAsInjectedScript(checkSchoolSessionReadyInPage);
 			expect(ready).toBe(true);
 		} finally {
 			globalThis.fetch = originalFetch;
-			globalThis.window = originalWindow;
 		}
 	});
 });

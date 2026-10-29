@@ -1,8 +1,8 @@
+import { trimmedOrUndefined } from '@/lib/shared/stringUtils';
 import type { AgendaItemLocation } from '@/magister/response/agenda.types';
 
 export function formatLocation(location?: AgendaItemLocation | null) {
-	const raw = location?.code ?? location?.omschrijving;
-	const trimmed = raw?.trim();
+	const trimmed = trimmedOrUndefined(location?.code ?? location?.omschrijving);
 	if (!trimmed) return undefined;
 
 	return trimmed.toLowerCase().replace(/[^a-z0-9]/g, '');

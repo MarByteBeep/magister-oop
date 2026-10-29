@@ -1,6 +1,6 @@
 import type { Links } from '@/magister/types';
 
-type ContactItemBase = {
+export type ContactItemBase = {
 	id: number;
 	label: string;
 	soort: string;

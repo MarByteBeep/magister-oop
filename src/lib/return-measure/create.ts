@@ -6,32 +6,41 @@ import { returnMeasureSpanMonthKeys } from '@/lib/return-measure/utils';
 import { postJson } from '@/magister/api';
 import { endpoints } from '@/magister/endpoints';
 
-export async function submitReturnMeasure(studentId: number, input: CreateReturnMeasureFormInput): Promise<boolean> {
+function unknownErrorMessage(err: unknown): string {
+	if (err instanceof Error) return err.message;
+	return 'Onbekende fout';
+}
+
+async function submitReturnMeasureRequest(studentId: number, input: CreateReturnMeasureFormInput): Promise<boolean> {
 	const payload = buildCreateReturnMeasureRequest(input);
 	if (!payload) {
 		toast.error('Controleer de ingevulde gegevens');
 		return false;
 	}
 
+	const result = await postJson(endpoints.createReturnMeasure(studentId), payload);
+	if (!result.ok) {
+		toast.error('Fout bij het aanmaken van de terugkommaatregel', {
+			description: result.error,
+		});
+		return false;
+	}
+
+	const monthKeys = returnMeasureSpanMonthKeys(input.dateKey, input.dayCount);
+	invalidateReturnMeasureCache(monthKeys);
+	await Promise.all(
+		monthKeys.map((monthKey) => bulkListRegistry.refresh('return-measures', `${monthKey}-01`, 'background')),
+	);
+	toast.success('Terugkommaatregel succesvol aangemaakt');
+	return true;
+}
+
+export async function submitReturnMeasure(studentId: number, input: CreateReturnMeasureFormInput): Promise<boolean> {
 	try {
-		const result = await postJson(endpoints.createReturnMeasure(studentId), payload);
-
-		if (!result.ok) {
-			toast.error('Fout bij het aanmaken van de terugkommaatregel', { description: result.error });
-			return false;
-		}
-
-		const monthKeys = returnMeasureSpanMonthKeys(input.dateKey, input.dayCount);
-		invalidateReturnMeasureCache(monthKeys);
-		await Promise.all(
-			monthKeys.map((monthKey) => bulkListRegistry.refresh('return-measures', `${monthKey}-01`, 'background')),
-		);
-
-		toast.success('Terugkommaatregel succesvol aangemaakt');
-		return true;
+		return await submitReturnMeasureRequest(studentId, input);
 	} catch (err) {
 		toast.error('Fout bij het aanmaken van de terugkommaatregel', {
-			description: err instanceof Error ? err.message : 'Onbekende fout',
+			description: unknownErrorMessage(err),
 		});
 		return false;
 	}

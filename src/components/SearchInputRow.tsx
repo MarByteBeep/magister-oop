@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
-interface SearchInputRowProps {
+export interface SearchInputRowProps {
 	searchTerm: string;
 	searchPlaceholder: string;
 	searchInputRef: React.RefObject<HTMLInputElement | null>;
@@ -18,6 +18,61 @@ interface SearchInputRowProps {
 	selectedFilterCount: number;
 	onSearchTermChange: (value: string) => void;
 	onTogglePermanentFilters: () => void;
+}
+
+const TOGGLE_VARIANTS = ['outline', 'default'] as const;
+
+function toggleVariant(active: boolean) {
+	return TOGGLE_VARIANTS[Number(active)];
+}
+
+function ClearSearchButton({
+	searchTerm,
+	onSearchTermChange,
+}: {
+	searchTerm: string;
+	onSearchTermChange: (value: string) => void;
+}) {
+	if (!searchTerm) return null;
+	return (
+		<Button
+			variant="ghost"
+			size="icon"
+			className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground"
+			onClick={() => onSearchTermChange('')}
+			title="Wis filter"
+		>
+			<LuX className="h-4 w-4" />
+		</Button>
+	);
+}
+
+function LoadingTooltipContent({ loadingTooltip }: { loadingTooltip?: string }) {
+	if (!loadingTooltip) return null;
+	return <TooltipContent>{loadingTooltip}</TooltipContent>;
+}
+
+function SearchLoadingIndicator({ loading, loadingTooltip }: { loading: boolean; loadingTooltip?: string }) {
+	if (!loading) return null;
+	return (
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<div>
+					<LoadingSpinner />
+				</div>
+			</TooltipTrigger>
+			<LoadingTooltipContent loadingTooltip={loadingTooltip} />
+		</Tooltip>
+	);
+}
+
+function SelectedFilterCountBadge({ selectedFilterCount }: { selectedFilterCount: number }) {
+	if (selectedFilterCount <= 0) return null;
+	return (
+		<Badge variant="default" className="absolute -top-3 -right-3 h-5 min-w-5 px-1 tabular-nums rounded-full">
+			{selectedFilterCount}
+		</Badge>
+	);
 }
 
 export function SearchInputRow({
@@ -48,43 +103,17 @@ export function SearchInputRow({
 					value={searchTerm}
 					onChange={(e) => onSearchTermChange(e.target.value)}
 				/>
-				{searchTerm && (
-					<Button
-						variant="ghost"
-						size="icon"
-						className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground"
-						onClick={() => onSearchTermChange('')}
-						title="Wis filter"
-					>
-						<LuX className="h-4 w-4" />
-					</Button>
-				)}
+				<ClearSearchButton searchTerm={searchTerm} onSearchTermChange={onSearchTermChange} />
 			</div>
-			{loading && (
-				<Tooltip>
-					<TooltipTrigger asChild>
-						<div>
-							<LoadingSpinner />
-						</div>
-					</TooltipTrigger>
-					{loadingTooltip && <TooltipContent>{loadingTooltip}</TooltipContent>}
-				</Tooltip>
-			)}
+			<SearchLoadingIndicator loading={loading} loadingTooltip={loadingTooltip} />
 			<Button
-				variant={showPermanentFilters ? 'default' : 'outline'}
+				variant={toggleVariant(showPermanentFilters)}
 				size="icon"
 				className="relative"
 				onClick={onTogglePermanentFilters}
 				title={permanentFilterTitle}
 			>
-				{selectedFilterCount > 0 && (
-					<Badge
-						variant="default"
-						className="absolute -top-3 -right-3 h-5 min-w-5 px-1 tabular-nums rounded-full"
-					>
-						{selectedFilterCount}
-					</Badge>
-				)}
+				<SelectedFilterCountBadge selectedFilterCount={selectedFilterCount} />
 				<LuFilter className="h-4 w-4" />
 			</Button>
 		</div>

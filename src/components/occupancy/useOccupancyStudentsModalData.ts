@@ -26,6 +26,42 @@ function formatTeacherLabel(entry: AgendaEntry): string | undefined {
 		.join(', ');
 }
 
+function agendaForStudentDay(student: Student | undefined, dateKey: string): AgendaEntry[] | undefined {
+	if (student === undefined) return undefined;
+	const agenda = student.agenda;
+	if (agenda === undefined) return undefined;
+	return agenda[dateKey];
+}
+
+function pickSubject(courseDescriptions: string | undefined, subject: string | undefined): string | undefined {
+	if (courseDescriptions !== undefined) return courseDescriptions;
+	return subject;
+}
+
+function lessonGroupMeta(item: AgendaEntry): Pick<OccupancyClassGroup, 'subject' | 'teacher'> {
+	if (!isLessonEntry(item)) return { teacher: formatTeacherLabel(item) };
+	const info = getAgendaItemInfo(item.item);
+	return {
+		subject: pickSubject(info.courseDescriptions, info.subject),
+		teacher: formatTeacherLabel(item),
+	};
+}
+
+function buildLessonClassGroup(
+	className: string,
+	studentsInClass: Student[],
+	dateKey: string,
+	matchingAgendaItems: (agendaForDay: AgendaEntry[]) => AgendaEntry[],
+): OccupancyClassGroup {
+	const agendaForDay = agendaForStudentDay(studentsInClass[0], dateKey);
+	if (agendaForDay === undefined) return { className, students: studentsInClass };
+
+	const item = matchingAgendaItems(agendaForDay)[0];
+	if (item === undefined) return { className, students: studentsInClass };
+
+	return { className, students: studentsInClass, ...lessonGroupMeta(item) };
+}
+
 function buildClassGroups(
 	students: Student[],
 	dateKey: string,
@@ -35,27 +71,8 @@ function buildClassGroups(
 	const grouped = sortAndGroupStudentsByClass(students);
 
 	return Object.entries(grouped).map(([className, studentsInClass]) => {
-		if (!includeLessonInfo) {
-			return { className, students: studentsInClass };
-		}
-
-		const agendaForDay = studentsInClass[0]?.agenda?.[dateKey];
-		const item = agendaForDay ? matchingAgendaItems(agendaForDay)[0] : undefined;
-
-		if (!item) {
-			return { className, students: studentsInClass };
-		}
-
-		const { courseDescriptions, subject } = isLessonEntry(item) ? getAgendaItemInfo(item.item) : {};
-		const rawSubject = courseDescriptions ?? subject;
-		const rawTeacher = formatTeacherLabel(item);
-
-		return {
-			className,
-			subject: rawSubject,
-			teacher: rawTeacher,
-			students: studentsInClass,
-		};
+		if (!includeLessonInfo) return { className, students: studentsInClass };
+		return buildLessonClassGroup(className, studentsInClass, dateKey, matchingAgendaItems);
 	});
 }
 

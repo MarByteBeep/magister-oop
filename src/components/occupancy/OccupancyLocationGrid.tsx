@@ -1,7 +1,7 @@
 import type { LessonInfo } from '@/lib/agenda/utils';
 import OccupancyLocationCard from './OccupancyLocationCard';
 
-interface OccupancyLocationGridProps {
+export interface OccupancyLocationGridProps {
 	filteredLocations: string[];
 	occupancyData: Record<string, Record<string, number>>;
 	currentLessonInfo: LessonInfo;

@@ -1,9 +1,9 @@
 import { createElement, useCallback, useMemo } from 'react';
 import type { EventProps, View } from 'react-big-calendar';
-import AgendaCalendarEvent from '@/components/student/agenda/AgendaCalendarEvent';
-import AgendaCalendarHeader from '@/components/student/agenda/AgendaCalendarHeader';
-import AgendaFullDayShortcutCellWrapper from '@/components/student/agenda/AgendaFullDayShortcutCellWrapper';
-import { firstLessonTime, lastLessonTime } from '@/components/student/agenda/agendaCalendarConfig';
+import AgendaCalendarEvent from '@/components/student/agenda/calendar/AgendaCalendarEvent';
+import AgendaCalendarHeader from '@/components/student/agenda/calendar/AgendaCalendarHeader';
+import AgendaFullDayShortcutCellWrapper from '@/components/student/agenda/calendar/AgendaFullDayShortcutCellWrapper';
+import { firstLessonTime, lastLessonTime } from '@/components/student/agenda/calendar/agendaCalendarConfig';
 import {
 	calendarDayPropGetter,
 	calendarEventPropGetter,
@@ -20,20 +20,86 @@ import { agendaDayLayoutAlgorithm } from '@/lib/agenda/dayLayout';
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 
+export type AgendaCalendarOptions = {
+	draftSelection?: AgendaSlotSelection | null;
+	onSelectSlot?: (selection: AgendaSlotSelection) => void;
+};
+
+function isOverlayCalendarEvent(ev: CalendarEvent): boolean {
+	if (ev.isDraft) return true;
+	if (ev.isHoverSlot) return true;
+	return Boolean(ev.isBreak);
+}
+
+function isSelectableCalendarEvent(ev: CalendarEvent): boolean {
+	if (isOverlayCalendarEvent(ev)) return false;
+	return Boolean(ev.resource);
+}
+
+function agendaViewsFor(view: View): View[] {
+	if (view === 'work_week') return ['work_week'];
+	return ['day'];
+}
+
+function weekFullDayCreateEnabled(
+	view: View,
+	onSelectSlot: AgendaCalendarOptions['onSelectSlot'],
+	createMode: boolean,
+) {
+	if (view !== 'work_week') return false;
+	if (onSelectSlot === undefined) return false;
+	return createMode;
+}
+
+function buildAgendaCalendarComponents(input: {
+	fullDayCreateEnabled: boolean;
+	handleSelectFullDay: (date: Date) => void;
+	stableActiveEntry: AgendaEntry | null | undefined;
+	overlappingEventIds: Set<string>;
+	onSelectEntry: (entry: AgendaEntry) => void;
+}) {
+	const fullDaySelect = input.fullDayCreateEnabled ? input.handleSelectFullDay : undefined;
+	return {
+		header: (props: { date: Date; label: string }) =>
+			createElement(AgendaCalendarHeader, {
+				...props,
+				onSelectFullDay: fullDaySelect,
+			}),
+		dateCellWrapper: input.fullDayCreateEnabled ? AgendaFullDayShortcutCellWrapper : undefined,
+		event: (props: EventProps<CalendarEvent>) =>
+			createElement(AgendaCalendarEvent, {
+				...props,
+				activeEntry: input.stableActiveEntry,
+				overlappingEventIds: input.overlappingEventIds,
+				onSelectRegistration: input.onSelectEntry,
+			}),
+	};
+}
+
+function useAgendaCalendarSelectionState(onSelectSlot: AgendaCalendarOptions['onSelectSlot']) {
+	const createMode = useCreateAppointmentMode(onSelectSlot !== undefined);
+	const selection = useAgendaCalendarSelection(onSelectSlot, createMode);
+	return { createMode, ...selection };
+}
+
+function useAgendaCalendarBounds(date: Date) {
+	const dateTimestamp = date.getTime();
+	const min = useMemo(() => hhmmToDate(new Date(dateTimestamp), firstLessonTime), [dateTimestamp]);
+	const max = useMemo(() => hhmmToDate(new Date(dateTimestamp), lastLessonTime), [dateTimestamp]);
+	return { min, max };
+}
+
 export function useAgendaCalendar(
 	entries: AgendaEntry[],
 	date: Date,
 	view: View,
 	activeEntry: AgendaEntry | null | undefined,
 	onSelectEntry: (entry: AgendaEntry) => void,
-	options?: {
-		draftSelection?: AgendaSlotSelection | null;
-		onSelectSlot?: (selection: AgendaSlotSelection) => void;
-	},
+	options?: AgendaCalendarOptions,
 ) {
 	const { draftSelection, onSelectSlot } = options ?? {};
-	const createMode = useCreateAppointmentMode(onSelectSlot !== undefined);
 	const {
+		createMode,
 		selectingPreview,
 		hoveredSlot,
 		setHoveredSlot,
@@ -41,10 +107,9 @@ export function useAgendaCalendar(
 		handleSelecting,
 		handleSelectFullDay,
 		handleSelectSlot,
-	} = useAgendaCalendarSelection(onSelectSlot, createMode);
+	} = useAgendaCalendarSelectionState(onSelectSlot);
 
 	const activePreview = draftSelection ?? selectingPreview;
-
 	const { calendarEvents, overlappingEventIds } = useAgendaCalendarEvents(
 		entries,
 		date,
@@ -53,15 +118,12 @@ export function useAgendaCalendar(
 		hoveredSlot,
 		onSelectSlot,
 	);
-
-	const dateTimestamp = date.getTime();
-	const min = useMemo(() => hhmmToDate(new Date(dateTimestamp), firstLessonTime), [dateTimestamp]);
-	const max = useMemo(() => hhmmToDate(new Date(dateTimestamp), lastLessonTime), [dateTimestamp]);
+	const { min, max } = useAgendaCalendarBounds(date);
 
 	const handleSelectEvent = useCallback(
 		(ev: CalendarEvent) => {
-			if (ev.isDraft || ev.isHoverSlot || ev.isBreak || !ev.resource) return;
-			onSelectEntry(ev.resource);
+			if (!isSelectableCalendarEvent(ev)) return;
+			onSelectEntry(ev.resource as AgendaEntry);
 		},
 		[onSelectEntry],
 	);
@@ -72,30 +134,20 @@ export function useAgendaCalendar(
 		[activePreview, createMode, onSelectSlot, setHoveredSlot, clearHoverTimeoutRef],
 	);
 
-	const weekFullDayShortcut = view === 'work_week' && onSelectSlot !== undefined;
-	const fullDayCreateEnabled = weekFullDayShortcut && createMode;
+	const fullDayCreateEnabled = weekFullDayCreateEnabled(view, onSelectSlot, createMode);
 	const stableActiveEntry = useStableAgendaEntry(activeEntry);
 
 	const components = useMemo(
-		() => ({
-			header: (props: { date: Date; label: string }) =>
-				createElement(AgendaCalendarHeader, {
-					...props,
-					onSelectFullDay: fullDayCreateEnabled ? handleSelectFullDay : undefined,
-				}),
-			dateCellWrapper: fullDayCreateEnabled ? AgendaFullDayShortcutCellWrapper : undefined,
-			event: (props: EventProps<CalendarEvent>) =>
-				createElement(AgendaCalendarEvent, {
-					...props,
-					activeEntry: stableActiveEntry,
-					overlappingEventIds,
-					onSelectRegistration: onSelectEntry,
-				}),
-		}),
+		() =>
+			buildAgendaCalendarComponents({
+				fullDayCreateEnabled,
+				handleSelectFullDay,
+				stableActiveEntry,
+				overlappingEventIds,
+				onSelectEntry,
+			}),
 		[stableActiveEntry, handleSelectFullDay, overlappingEventIds, fullDayCreateEnabled, onSelectEntry],
 	);
-
-	const views: View[] = view === 'work_week' ? ['work_week'] : ['day'];
 
 	return {
 		events: calendarEvents,
@@ -112,7 +164,7 @@ export function useAgendaCalendar(
 		eventPropGetter: calendarEventPropGetter,
 		tooltipAccessor: calendarTooltipAccessor,
 		components,
-		views,
+		views: agendaViewsFor(view),
 		dayLayoutAlgorithm: agendaDayLayoutAlgorithm,
 	};
 }

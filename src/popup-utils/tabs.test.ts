@@ -25,13 +25,29 @@ describe('isSchoolSessionUrl', () => {
 describe('isCompleteSchoolTab', () => {
 	test('requires a finished school SPA tab', () => {
 		expect(
-			isCompleteSchoolTab({ url: 'https://sghetstreek.magister.net/magister/#/agenda', status: 'complete' }),
+			isCompleteSchoolTab({
+				url: 'https://sghetstreek.magister.net/magister/#/agenda',
+				status: 'complete',
+			}),
 		).toBe(true);
-		expect(isCompleteSchoolTab({ url: 'https://sghetstreek.magister.net/', status: 'loading' })).toBe(false);
-		expect(isCompleteSchoolTab({ url: 'https://accounts.magister.net/account/login', status: 'complete' })).toBe(
-			false,
-		);
-		expect(isCompleteSchoolTab({ url: 'https://www.magister.net/', status: 'complete' })).toBe(false);
+		expect(
+			isCompleteSchoolTab({
+				url: 'https://sghetstreek.magister.net/',
+				status: 'loading',
+			}),
+		).toBe(false);
+		expect(
+			isCompleteSchoolTab({
+				url: 'https://accounts.magister.net/account/login',
+				status: 'complete',
+			}),
+		).toBe(false);
+		expect(
+			isCompleteSchoolTab({
+				url: 'https://www.magister.net/',
+				status: 'complete',
+			}),
+		).toBe(false);
 	});
 });
 

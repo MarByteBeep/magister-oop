@@ -61,14 +61,14 @@ In productie (`bun run build`) wordt geen testserver gebruikt; dan praat de exte
 
 ## Overzicht commando’s
 
-| Actie                    | Commando                            |
-|--------------------------|-------------------------------------|
-| Data genereren           | `bun run testserver:init`           |
-| Dev (app + API in één)   | `bun run dev` (uit root)            |
+| Actie                  | Commando                  |
+| ---------------------- | ------------------------- |
+| Data genereren         | `bun run testserver:init` |
+| Dev (app + API in één) | `bun run dev` (uit root)  |
 
 ## Mapstructuur (testserver)
 
-- `testserver/src/app.ts` — Hono-app: routing voor alle API-endpoints, CORS en 404. Wordt door `vite-plugin-api.ts` als middleware in de Vite dev-server geladen.
+- `testserver/src/app.ts` — Hono-app: routing voor alle API-endpoints, CORS en 404. Wordt door `vitePluginApi.ts` als middleware in de Vite dev-server geladen.
 - `testserver/src/init/init.ts` — Init-script (aanmaken en vullen van `data/`).
 - `testserver/src/init/leerling.ts`, `medewerker.ts`, `locker.ts`, `agenda.ts` — Generatoren voor dummy-data.
 - `testserver/src/api/` — API-handlers per endpoint (o.a. `leerlingen/zoeken`, `leerlingen/{id}/afspraken`, `v1/lockers/details`). Exporteren `GET(req)` of `GET(req, id)`; de routing staat in `app.ts`.

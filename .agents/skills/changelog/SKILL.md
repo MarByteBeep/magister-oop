@@ -1,12 +1,13 @@
 ---
+
 name: changelog
 description: >
-  Update CHANGELOG.md and package.json version from user-facing work since the
-  previous release. Accepts /changelog X.Y.Z only (no prerelease); errors if live
-  package.json is already higher; merges into an existing section on re-runs.
-  Resolves a git baseline commit; includes commits plus staged, unstaged, and
-  qualifying untracked files; deduplicates outcomes. Never commits. Use when the
-  user says /changelog, passes a version, or asks for release notes.
+Update CHANGELOG.md and package.json version from user-facing work since the
+previous release. Accepts /changelog X.Y.Z only (no prerelease); errors if live
+package.json is already higher; merges into an existing section on re-runs.
+Resolves a git baseline commit; includes commits plus staged, unstaged, and
+qualifying untracked files; deduplicates outcomes. Never commits. Use when the
+user says /changelog, passes a version, or asks for release notes.
 ---
 
 # Changelog
@@ -29,10 +30,10 @@ Audience: **end users**. Skip refactors, tests, types, dead code, internal plumb
 
 Accept **only** `X.Y.Z` (digits and dots). **Prerelease and build metadata are invalid** (`1.2.3-beta`, `1.2.3+build` → error, no edits).
 
-| Invocation | Behavior |
-|------------|----------|
-| `/changelog 0.3.5` | Target = that version. Set `package.json` `"version"` to it. Notes under `## 0.3.5`. |
-| `/changelog` (no version) | Target = current `package.json` if filling that section; otherwise ask for `X.Y.Z`. |
+| Invocation                | Behavior                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------ |
+| `/changelog 0.3.5`        | Target = that version. Set `package.json` `"version"` to it. Notes under `## 0.3.5`. |
+| `/changelog` (no version) | Target = current `package.json` if filling that section; otherwise ask for `X.Y.Z`.  |
 
 ### Live version guard
 
@@ -78,10 +79,10 @@ Then add current worktree: staged, unstaged, qualifying untracked.
 
 ## Worktree sources
 
-| Source | Include |
-|--------|---------|
-| Staged | `git diff --cached` |
-| Unstaged | `git diff` |
+| Source    | Include                                                                                                                                                                                                                          |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Staged    | `git diff --cached`                                                                                                                                                                                                              |
+| Unstaged  | `git diff`                                                                                                                                                                                                                       |
 | Untracked | Only files that are part of the **current worktree** and clearly **introduce or change user-facing behavior** (UI copy, user-visible flows). Ignore tooling junk, local secrets, generated noise, and unrelated untracked paths. |
 
 **Deduplicate** the same user-facing outcome if it appears in more than one of: commit range, staged, unstaged, untracked.

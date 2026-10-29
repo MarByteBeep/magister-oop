@@ -1,13 +1,13 @@
 'use client';
 
-import AgendaCreateHint from '@/components/student/agenda/AgendaCreateHint';
-import AgendaSyncButton from '@/components/student/agenda/AgendaSyncButton';
-import DailyAgendaView from '@/components/student/agenda/DailyAgendaView';
+import AgendaCreateHint from '@/components/student/agenda/calendar/AgendaCreateHint';
+import AgendaSyncButton from '@/components/student/agenda/calendar/AgendaSyncButton';
+import DailyAgendaView from '@/components/student/agenda/calendar/DailyAgendaView';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getNow, getWorkWeekRange } from '@/lib/shared/dateUtils';
 import type { Student } from '@/types/student.types';
 
-interface StudentAgendaCardProps {
+export interface StudentAgendaCardProps {
 	student: Student;
 	onOpenStudent?: (student: Student) => void;
 }

@@ -23,50 +23,56 @@ function registrationKey(event: CalendarEvent): string {
 	return (event.registrations ?? []).map((entry) => `${entry.registration.id}:${entry.start}`).join(',');
 }
 
+function calendarEventTimesEqual(a: CalendarEvent, b: CalendarEvent): boolean {
+	if (a.start.getTime() !== b.start.getTime()) return false;
+	return a.end.getTime() === b.end.getTime();
+}
+
+function calendarEventFlagsEqual(a: CalendarEvent, b: CalendarEvent): boolean {
+	if (a.isDraft !== b.isDraft) return false;
+	if (a.isHoverSlot !== b.isHoverSlot) return false;
+	return a.isBreak === b.isBreak;
+}
+
+function calendarEventIdentityEqual(a: CalendarEvent, b: CalendarEvent): boolean {
+	if (a.id !== b.id) return false;
+	return a.resource === b.resource;
+}
+
+function calendarEventCoreEqual(a: CalendarEvent, b: CalendarEvent): boolean {
+	if (!calendarEventIdentityEqual(a, b)) return false;
+	return calendarEventTimesEqual(a, b);
+}
+
+function calendarEventEqual(a: CalendarEvent, b: CalendarEvent): boolean {
+	if (!calendarEventCoreEqual(a, b)) return false;
+	if (!calendarEventFlagsEqual(a, b)) return false;
+	return registrationKey(a) === registrationKey(b);
+}
+
 function calendarEventsEqual(a: CalendarEvent[], b: CalendarEvent[]): boolean {
 	if (a.length !== b.length) return false;
 	return a.every((event, index) => {
 		const other = b[index];
 		if (!other) return false;
-		return (
-			event.id === other.id &&
-			event.start.getTime() === other.start.getTime() &&
-			event.end.getTime() === other.end.getTime() &&
-			event.isDraft === other.isDraft &&
-			event.isHoverSlot === other.isHoverSlot &&
-			event.isBreak === other.isBreak &&
-			event.resource === other.resource &&
-			registrationKey(event) === registrationKey(other)
-		);
+		return calendarEventEqual(event, other);
 	});
 }
 
 function setsEqual(a: Set<string>, b: Set<string>): boolean {
 	if (a.size !== b.size) return false;
-	for (const id of a) {
-		if (!b.has(id)) return false;
-	}
-	return true;
+	return [...a].every((id) => b.has(id));
 }
 
-function buildOverlayEvents(
-	activePreview: AgendaSlotSelection | null,
-	hoveredSlot: HoveredAgendaSlot | null,
-	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
-): CalendarEvent[] {
-	if (activePreview) {
-		const isFullDay = isFullDayScheduleSelection(activePreview);
-		const lessonHours = getOverlappingLessonHoursForSelection(activePreview);
-		const lessonLabel = formatLessonHoursCompact(lessonHours);
-		return [
-			draftSelectionToBackgroundEvent(activePreview, {
-				title: isFullDay ? getFullDayScheduleLabel() : (lessonLabel ?? 'Nieuwe terugkommaatregel'),
-			}),
-		];
-	}
+function buildDraftOverlay(activePreview: AgendaSlotSelection): CalendarEvent[] {
+	const isFullDay = isFullDayScheduleSelection(activePreview);
+	const lessonHours = getOverlappingLessonHoursForSelection(activePreview);
+	const lessonLabel = formatLessonHoursCompact(lessonHours);
+	const title = isFullDay ? getFullDayScheduleLabel() : (lessonLabel ?? 'Nieuwe terugkommaatregel');
+	return [draftSelectionToBackgroundEvent(activePreview, { title })];
+}
 
-	if (!hoveredSlot || !onSelectSlot) return [];
-
+function buildHoverOverlay(hoveredSlot: HoveredAgendaSlot): CalendarEvent[] {
 	const hoverDate = parseDateKey(hoveredSlot.dateKey);
 	return [
 		hoverLessonSlotToBackgroundEvent({
@@ -74,6 +80,24 @@ function buildOverlayEvents(
 			end: hhmmToDate(hoverDate, hoveredSlot.endTime),
 		}),
 	];
+}
+
+function canShowHoverOverlay(
+	hoveredSlot: HoveredAgendaSlot | null,
+	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
+): hoveredSlot is HoveredAgendaSlot {
+	if (!hoveredSlot) return false;
+	return Boolean(onSelectSlot);
+}
+
+function buildOverlayEvents(
+	activePreview: AgendaSlotSelection | null,
+	hoveredSlot: HoveredAgendaSlot | null,
+	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
+): CalendarEvent[] {
+	if (activePreview) return buildDraftOverlay(activePreview);
+	if (!canShowHoverOverlay(hoveredSlot, onSelectSlot)) return [];
+	return buildHoverOverlay(hoveredSlot);
 }
 
 export function useAgendaCalendarEvents(
@@ -88,7 +112,8 @@ export function useAgendaCalendarEvents(
 	const events = useMemo(() => agendaEntriesToCalendarEvents(entries), [entries]);
 	const visibleDates = useMemo(() => {
 		const resolvedDate = new Date(dateTimestamp);
-		return view === 'work_week' ? getWeekDays(resolvedDate) : [resolvedDate];
+		if (view === 'work_week') return getWeekDays(resolvedDate);
+		return [resolvedDate];
 	}, [dateTimestamp, view]);
 	const breakEvents = useMemo(() => breakPeriodsToCalendarEvents(visibleDates), [visibleDates]);
 	const overlayEvents = useMemo(

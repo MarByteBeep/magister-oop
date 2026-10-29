@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
-interface OccupancyFiltersProps {
+export interface OccupancyFiltersProps {
 	show: boolean;
 	allLocations: string[];
 	selectedLocations: Set<string>;

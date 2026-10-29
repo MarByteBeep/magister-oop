@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 
-interface MailAddressProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface MailAddressProps extends React.HTMLAttributes<HTMLDivElement> {
 	address: string;
 }
 

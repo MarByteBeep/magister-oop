@@ -42,7 +42,7 @@ De extensie is nu ingeladen. Klik op het icoon: als je nog niet in Magister zit,
 
 ## Overzicht commando's
 
-| Commando         | Beschrijving                    |
-|------------------|----------------------------------|
-| `bun run build`  | Productiebuild → map `build/`   |
+| Commando              | Beschrijving                              |
+| --------------------- | ----------------------------------------- |
+| `bun run build`       | Productiebuild → map `build/`             |
 | `bun run build:watch` | Build met watch (herbouw bij wijzigingen) |

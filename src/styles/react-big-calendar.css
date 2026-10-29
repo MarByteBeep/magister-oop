@@ -135,8 +135,8 @@
 }
 
 /* Slots stay transparent so the column tint from .agenda-today-column (on the day-slot) shows through */
-.agenda-today-column .rbc-time-slot,
-.agenda-today-column .rbc-timeslot-group {
+.agenda-today-column.rbc-day-slot .rbc-time-slot,
+.agenda-today-column.rbc-day-slot .rbc-timeslot-group {
 	background: transparent;
 }
 

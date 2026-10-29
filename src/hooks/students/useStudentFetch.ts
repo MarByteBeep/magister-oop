@@ -8,6 +8,71 @@ import type { LockersResponse } from '@/magister/response/locker.types';
 import type { StudentsResponse } from '@/magister/response/student.types';
 import type { Student } from '@/types/student.types';
 
+function mergeStudentIntoList(merged: Student[], student: Student): void {
+	const idx = merged.findIndex((st) => st.id === student.id);
+	if (idx >= 0) {
+		merged[idx] = mergeDeep(merged[idx], student);
+		return;
+	}
+	merged.push(student);
+}
+
+function mergeStudentPage(prev: Student[], items: Student[]): Student[] {
+	const merged = [...prev];
+	for (const student of items) {
+		mergeStudentIntoList(merged, student);
+	}
+	return merged;
+}
+
+function firstStudentUuid(items: StudentsResponse['items']): string | null {
+	const externeId = items[0]?.externeId;
+	if (!externeId) return null;
+	return externeId;
+}
+
+async function ensureAttendanceTypesForUuid(studentUuid: string | null): Promise<void> {
+	if (!studentUuid) return;
+	await ensureAttendanceTypes(studentUuid).catch((error) => {
+		console.error('Failed to load attendance types', error);
+	});
+}
+
+function nextPageUrl(data: StudentsResponse): string | null {
+	return data.links.next?.href ?? null;
+}
+
+function rememberFirstUuid(current: string | null, items: StudentsResponse['items']): string | null {
+	if (current) return current;
+	return firstStudentUuid(items);
+}
+
+async function fetchStudentPage(
+	url: string,
+	setStudents: Dispatch<SetStateAction<Student[]>>,
+	firstUuid: string | null,
+): Promise<{ nextUrl: string | null; firstUuid: string | null }> {
+	const data: StudentsResponse = await getJson<StudentsResponse>(url, 'include', 'no-cache');
+	setStudents((prev) => mergeStudentPage(prev, data.items));
+	return {
+		nextUrl: nextPageUrl(data),
+		firstUuid: rememberFirstUuid(firstUuid, data.items),
+	};
+}
+
+async function fetchAllStudentPages(setStudents: Dispatch<SetStateAction<Student[]>>): Promise<string | null> {
+	let nextUrl: string | null = endpoints.searchStudents(50, 0);
+	let firstUuid: string | null = null;
+
+	while (nextUrl) {
+		const page = await fetchStudentPage(nextUrl, setStudents, firstUuid);
+		nextUrl = page.nextUrl;
+		firstUuid = page.firstUuid;
+	}
+
+	return firstUuid;
+}
+
 export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>) {
 	const fetchLockers = useCallback(async () => {
 		try {
@@ -15,7 +80,8 @@ export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>
 			setStudents((prev) =>
 				prev.map((s) => {
 					const locker = data.lockersDetails.find((l) => l.rentalPeriod?.student?.personId === s.id);
-					return locker ? mergeDeep(s, { lockerCode: locker.lockerCode }) : s;
+					if (!locker) return s;
+					return mergeDeep(s, { lockerCode: locker.lockerCode });
 				}),
 			);
 		} catch (e) {
@@ -24,31 +90,8 @@ export function useStudentFetch(setStudents: Dispatch<SetStateAction<Student[]>>
 	}, [setStudents]);
 
 	const fetchStudentsPaginated = useCallback(async () => {
-		let nextUrl: string | null = endpoints.searchStudents(50, 0);
-		let firstStudentUuid: string | null = null;
-
-		while (nextUrl) {
-			const data: StudentsResponse = await getJson<StudentsResponse>(nextUrl, 'include', 'no-cache');
-			if (!firstStudentUuid && data.items[0]?.externeId) {
-				firstStudentUuid = data.items[0].externeId;
-			}
-			setStudents((prev) => {
-				const merged = [...prev];
-				for (const s of data.items) {
-					const idx = merged.findIndex((st) => st.id === s.id);
-					if (idx >= 0) merged[idx] = mergeDeep(merged[idx], s);
-					else merged.push(s);
-				}
-				return merged;
-			});
-			nextUrl = data.links.next?.href ?? null;
-		}
-
-		if (firstStudentUuid) {
-			await ensureAttendanceTypes(firstStudentUuid).catch((error) => {
-				console.error('Failed to load attendance types', error);
-			});
-		}
+		const firstUuid = await fetchAllStudentPages(setStudents);
+		await ensureAttendanceTypesForUuid(firstUuid);
 	}, [setStudents]);
 
 	const refresh = useCallback(async () => {

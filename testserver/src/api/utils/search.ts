@@ -1,11 +1,14 @@
 import { sleep } from './sleep';
 
+function isPaginationParam(key: string): boolean {
+	return key === 'top' || key === 'skip';
+}
+
 function getPreservedQueryParams(searchParams: URLSearchParams) {
 	const preserved = new URLSearchParams();
 	for (const [key, value] of searchParams.entries()) {
-		if (key !== 'top' && key !== 'skip') {
-			preserved.append(key, value);
-		}
+		if (isPaginationParam(key)) continue;
+		preserved.append(key, value);
 	}
 	return preserved.toString();
 }
@@ -14,6 +17,55 @@ function buildPageHref(serverUrl: string, baseUrl: string, top: number, query: s
 	const skipPart = skip === undefined ? '' : `&skip=${skip}`;
 	const queryPart = query ? `&${query}` : '';
 	return `${serverUrl}${baseUrl}?top=${top}${queryPart}${skipPart}`;
+}
+
+function assignPrevLink(
+	links: Record<string, { href: string } | null>,
+	serverUrl: string,
+	baseUrl: string,
+	top: number,
+	skip: number,
+	query: string,
+) {
+	if (skip <= 0) return;
+	links.prev = {
+		href: buildPageHref(serverUrl, baseUrl, top, query, Math.max(0, skip - top)),
+	};
+}
+
+function assignNextLink(
+	links: Record<string, { href: string } | null>,
+	serverUrl: string,
+	baseUrl: string,
+	top: number,
+	skip: number,
+	totalCount: number,
+	query: string,
+) {
+	if (skip + top >= totalCount) return;
+	links.next = {
+		href: buildPageHref(serverUrl, baseUrl, top, query, skip + top),
+	};
+}
+
+function lastPageSkip(totalCount: number, top: number): number {
+	const remainder = totalCount % top;
+	if (remainder === 0) return Math.max(0, totalCount - top);
+	return Math.max(0, totalCount - remainder);
+}
+
+function assignLastLink(
+	links: Record<string, { href: string } | null>,
+	serverUrl: string,
+	baseUrl: string,
+	top: number,
+	totalCount: number,
+	query: string,
+) {
+	if (totalCount <= 0) return;
+	links.last = {
+		href: buildPageHref(serverUrl, baseUrl, top, query, lastPageSkip(totalCount, top)),
+	};
 }
 
 function buildPaginationLinks(
@@ -30,21 +82,9 @@ function buildPaginationLinks(
 		next: null,
 		last: null,
 	};
-
-	if (skip > 0) {
-		links.prev = { href: buildPageHref(serverUrl, baseUrl, top, query, Math.max(0, skip - top)) };
-	}
-
-	if (skip + top < totalCount) {
-		links.next = { href: buildPageHref(serverUrl, baseUrl, top, query, skip + top) };
-	}
-
-	if (totalCount > 0) {
-		const remainder = totalCount % top;
-		const lastSkip = Math.max(0, totalCount - (remainder === 0 ? top : remainder));
-		links.last = { href: buildPageHref(serverUrl, baseUrl, top, query, lastSkip) };
-	}
-
+	assignPrevLink(links, serverUrl, baseUrl, top, skip, query);
+	assignNextLink(links, serverUrl, baseUrl, top, skip, totalCount, query);
+	assignLastLink(links, serverUrl, baseUrl, top, totalCount, query);
 	return links;
 }
 

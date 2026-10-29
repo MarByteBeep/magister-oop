@@ -77,21 +77,40 @@ function createTemplate(studentId: number, noticeIndex: number): StoredAbsenceNo
 const ZK_NOTICE_INDEX = 0;
 const OTHER_NOTICE_COUNT = TEST_ABSENCE_NOTICES.length - 1;
 
+function assignZkNotice(result: Record<string, StoredAbsenceNoticeTemplate[]>, student: StudentBase): void {
+	result[student.externeId] = [createTemplate(student.id, ZK_NOTICE_INDEX)];
+}
+
+function assignOtherNotice(
+	result: Record<string, StoredAbsenceNoticeTemplate[]>,
+	student: StudentBase,
+	otherNoticeCounter: number,
+): number {
+	const noticeIndex = (otherNoticeCounter % OTHER_NOTICE_COUNT) + 1;
+	result[student.externeId] = [createTemplate(student.id, noticeIndex)];
+	return otherNoticeCounter + 1;
+}
+
+function processAbsenceStudent(
+	index: number,
+	student: StudentBase,
+	result: Record<string, StoredAbsenceNoticeTemplate[]>,
+	otherNoticeCounter: number,
+): number {
+	if (index % 10 === 0) {
+		assignZkNotice(result, student);
+		return otherNoticeCounter;
+	}
+	if (index % 5 !== 0) return otherNoticeCounter;
+	return assignOtherNotice(result, student, otherNoticeCounter);
+}
+
 export function generateAbsenceNoticeData(allStudents: StudentBase[]): Record<string, StoredAbsenceNoticeTemplate[]> {
 	const result: Record<string, StoredAbsenceNoticeTemplate[]> = {};
 	let otherNoticeCounter = 0;
 
 	for (const [index, student] of allStudents.entries()) {
-		if (index % 10 === 0) {
-			result[student.externeId] = [createTemplate(student.id, ZK_NOTICE_INDEX)];
-			continue;
-		}
-
-		if (index % 5 !== 0) continue;
-
-		const noticeIndex = (otherNoticeCounter % OTHER_NOTICE_COUNT) + 1;
-		result[student.externeId] = [createTemplate(student.id, noticeIndex)];
-		otherNoticeCounter++;
+		otherNoticeCounter = processAbsenceStudent(index, student, result, otherNoticeCounter);
 	}
 
 	return result;

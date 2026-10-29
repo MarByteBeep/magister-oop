@@ -25,7 +25,9 @@ function justification(partial: Partial<Justification> = {}): Justification {
 			omschrijving: 'Uit de les gestuurd',
 		},
 		opmerking: 'praat door',
-		links: { self: { href: '/api/medewerkers/afspraken/verantwoordingen/35555551' } },
+		links: {
+			self: { href: '/api/medewerkers/afspraken/verantwoordingen/35555551' },
+		},
 		...partial,
 	};
 }

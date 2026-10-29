@@ -2,7 +2,7 @@ import { type ReactNode, useMemo } from 'react';
 import { useStudents } from '@/hooks/students/useStudents';
 import { StudentsActionsContext, StudentsDataContext } from './StudentsContext';
 
-interface Props {
+export interface Props {
 	children: ReactNode;
 }
 

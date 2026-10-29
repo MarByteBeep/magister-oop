@@ -118,25 +118,41 @@ export function agendaEntriesToCalendarEvents(entries: AgendaEntry[]): CalendarE
 	});
 }
 
+function calendarEventsOverlap(a: CalendarEvent, b: CalendarEvent): boolean {
+	return a.start < b.end && a.end > b.start;
+}
+
+function markPairIfOverlapping(overlappingIds: Set<string>, a: CalendarEvent, b: CalendarEvent): void {
+	if (!isSameCalendarDay(a.start, b.start)) return;
+	if (!calendarEventsOverlap(a, b)) return;
+	overlappingIds.add(a.id);
+	overlappingIds.add(b.id);
+}
+
+function markOverlapWithOptional(overlappingIds: Set<string>, a: CalendarEvent, b: CalendarEvent | undefined): void {
+	if (!b) return;
+	markPairIfOverlapping(overlappingIds, a, b);
+}
+
+function markOverlapsAgainstLaterEvents(
+	overlappingIds: Set<string>,
+	lessonEvents: CalendarEvent[],
+	index: number,
+): void {
+	const a = lessonEvents[index];
+	if (!a) return;
+	for (let j = index + 1; j < lessonEvents.length; j++) {
+		markOverlapWithOptional(overlappingIds, a, lessonEvents[j]);
+	}
+}
+
 /** Overlap packing for compact lesson UI; overlay entries are ignored. */
 export function getOverlappingEventIds(events: CalendarEvent[]): Set<string> {
 	const overlappingIds = new Set<string>();
 	const lessonEvents = events.filter((event) => event.resource && isLessonEntry(event.resource));
 
 	for (let i = 0; i < lessonEvents.length; i++) {
-		for (let j = i + 1; j < lessonEvents.length; j++) {
-			const a = lessonEvents[i];
-			const b = lessonEvents[j];
-			if (!a || !b) continue;
-
-			const sameDay = isSameCalendarDay(a.start, b.start);
-			const overlaps = a.start < b.end && a.end > b.start;
-
-			if (sameDay && overlaps) {
-				overlappingIds.add(a.id);
-				overlappingIds.add(b.id);
-			}
-		}
+		markOverlapsAgainstLaterEvents(overlappingIds, lessonEvents, i);
 	}
 
 	return overlappingIds;

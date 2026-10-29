@@ -6,7 +6,7 @@ import type { StudentDetailTab } from '@/components/student/profile/StudentDetai
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import type { Student } from '@/types/student.types';
 
-interface ReturnMeasuresDialogsProps {
+export interface ReturnMeasuresDialogsProps {
 	selectedMeasure: ReturnMeasureStudent | null;
 	selectedStudent: Student | undefined;
 	studentTab: StudentDetailTab;

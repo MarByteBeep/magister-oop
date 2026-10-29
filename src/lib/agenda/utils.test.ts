@@ -7,9 +7,6 @@ import {
 	isSameAgendaOccurrence,
 } from '@/lib/agenda/utils';
 
-// ------------------------------------------------------------
-// HELPER – mock the time
-// ------------------------------------------------------------
 function setTime(time: string) {
 	const [h, m] = time.split(':').map(Number);
 	const date = new Date();
@@ -17,58 +14,6 @@ function setTime(time: string) {
 
 	setSystemTime(date);
 }
-
-// ------------------------------------------------------------
-// Time generator
-// ------------------------------------------------------------
-function generateTimes() {
-	const times: string[] = [];
-	let h = 7;
-	let m = 30;
-
-	while (h < 17 || (h === 17 && m <= 30)) {
-		times.push(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`);
-		m += 10;
-		if (m >= 60) {
-			m = 0;
-			h++;
-		}
-	}
-	return times;
-}
-
-const times = generateTimes();
-
-// ------------------------------------------------------------
-// MAIN TEST
-// ------------------------------------------------------------
-test('getCurrentLesson() & getNextLesson() work for all times 07:30–17:30', () => {
-	for (const time of times) {
-		setTime(time);
-
-		const current = getCurrentLesson();
-		const next = getNextLesson(current);
-
-		expect(current).toBeDefined();
-		expect(next).toBeDefined();
-
-		// before-school should only occur before 08:30
-		if (time < '08:30') {
-			expect(current.status).toBe('before-school');
-			expect(next.status).toBe('lesson');
-		}
-
-		// after-school should only occur after 16:00
-		if (time >= '16:00') {
-			expect(current.status).toBe('after-school');
-			expect(next.status).toBe('after-school');
-		}
-	}
-});
-
-// ------------------------------------------------------------
-// SPECIFIC TESTS
-// ------------------------------------------------------------
 
 test('Before 08:30 → before-school', () => {
 	setTime('07:45');

@@ -10,25 +10,25 @@ Gerelateerd: [privacy.md](./privacy.md).
 
 ### 1.1 Extensie-rechten (`public/manifest.json`)
 
-| Onderdeel | Waarde | Betekenis |
-|-----------|--------|-----------|
-| `permissions` | `scripting`, `storage` | Script-injectie in tabs; `chrome.storage` |
-| `host_permissions` | `*://*.magister.net/*` | Alleen Magister-hosts (http en https) |
+| Onderdeel             | Waarde                                                      | Betekenis                                                                 |
+| --------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `permissions`         | `scripting`, `storage`                                      | Script-injectie in tabs; `chrome.storage`                                 |
+| `host_permissions`    | `*://*.magister.net/*`                                      | Alleen Magister-hosts (http en https)                                     |
 | CSP `extension_pages` | `script-src 'self'; object-src 'self'; connect-src 'self';` | Extensiepagina’s kunnen **zelf geen** netwerkverzoeken naar Magister doen |
-| Content scripts | geen | Er wordt niets automatisch in pagina’s geïnjecteerd |
+| Content scripts       | geen                                                        | Er wordt niets automatisch in pagina’s geïnjecteerd                       |
 
 **Geen browsegeschiedenis.** De extensie leest geen browsegeschiedenis en heeft daar ook geen rechten voor: het manifest vraagt geen `history`-permissie en geen `tabs`-permissie. Zonder `tabs`-permissie geeft Chrome de URL en titel van een tabblad alleen door voor hosts in `host_permissions`. De extensie ziet dus alleen van open `*.magister.net`-tabbladen welke URL ze hebben, en gebruikt dat om de ingelogde school-tab te vinden (`src/popup-utils/tabs.ts`). Andere tabbladen vraagt ze niet op. Eerder bezochte pagina’s en zoekgeschiedenis zijn voor de extensie niet zichtbaar.
 
 ### 1.2 Hoe requests lopen
 
-| Laag | Pad | Rol |
-|------|-----|-----|
-| Endpoint-definities | `src/magister/endpoints.ts` | Pad-templates |
-| HTTP-client | `src/magister/api.ts` | `getJson` / `postJson` / `putJson` / `deleteJson` / `getBlob` |
-| In-page JSON-fetch | `src/magister/magisterTabJsonInPage.ts` | `fetch` uitgevoerd in de Magister-tab |
-| In-page blob-fetch | `src/magister/fetchBlobInMagisterTab.ts` | Foto’s, uitgevoerd in de Magister-tab |
-| Tabselectie | `src/popup-utils/tabs.ts` (`isSchoolSessionUrl`) | Bepaalt in welke tab wordt geïnjecteerd |
-| Storage-wrapper | `src/lib/shared/storage.ts` | `chrome.storage.session` / `chrome.storage.local` |
+| Laag                | Pad                                              | Rol                                                           |
+| ------------------- | ------------------------------------------------ | ------------------------------------------------------------- |
+| Endpoint-definities | `src/magister/endpoints.ts`                      | Pad-templates                                                 |
+| HTTP-client         | `src/magister/api.ts`                            | `getJson` / `postJson` / `putJson` / `deleteJson` / `getBlob` |
+| In-page JSON-fetch  | `src/magister/magisterTabJsonInPage.ts`          | `fetch` uitgevoerd in de Magister-tab                         |
+| In-page blob-fetch  | `src/magister/fetchBlobInMagisterTab.ts`         | Foto’s, uitgevoerd in de Magister-tab                         |
+| Tabselectie         | `src/popup-utils/tabs.ts` (`isSchoolSessionUrl`) | Bepaalt in welke tab wordt geïnjecteerd                       |
+| Storage-wrapper     | `src/lib/shared/storage.ts`                      | `chrome.storage.session` / `chrome.storage.local`             |
 
 Omdat de CSP directe verbindingen blokkeert, voert de extensie elke request uit via `chrome.scripting.executeScript` (`world: 'MAIN'`) in een ingelogde school-tab. Die tab moet voldoen aan `{school}.magister.net`; `accounts.`, `www.`, `attendance.` en `lockers.magister.net` zijn uitgesloten. Het tab-ID wordt bewaard als `activeTabId` in session storage.
 
@@ -44,13 +44,13 @@ Alleen de response-body (JSON of blob) gaat terug naar de extensie. Er is geen e
 
 De sessiestatus staat als `magisterSession` in session storage (`src/lib/session/magisterSession.ts`) en kent vier waarden: `checking`, `connecting`, `ready` en `cancelled`. `src/App.tsx` toont alleen bij `ready` tabbladinhoud en tellers; in alle andere gevallen staat er alleen een melding (`src/components/MagisterSessionNotice.tsx`). Gecachete leerlingdata blijft in opslag staan, maar wordt zonder geldige sessie niet getoond.
 
-| Moment | Gedrag | Code |
-|--------|--------|------|
-| Nieuw extensievenster | Een eerdere `ready` wordt `checking` tot de sessie opnieuw is gecontroleerd | `src/background.ts`: `markSessionUnverified` |
-| Elke 60 s en bij focus van het venster | Popup vraagt de background de sessie te controleren | `src/context/MagisterSessionProvider.tsx` |
-| API-call geeft sessie-verlopen of token-ontbreekt, of de school-tab is gesloten, herladen of weg-genavigeerd (na één nieuwe poging) | Idem | `src/magister/api.ts`: `executeInActiveMagisterTab`; meldingen in `src/magister/sessionErrors.ts` |
-| Controle faalt | Status wordt `connecting`; de background opent of focust de Magister-logintab en wacht op een nieuwe login | `src/background.ts`: `recheckReadySession` → `startConnecting` |
-| Login voltooid | Status wordt `ready`; data uit de cache is direct zichtbaar en wordt op de achtergrond ververst | `src/hooks/students/useStudentsInit.ts` |
+| Moment                                                                                                                              | Gedrag                                                                                                     | Code                                                                                              |
+| ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Nieuw extensievenster                                                                                                               | Een eerdere `ready` wordt `checking` tot de sessie opnieuw is gecontroleerd                                | `src/background.ts`: `markSessionUnverified`                                                      |
+| Elke 60 s en bij focus van het venster                                                                                              | Popup vraagt de background de sessie te controleren                                                        | `src/context/MagisterSessionProvider.tsx`                                                         |
+| API-call geeft sessie-verlopen of token-ontbreekt, of de school-tab is gesloten, herladen of weg-genavigeerd (na één nieuwe poging) | Idem                                                                                                       | `src/magister/api.ts`: `executeInActiveMagisterTab`; meldingen in `src/magister/sessionErrors.ts` |
+| Controle faalt                                                                                                                      | Status wordt `connecting`; de background opent of focust de Magister-logintab en wacht op een nieuwe login | `src/background.ts`: `recheckReadySession` → `startConnecting`                                    |
+| Login voltooid                                                                                                                      | Status wordt `ready`; data uit de cache is direct zichtbaar en wordt op de achtergrond ververst            | `src/hooks/students/useStudentsInit.ts`                                                           |
 
 De controle is `checkSchoolSessionReadyInPage` (OIDC-token aanwezig én `GET /api/account` slaagt). Een gewone 404 van een school-API geeft dezelfde foutmelding als een verlopen sessie; dat leidt alleen tot een extra controle en verandert niets zolang de sessie geldig is.
 
@@ -64,67 +64,67 @@ Endpoints zonder host in de tabellen hieronder zijn relatief en worden aangeroep
 
 #### Sessie
 
-| Methode | Endpoint | Auth | `getJson`-cache | Call-site |
-|---------|----------|------|-----------------|-----------|
-| GET | `/api/account` | cookies (vereist ook aanwezig OIDC-token in de tab) | n.v.t. (eigen `fetch`) | `src/popup-utils/tabs.ts`: `checkSchoolSessionReadyInPage`. Alleen statuscheck, de response wordt niet bewaard. |
+| Methode | Endpoint       | Auth                                                | `getJson`-cache        | Call-site                                                                                                       |
+| ------- | -------------- | --------------------------------------------------- | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| GET     | `/api/account` | cookies (vereist ook aanwezig OIDC-token in de tab) | n.v.t. (eigen `fetch`) | `src/popup-utils/tabs.ts`: `checkSchoolSessionReadyInPage`. Alleen statuscheck, de response wordt niet bewaard. |
 
 #### Leerlingen (lijst & profiel)
 
-| Methode | Endpoint | Auth | `getJson`-cache | Call-site |
-|---------|----------|------|-----------------|-----------|
-| GET | `/api/leerlingen/zoeken?q=**&…&velden=stamnummer&velden=naam&velden=klassen&velden=studies&velden=emailadres&velden=telefoonnummer&velden=KlassenMentor1` | cookies | `no-cache` | `src/hooks/students/useStudentFetch.ts`: `fetchStudentsPaginated` (alle leerlingen, gepagineerd per 50) |
-| GET | `https://lockers.magister.net/api/v1/lockers/details` | **geen** (`omit`, geen token) | `cache` → `jsonCache` | `src/hooks/students/useStudentFetch.ts`: `fetchLockers` |
-| GET | `/api/leerlingen/{id}/personalia` | cookies | `cache` → `jsonCache` | `src/hooks/students/studentDetailsFetchers.ts` |
-| GET | `/api/leerlingen/{id}/adresgegevens` | cookies | `cache` → `jsonCache` | idem |
-| GET | `/api/leerlingen/{id}/ouders` | cookies | `cache` → `jsonCache` | idem |
-| GET | `/api/ouders/{id}/contactgegevens` | cookies | `cache` → `jsonCache` | idem (per ouder/verzorger) |
-| GET | `student.links.foto.href` uit de API-response (typisch `/api/leerlingen/{id}/foto`) | cookies (`credentials: 'include'`) | n.v.t.; object-URL in geheugen | `studentDetailsFetchers.ts` → `src/lib/shared/blobUtils.ts` → `getBlob` |
+| Methode | Endpoint                                                                                                                                                  | Auth                               | `getJson`-cache                | Call-site                                                                                               |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| GET     | `/api/leerlingen/zoeken?q=**&…&velden=stamnummer&velden=naam&velden=klassen&velden=studies&velden=emailadres&velden=telefoonnummer&velden=KlassenMentor1` | cookies                            | `no-cache`                     | `src/hooks/students/useStudentFetch.ts`: `fetchStudentsPaginated` (alle leerlingen, gepagineerd per 50) |
+| GET     | `https://lockers.magister.net/api/v1/lockers/details`                                                                                                     | **geen** (`omit`, geen token)      | `cache` → `jsonCache`          | `src/hooks/students/useStudentFetch.ts`: `fetchLockers`                                                 |
+| GET     | `/api/leerlingen/{id}/personalia`                                                                                                                         | cookies                            | `cache` → `jsonCache`          | `src/hooks/students/studentDetailsFetchers.ts`                                                          |
+| GET     | `/api/leerlingen/{id}/adresgegevens`                                                                                                                      | cookies                            | `cache` → `jsonCache`          | idem                                                                                                    |
+| GET     | `/api/leerlingen/{id}/ouders`                                                                                                                             | cookies                            | `cache` → `jsonCache`          | idem                                                                                                    |
+| GET     | `/api/ouders/{id}/contactgegevens`                                                                                                                        | cookies                            | `cache` → `jsonCache`          | idem (per ouder/verzorger)                                                                              |
+| GET     | `student.links.foto.href` uit de API-response (typisch `/api/leerlingen/{id}/foto`)                                                                       | cookies (`credentials: 'include'`) | n.v.t.; object-URL in geheugen | `studentDetailsFetchers.ts` → `src/lib/shared/blobUtils.ts` → `getBlob`                                 |
 
 Twee URL’s komen uit de Magister-response in plaats van uit `endpoints.ts`: de volgende pagina bij leerlingenzoeken (`links.next.href`) en de foto (`links.foto.href`). Ze worden ongewijzigd opgevraagd vanuit de school-tab.
 
 #### Agenda
 
-| Methode | Endpoint | Auth | `getJson`-cache | Call-site |
-|---------|----------|------|-----------------|-----------|
-| GET | `/api/leerlingen/{id}/afspraken?begin=&einde=&status=actief` | cookies | `no-cache` | `src/hooks/agenda/useAgendaLoader.ts` |
-| POST | `/api/medewerkers/afspraken/{appointmentId}/verantwoordingen` | cookies | n.v.t. | `src/lib/agenda/tardyUtils.ts`: registreert een te-laat-melding |
+| Methode | Endpoint                                                      | Auth    | `getJson`-cache | Call-site                                                       |
+| ------- | ------------------------------------------------------------- | ------- | --------------- | --------------------------------------------------------------- |
+| GET     | `/api/leerlingen/{id}/afspraken?begin=&einde=&status=actief`  | cookies | `no-cache`      | `src/hooks/agenda/useAgendaLoader.ts`                           |
+| POST    | `/api/medewerkers/afspraken/{appointmentId}/verantwoordingen` | cookies | n.v.t.          | `src/lib/agenda/tardyUtils.ts`: registreert een te-laat-melding |
 
 #### Registraties (ongeoorloofd)
 
-| Methode | Endpoint | Auth | `getJson`-cache | Call-site |
-|---------|----------|------|-----------------|-----------|
-| GET | `/api/m6/verantwoordingen/ongeoorloofderegistraties?datum=` | cookies | `no-cache` | `src/lib/registrations/fetch.ts` |
-| DELETE | `/api/medewerkers/afspraken/verantwoordingen/{id}` | cookies | n.v.t. | `src/lib/registrations/delete.ts`: verwijdert een registratie |
+| Methode | Endpoint                                                    | Auth    | `getJson`-cache | Call-site                                                     |
+| ------- | ----------------------------------------------------------- | ------- | --------------- | ------------------------------------------------------------- |
+| GET     | `/api/m6/verantwoordingen/ongeoorloofderegistraties?datum=` | cookies | `no-cache`      | `src/lib/registrations/fetch.ts`                              |
+| DELETE  | `/api/medewerkers/afspraken/verantwoordingen/{id}`          | cookies | n.v.t.          | `src/lib/registrations/delete.ts`: verwijdert een registratie |
 
 #### Terugkommaatregelen
 
-| Methode | Endpoint | Auth | `getJson`-cache | Call-site |
-|---------|----------|------|-----------------|-----------|
-| GET | `/api/m6/leerlingen/terugkomers?begin=&einde=&Status=Alles` | cookies | `no-cache` | `src/lib/return-measure/fetch.ts` |
-| POST | `/api/leerlingen/{id}/verantwoordingen/terugkommaatregelen` | cookies | n.v.t. | `src/lib/return-measure/create.ts`: maakt een maatregel aan |
-| PUT | `/api/terugkommaatregelen/{id}/melding` | cookies | n.v.t. | `src/lib/return-measure/report.ts`: meldt `Tijdig` / `NietTijdig` |
+| Methode | Endpoint                                                    | Auth    | `getJson`-cache | Call-site                                                         |
+| ------- | ----------------------------------------------------------- | ------- | --------------- | ----------------------------------------------------------------- |
+| GET     | `/api/m6/leerlingen/terugkomers?begin=&einde=&Status=Alles` | cookies | `no-cache`      | `src/lib/return-measure/fetch.ts`                                 |
+| POST    | `/api/leerlingen/{id}/verantwoordingen/terugkommaatregelen` | cookies | n.v.t.          | `src/lib/return-measure/create.ts`: maakt een maatregel aan       |
+| PUT     | `/api/terugkommaatregelen/{id}/melding`                     | cookies | n.v.t.          | `src/lib/return-measure/report.ts`: meldt `Tijdig` / `NietTijdig` |
 
 #### Afwezigheid (attendance.magister.net)
 
-| Methode | Endpoint | Auth | `getJson`-cache | Call-site |
-|---------|----------|------|-----------------|-----------|
-| GET | `https://attendance.magister.net/api/v2/absence-notices/today?roles=Ondersteuner&date=` | **bearer** | `no-cache` | `src/lib/absence-notice/fetch.ts` |
-| GET | `https://attendance.magister.net/api/v2/student/{uuid}/attendance-types?active=true` | **bearer** | `no-cache` | `src/lib/absence-notice/attendanceTypes.ts` (één keer, met UUID van de eerste leerling) |
-| POST | `https://attendance.magister.net/api/v2/student/{uuid}/absence-notices` | **bearer** | n.v.t. | `src/lib/absence-notice/create.ts`: maakt een afwezigheidsmelding aan |
-| DELETE | `https://attendance.magister.net/api/v2/student/{uuid}/absence-notices/{id}` | **bearer** | n.v.t. | `src/lib/absence-notice/delete.ts`: verwijdert een afwezigheidsmelding |
+| Methode | Endpoint                                                                                | Auth       | `getJson`-cache | Call-site                                                                               |
+| ------- | --------------------------------------------------------------------------------------- | ---------- | --------------- | --------------------------------------------------------------------------------------- |
+| GET     | `https://attendance.magister.net/api/v2/absence-notices/today?roles=Ondersteuner&date=` | **bearer** | `no-cache`      | `src/lib/absence-notice/fetch.ts`                                                       |
+| GET     | `https://attendance.magister.net/api/v2/student/{uuid}/attendance-types?active=true`    | **bearer** | `no-cache`      | `src/lib/absence-notice/attendanceTypes.ts` (één keer, met UUID van de eerste leerling) |
+| POST    | `https://attendance.magister.net/api/v2/student/{uuid}/absence-notices`                 | **bearer** | n.v.t.          | `src/lib/absence-notice/create.ts`: maakt een afwezigheidsmelding aan                   |
+| DELETE  | `https://attendance.magister.net/api/v2/student/{uuid}/absence-notices/{id}`            | **bearer** | n.v.t.          | `src/lib/absence-notice/delete.ts`: verwijdert een afwezigheidsmelding                  |
 
 ### 2.2 Gedefinieerd maar niet aangeroepen
 
 Deze helpers staan in `endpoints.ts` zonder call-site:
 
-| Categorie | Helper | Pad |
-|-----------|--------|-----|
-| Sessie | `account` | `/api/account` (de sessiecheck gebruikt een hardcoded pad in `tabs.ts`) |
-| Medewerkers | `searchStaff` | `/api/medewerkers/zoeken?…` |
-| Leerlingen | `studentPhoto` | `/api/leerlingen/{id}/foto` (foto’s gebruiken de `href` uit de API-response) |
-| Ouders | `parentChildren` | `/api/ouders/{id}/kinderen` |
-| Ouders | `parentAddress` | `/api/ouders/{id}/adresgegevens` |
-| LVS | `unreadLog` | `/api/lvs/logboekformulieren/ongelezen?…` |
+| Categorie   | Helper           | Pad                                                                          |
+| ----------- | ---------------- | ---------------------------------------------------------------------------- |
+| Sessie      | `account`        | `/api/account` (de sessiecheck gebruikt een hardcoded pad in `tabs.ts`)      |
+| Medewerkers | `searchStaff`    | `/api/medewerkers/zoeken?…`                                                  |
+| Leerlingen  | `studentPhoto`   | `/api/leerlingen/{id}/foto` (foto’s gebruiken de `href` uit de API-response) |
+| Ouders      | `parentChildren` | `/api/ouders/{id}/kinderen`                                                  |
+| Ouders      | `parentAddress`  | `/api/ouders/{id}/adresgegevens`                                             |
+| LVS         | `unreadLog`      | `/api/lvs/logboekformulieren/ongelezen?…`                                    |
 
 ---
 
@@ -164,14 +164,14 @@ Er zijn drie lagen: `chrome.storage.session`, geheugen van de extensiepagina, en
 
 ### 4.1 Leerlingstore (`studentData`, session storage)
 
-| | |
-|--|--|
-| In geheugen | `src/lib/students/dataStore.ts`: singleton `studentDataStore` |
-| Persistentie | `src/lib/students/dataStorePersistence.ts`: key `studentData` in `chrome.storage.session` |
-| Laden | `loadStudentDataFromSession()` vanuit `src/hooks/students/useStudentsInit.ts` |
-| Wegschrijven | `useStudentStore` → `queuePersistStudentDataToSession()` na elke wijziging (debounce 300 ms) |
-| Wissen | `clearStudentStore()` bij handmatig verversen (`useStudentFetch.refresh`); niet bij uitloggen uit Magister |
-| Weergave | Alleen bij sessie `ready` (zie §1.3); het laden uit session storage gebeurt wel al vóór de sessiecheck |
+|              |                                                                                                            |
+| ------------ | ---------------------------------------------------------------------------------------------------------- |
+| In geheugen  | `src/lib/students/dataStore.ts`: singleton `studentDataStore`                                              |
+| Persistentie | `src/lib/students/dataStorePersistence.ts`: key `studentData` in `chrome.storage.session`                  |
+| Laden        | `loadStudentDataFromSession()` vanuit `src/hooks/students/useStudentsInit.ts`                              |
+| Wegschrijven | `useStudentStore` → `queuePersistStudentDataToSession()` na elke wijziging (debounce 300 ms)               |
+| Wissen       | `clearStudentStore()` bij handmatig verversen (`useStudentFetch.refresh`); niet bij uitloggen uit Magister |
+| Weergave     | Alleen bij sessie `ready` (zie §1.3); het laden uit session storage gebeurt wel al vóór de sessiecheck     |
 
 Inhoud (`StudentDataSnapshot`):
 
@@ -183,13 +183,13 @@ Inhoud (`StudentDataSnapshot`):
 
 ### 4.2 JSON-responsecache (`jsonCache`, session storage)
 
-| | |
-|--|--|
-| Code | `src/lib/shared/cache.ts` |
-| Key | `jsonCache` in `chrome.storage.session`, LZString-gecomprimeerd |
-| Gebruik | `getJson` in `src/magister/api.ts` met cache-optie `cache` (default) |
-| Laden | `await loadJsonCache()` bij import van `api.ts` |
-| Wissen | Geen code die de cache wist; alleen het einde van de browsersessie of herladen van de extensie |
+|         |                                                                                                |
+| ------- | ---------------------------------------------------------------------------------------------- |
+| Code    | `src/lib/shared/cache.ts`                                                                      |
+| Key     | `jsonCache` in `chrome.storage.session`, LZString-gecomprimeerd                                |
+| Gebruik | `getJson` in `src/magister/api.ts` met cache-optie `cache` (default)                           |
+| Laden   | `await loadJsonCache()` bij import van `api.ts`                                                |
+| Wissen  | Geen code die de cache wist; alleen het einde van de browsersessie of herladen van de extensie |
 
 Inhoud: volledige responses van **personalia, adresgegevens, ouders, oudercontactgegevens** (per bekeken leerling) en **lockers** (alle lockers). De cache-key is de relatieve URL, zonder school-origin.
 
@@ -199,36 +199,36 @@ Calls met `'no-cache'` (zoeken, agenda, registraties, terugkomers, afwezigheid, 
 
 Deze data verdwijnt als het extensievenster sluit en wordt niet naar `chrome.storage` geschreven.
 
-| Module | Structuur | Data |
-|--------|-----------|------|
-| `src/lib/registrations/fetch.ts` | `Map<dateKey, RegistrationsResponse>` | Ongeoorloofde registraties per dag |
-| `src/lib/return-measure/fetch.ts` | `Map<monthKey, ReturnMeasureStudent[]>` | Terugkommaatregelen per maand, inclusief leerlinggegevens |
-| `src/lib/return-measure/report.ts` | `Map<measureId, action>` | Lokaal bijgehouden meldstatus na een PUT |
-| `src/lib/absence-notice/fetch.ts` | `Map<dateKey, AbsenceNotice[]>` | Afwezigheidsmeldingen per dag |
-| `src/lib/absence-notice/attendanceTypes.ts` | module-variabele | Schoolbrede afwezigheidscodes (geen persoonsgegevens) |
-| `src/lib/bulk-lists/registry.ts` | `Map<listId, snapshot>` | Lijstweergaven van vandaag (registraties, terugkommaatregelen) |
-| `src/lib/shared/blobUtils.ts` | `Map<href, objectUrl>` | Leerlingfoto’s als object-URL |
+| Module                                      | Structuur                               | Data                                                           |
+| ------------------------------------------- | --------------------------------------- | -------------------------------------------------------------- |
+| `src/lib/registrations/fetch.ts`            | `Map<dateKey, RegistrationsResponse>`   | Ongeoorloofde registraties per dag                             |
+| `src/lib/return-measure/fetch.ts`           | `Map<monthKey, ReturnMeasureStudent[]>` | Terugkommaatregelen per maand, inclusief leerlinggegevens      |
+| `src/lib/return-measure/report.ts`          | `Map<measureId, action>`                | Lokaal bijgehouden meldstatus na een PUT                       |
+| `src/lib/absence-notice/fetch.ts`           | `Map<dateKey, AbsenceNotice[]>`         | Afwezigheidsmeldingen per dag                                  |
+| `src/lib/absence-notice/attendanceTypes.ts` | module-variabele                        | Schoolbrede afwezigheidscodes (geen persoonsgegevens)          |
+| `src/lib/bulk-lists/registry.ts`            | `Map<listId, snapshot>`                 | Lijstweergaven van vandaag (registraties, terugkommaatregelen) |
+| `src/lib/shared/blobUtils.ts`               | `Map<href, objectUrl>`                  | Leerlingfoto’s als object-URL                                  |
 
 ### 4.4 Overige storage-keys
 
 **`chrome.storage.session`** (geen leerlingdata):
 
-| Key | Code | Inhoud |
-|-----|------|--------|
-| `activeTabId` | `src/magister/api.ts`, `src/background.ts` | Tab-ID van de Magister-tab voor injectie |
-| `loginTabId` | `src/popup-utils/tabs.ts` | Tab-ID van de login-tab |
-| `magisterSession` | `src/background.ts`, `src/context/MagisterSessionProvider.tsx` | Status: `checking` / `connecting` / `ready` / `cancelled` |
-| `popupWindowId` | `src/background.ts` | Venster-ID van het extensievenster |
-| `studentsSearchTerm` | `src/components/Students.tsx` via `useSearchTermStorage` | Ingevoerde zoekterm (kan een leerlingnaam zijn) |
+| Key                  | Code                                                           | Inhoud                                                    |
+| -------------------- | -------------------------------------------------------------- | --------------------------------------------------------- |
+| `activeTabId`        | `src/magister/api.ts`, `src/background.ts`                     | Tab-ID van de Magister-tab voor injectie                  |
+| `loginTabId`         | `src/popup-utils/tabs.ts`                                      | Tab-ID van de login-tab                                   |
+| `magisterSession`    | `src/background.ts`, `src/context/MagisterSessionProvider.tsx` | Status: `checking` / `connecting` / `ready` / `cancelled` |
+| `popupWindowId`      | `src/background.ts`                                            | Venster-ID van het extensievenster                        |
+| `studentsSearchTerm` | `src/components/Students.tsx` via `useSearchTermStorage`       | Ingevoerde zoekterm (kan een leerlingnaam zijn)           |
 
 **`chrome.storage.local`** (blijft bewaard):
 
-| Key | Code | Inhoud |
-|-----|------|--------|
-| `magisterSchoolOrigin` | `src/popup-utils/tabs.ts` | School-URL, bijv. `https://school.magister.net` |
-| `selectedStudies` | `src/hooks/shared/useSelectedStudiesStorage.ts` | Gekozen opleidingsfilter |
-| `occupancySelectedLocations` | `src/components/occupancy/useOccupancyLocationSelection.ts` | Gekozen bezettingslocaties |
-| `themePreference` | `src/lib/theme/preference.ts` | Licht/donker thema |
+| Key                          | Code                                                        | Inhoud                                          |
+| ---------------------------- | ----------------------------------------------------------- | ----------------------------------------------- |
+| `magisterSchoolOrigin`       | `src/popup-utils/tabs.ts`                                   | School-URL, bijv. `https://school.magister.net` |
+| `selectedStudies`            | `src/hooks/shared/useSelectedStudiesStorage.ts`             | Gekozen opleidingsfilter                        |
+| `occupancySelectedLocations` | `src/components/occupancy/useOccupancyLocationSelection.ts` | Gekozen bezettingslocaties                      |
+| `themePreference`            | `src/lib/theme/preference.ts`                               | Licht/donker thema                              |
 
 ---
 
@@ -236,11 +236,11 @@ Deze data verdwijnt als het extensievenster sluit en wordt niet naar `chrome.sto
 
 Opties in `src/magister/api.ts`:
 
-| Optie | Lezen uit `jsonCache` | Schrijven naar `jsonCache` | Gebruikt |
-|-------|----------------------|----------------------------|----------|
-| `cache` (default) | ja | ja | ja (studentdetails, lockers) |
-| `cache-write-only` | nee | ja | nee |
-| `no-cache` | nee | nee | ja |
+| Optie              | Lezen uit `jsonCache` | Schrijven naar `jsonCache` | Gebruikt                     |
+| ------------------ | --------------------- | -------------------------- | ---------------------------- |
+| `cache` (default)  | ja                    | ja                         | ja (studentdetails, lockers) |
+| `cache-write-only` | nee                   | ja                         | nee                          |
+| `no-cache`         | nee                   | nee                        | ja                           |
 
 Mutaties (`postJson` / `putJson` / `deleteJson`) worden niet gecachet.
 
@@ -286,4 +286,4 @@ Mutaties (`postJson` / `putJson` / `deleteJson`) worden niet gecachet.
 
 ---
 
-*Opgesteld op basis van de codebase; bij wijzigingen in API-calls of opslag dit document bijwerken.*
+_Opgesteld op basis van de codebase; bij wijzigingen in API-calls of opslag dit document bijwerken._

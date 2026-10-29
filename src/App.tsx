@@ -11,6 +11,7 @@ import { useMagisterSession } from '@/context/MagisterSessionContext';
 import { useRegistrationsContext } from '@/context/RegistrationsContext';
 import { useReturnMeasuresContext } from '@/context/ReturnMeasuresContext';
 import { useActionBadge } from '@/hooks/shared/useActionBadge';
+import type { MagisterSessionStatus } from '@/lib/session/magisterSession';
 
 function TabCountBadge({ count }: { count: number }) {
 	if (count <= 0) return null;
@@ -18,6 +19,37 @@ function TabCountBadge({ count }: { count: number }) {
 		<Badge variant="destructive" className="ml-1.5 h-5 min-w-5 px-1.5 text-xs">
 			{count}
 		</Badge>
+	);
+}
+
+function badgeCountWhenReady(ready: boolean, count: number): number {
+	if (!ready) return 0;
+	return count;
+}
+
+function AppTabsBody({ ready, session }: { ready: boolean; session: MagisterSessionStatus }) {
+	if (!ready) {
+		if (session === 'ready') return null;
+		return <MagisterSessionNotice session={session} />;
+	}
+	return (
+		<div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-2">
+			<TabsContent value="students">
+				<Students />
+			</TabsContent>
+			<TabsContent value="staff">
+				<p>coming soon...</p>
+			</TabsContent>
+			<TabsContent value="occupancy">
+				<Occupancy />
+			</TabsContent>
+			<TabsContent value="registrations">
+				<Registrations />
+			</TabsContent>
+			<TabsContent value="return-measures">
+				<ReturnMeasures />
+			</TabsContent>
+		</div>
 	);
 }
 
@@ -42,11 +74,11 @@ function App() {
 							<TabsTrigger value="occupancy">Bezetting</TabsTrigger>
 							<TabsTrigger value="registrations">
 								Registraties
-								<TabCountBadge count={ready ? registrationCount : 0} />
+								<TabCountBadge count={badgeCountWhenReady(ready, registrationCount)} />
 							</TabsTrigger>
 							<TabsTrigger value="return-measures">
 								Terugkomers
-								<TabCountBadge count={ready ? openTodayCount : 0} />
+								<TabCountBadge count={badgeCountWhenReady(ready, openTodayCount)} />
 							</TabsTrigger>
 						</TabsList>
 						<div className="shrink-0">
@@ -54,27 +86,7 @@ function App() {
 						</div>
 					</div>
 
-					{ready ? (
-						<div className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto pt-2">
-							<TabsContent value="students">
-								<Students />
-							</TabsContent>
-							<TabsContent value="staff">
-								<p>coming soon...</p>
-							</TabsContent>
-							<TabsContent value="occupancy">
-								<Occupancy />
-							</TabsContent>
-							<TabsContent value="registrations">
-								<Registrations />
-							</TabsContent>
-							<TabsContent value="return-measures">
-								<ReturnMeasures />
-							</TabsContent>
-						</div>
-					) : (
-						<MagisterSessionNotice session={session} />
-					)}
+					<AppTabsBody ready={ready} session={session} />
 				</Tabs>
 			</div>
 			<ThemedToaster />

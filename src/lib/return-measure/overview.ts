@@ -100,7 +100,10 @@ export function returnMeasurePeriodRange(
 	}
 	if (period === 'week') {
 		const monday = getStartOfWeek(now);
-		return { startKey: getDateKey(monday), endKey: getDateKey(addDays(monday, 6)) };
+		return {
+			startKey: getDateKey(monday),
+			endKey: getDateKey(addDays(monday, 6)),
+		};
 	}
 	const { start, end } = getMonthRange(now);
 	return { startKey: getDateKey(start), endKey: getDateKey(end) };

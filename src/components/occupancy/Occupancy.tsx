@@ -13,20 +13,127 @@ import { useOccupancyData } from './useOccupancyData';
 import { useOccupancyLocationSelection } from './useOccupancyLocationSelection';
 import { useOccupancyModal } from './useOccupancyModal';
 
-export default function Occupancy() {
+function modalLocations(modalLocation: string | null, filteredLocations: string[]): string[] {
+	if (modalLocation === null) return filteredLocations;
+	return [modalLocation];
+}
+
+function modalInstanceKey(modalLessonRange: string, modalLocation: string | null): string {
+	if (modalLocation === null) return `${modalLessonRange}-chart`;
+	return `${modalLessonRange}-${modalLocation}`;
+}
+
+function OccupancyStudentsModalGate({
+	isModalOpen,
+	modalLessonRange,
+	modalLocation,
+	todayKey,
+	filteredLocations,
+	closeModal,
+}: {
+	isModalOpen: boolean;
+	modalLessonRange: string;
+	modalLocation: string | null;
+	todayKey: string;
+	filteredLocations: string[];
+	closeModal: () => void;
+}) {
+	if (!isModalOpen) return null;
+
+	return (
+		<OccupancyStudentsModal
+			key={modalInstanceKey(modalLessonRange, modalLocation)}
+			isOpen={isModalOpen}
+			onClose={closeModal}
+			lessonRange={modalLessonRange}
+			dateKey={todayKey}
+			locations={modalLocations(modalLocation, filteredLocations)}
+			showBreakStudents={modalLocation === null}
+		/>
+	);
+}
+
+function useOccupancyPageState() {
 	const { students, currentLessonInfo } = useStudentsContext();
 	const { todayKey, occupancyData, allLocations, hasData } = useOccupancyData(students);
-
 	const [showLocationFilters, setShowLocationFilters] = useState(false);
 	const [showChart, setShowChart] = useState(true);
 	const chartIsDark = useChartDarkMode();
-	const { isModalOpen, modalLocation, modalLessonRange, openLocationModal, openChartModal, closeModal } =
-		useOccupancyModal();
+	const modal = useOccupancyModal();
+	const selection = useOccupancyLocationSelection(allLocations);
+	const chartData = useOccupancyChartData(selection.filteredLocations, occupancyData, students, todayKey);
 
-	const { selectedLocations, filteredLocations, handleLocationFilterChange, handleSelectAll, handleDeselectAll } =
-		useOccupancyLocationSelection(allLocations);
+	return {
+		currentLessonInfo,
+		todayKey,
+		occupancyData,
+		allLocations,
+		hasData,
+		showLocationFilters,
+		showChart,
+		chartIsDark,
+		chartData,
+		modal,
+		selection,
+		toggleFilters: () => setShowLocationFilters((v) => !v),
+		toggleChart: () => setShowChart((v) => !v),
+	};
+}
 
-	const chartData = useOccupancyChartData(filteredLocations, occupancyData, students, todayKey);
+function OccupancyContent() {
+	const page = useOccupancyPageState();
+	const { modal, selection } = page;
+
+	return (
+		<div className="space-y-0">
+			<OccupancyToolbar
+				showLocationFilters={page.showLocationFilters}
+				showChart={page.showChart}
+				selectedCount={selection.selectedLocations.size}
+				totalLocations={page.allLocations.length}
+				onToggleFilters={page.toggleFilters}
+				onToggleChart={page.toggleChart}
+			/>
+
+			<OccupancyChartPanel
+				show={page.showChart}
+				chartData={page.chartData}
+				currentLessonInfo={page.currentLessonInfo}
+				chartIsDark={page.chartIsDark}
+				onLessonRangeClick={modal.openChartModal}
+			/>
+
+			<OccupancyFilters
+				show={page.showLocationFilters}
+				allLocations={page.allLocations}
+				selectedLocations={selection.selectedLocations}
+				onLocationFilterChange={selection.handleLocationFilterChange}
+				onSelectAll={selection.handleSelectAll}
+				onDeselectAll={selection.handleDeselectAll}
+			/>
+
+			<OccupancyLocationGrid
+				filteredLocations={selection.filteredLocations}
+				occupancyData={page.occupancyData}
+				currentLessonInfo={page.currentLessonInfo}
+				onCardClick={modal.openLocationModal}
+			/>
+
+			<OccupancyStudentsModalGate
+				isModalOpen={modal.isModalOpen}
+				modalLessonRange={modal.modalLessonRange}
+				modalLocation={modal.modalLocation}
+				todayKey={page.todayKey}
+				filteredLocations={selection.filteredLocations}
+				closeModal={modal.closeModal}
+			/>
+		</div>
+	);
+}
+
+export default function Occupancy() {
+	const { students } = useStudentsContext();
+	const { hasData } = useOccupancyData(students);
 
 	if (!hasData) {
 		return (
@@ -34,52 +141,5 @@ export default function Occupancy() {
 		);
 	}
 
-	return (
-		<div className="space-y-0">
-			<OccupancyToolbar
-				showLocationFilters={showLocationFilters}
-				showChart={showChart}
-				selectedCount={selectedLocations.size}
-				totalLocations={allLocations.length}
-				onToggleFilters={() => setShowLocationFilters((v) => !v)}
-				onToggleChart={() => setShowChart((v) => !v)}
-			/>
-
-			<OccupancyChartPanel
-				show={showChart}
-				chartData={chartData}
-				currentLessonInfo={currentLessonInfo}
-				chartIsDark={chartIsDark}
-				onLessonRangeClick={openChartModal}
-			/>
-
-			<OccupancyFilters
-				show={showLocationFilters}
-				allLocations={allLocations}
-				selectedLocations={selectedLocations}
-				onLocationFilterChange={handleLocationFilterChange}
-				onSelectAll={handleSelectAll}
-				onDeselectAll={handleDeselectAll}
-			/>
-
-			<OccupancyLocationGrid
-				filteredLocations={filteredLocations}
-				occupancyData={occupancyData}
-				currentLessonInfo={currentLessonInfo}
-				onCardClick={openLocationModal}
-			/>
-
-			{isModalOpen && (
-				<OccupancyStudentsModal
-					key={`${modalLessonRange}-${modalLocation ?? 'chart'}`}
-					isOpen={isModalOpen}
-					onClose={closeModal}
-					lessonRange={modalLessonRange}
-					dateKey={todayKey}
-					locations={modalLocation ? [modalLocation] : filteredLocations}
-					showBreakStudents={modalLocation === null}
-				/>
-			)}
-		</div>
-	);
+	return <OccupancyContent />;
 }

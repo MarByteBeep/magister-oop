@@ -5,34 +5,48 @@ import StudentDetailContent, { type StudentDetailTab } from '@/components/studen
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import type { Student } from '@/types/student.types';
 
-interface StudentDetailDialogProps {
+export interface StudentDetailDialogProps {
 	student?: Student | null;
 	onClose: () => void;
 	initialTab?: StudentDetailTab;
 	agendaDate?: Date;
 }
 
-export default function StudentDetailDialog({ student, onClose, initialTab, agendaDate }: StudentDetailDialogProps) {
+function isStudentDialogOpen(studentId: number | undefined): boolean {
+	return studentId !== undefined;
+}
+
+function handleDialogOpenChange(isOpen: boolean, onClose: () => void) {
+	if (isOpen) return;
+	onClose();
+}
+
+function NestedStudentDialog({ student, onClose }: { student: Student | null; onClose: () => void }) {
+	if (!student) return null;
+	return <StudentDetailDialog student={student} onClose={onClose} />;
+}
+
+export default function StudentDetailDialog(props: StudentDetailDialogProps) {
 	const [nestedStudent, setNestedStudent] = useState<Student | null>(null);
-	const studentId = student?.id;
+	const studentId = props.student ? props.student.id : undefined;
 
 	return (
 		<>
 			<Dialog
-				open={studentId !== null && studentId !== undefined}
-				onOpenChange={(isOpen: boolean) => !isOpen && onClose()}
+				open={isStudentDialogOpen(studentId)}
+				onOpenChange={(isOpen: boolean) => handleDialogOpenChange(isOpen, props.onClose)}
 			>
 				<DialogContent className="w-[1100px] h-[700px] flex flex-col">
 					<StudentDetailContent
-						student={student ?? undefined}
+						student={props.student ?? undefined}
 						onOpenStudent={setNestedStudent}
-						initialTab={initialTab}
-						agendaDate={agendaDate}
+						initialTab={props.initialTab}
+						agendaDate={props.agendaDate}
 					/>
 				</DialogContent>
 			</Dialog>
 
-			{nestedStudent && <StudentDetailDialog student={nestedStudent} onClose={() => setNestedStudent(null)} />}
+			<NestedStudentDialog student={nestedStudent} onClose={() => setNestedStudent(null)} />
 		</>
 	);
 }

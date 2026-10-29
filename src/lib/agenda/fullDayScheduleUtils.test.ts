@@ -25,7 +25,11 @@ test('isFullDayReturnMeasureEntry matches default 08:00–16:00 school day', () 
 });
 
 test('configureFullDaySchedule allows school-specific times', () => {
-	configureFullDaySchedule({ beginTime: '08:30', endTime: '15:30', label: 'Vierkant rooster' });
+	configureFullDaySchedule({
+		beginTime: '08:30',
+		endTime: '15:30',
+		label: 'Vierkant rooster',
+	});
 	expect(isFullDayReturnMeasureEntry(returnMeasureEntry(measure('2026-08-31T08:30:00', '2026-08-31T15:30:00')))).toBe(
 		true,
 	);
@@ -41,6 +45,9 @@ test('isFullDayScheduleSelection matches configured school-day bounds', () => {
 	const fullDay = getFullDayScheduleSelection(new Date('2026-09-16T12:00:00'));
 	expect(isFullDayScheduleSelection(fullDay)).toBe(true);
 	expect(
-		isFullDayScheduleSelection({ start: new Date('2026-09-16T08:30:00'), end: new Date('2026-09-16T16:00:00') }),
+		isFullDayScheduleSelection({
+			start: new Date('2026-09-16T08:30:00'),
+			end: new Date('2026-09-16T16:00:00'),
+		}),
 	).toBe(false);
 });

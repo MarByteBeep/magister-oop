@@ -45,14 +45,14 @@ Dit zijn geen persoonsgegevens. Het zijn voorkeuren die het gebruik van de exten
 
 ## Wat wordt waar bewaard?
 
-| Soort gegevens              | Session storage | Local storage | Na afsluiten browser |
-|----------------------------|-----------------|---------------|------------|
-| Leerlinglijsten, roosters  | Ja (tijdelijk)  | Nee           | Verdwijnt  |
-| API-cache (roosters, etc.) | Ja (tijdelijk)  | Nee           | Verdwijnt  |
-| Zoekterm (Leerlingen)      | Ja (tijdelijk)  | Nee           | Verdwijnt  |
-| Actieve Magister-tab ID    | Ja (tijdelijk)  | Nee           | Verdwijnt  |
-| Filter opleidingen         | Nee             | Ja            | Blijft     |
-| Filter bezettingslocaties  | Nee             | Ja            | Blijft     |
+| Soort gegevens             | Session storage | Local storage | Na afsluiten browser |
+| -------------------------- | --------------- | ------------- | -------------------- |
+| Leerlinglijsten, roosters  | Ja (tijdelijk)  | Nee           | Verdwijnt            |
+| API-cache (roosters, etc.) | Ja (tijdelijk)  | Nee           | Verdwijnt            |
+| Zoekterm (Leerlingen)      | Ja (tijdelijk)  | Nee           | Verdwijnt            |
+| Actieve Magister-tab ID    | Ja (tijdelijk)  | Nee           | Verdwijnt            |
+| Filter opleidingen         | Nee             | Ja            | Blijft               |
+| Filter bezettingslocaties  | Nee             | Ja            | Blijft               |
 
 ## AVG-uitgangspunten
 

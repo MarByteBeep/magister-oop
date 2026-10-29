@@ -248,7 +248,9 @@ describe('checkCommand (Windows env)', () => {
 
 		test('npm install', () => {
 			setWindowsEnv();
-			expect(checkCommand('npm install express')).toEqual({ permission: 'allow' });
+			expect(checkCommand('npm install express')).toEqual({
+				permission: 'allow',
+			});
 		});
 
 		test('git status', () => {
@@ -368,7 +370,9 @@ describe('checkCommand (Linux env)', () => {
 
 		test('chmod 755 (normal on Linux)', () => {
 			setLinuxEnv();
-			expect(checkCommand('chmod 755 deploy.sh')).toEqual({ permission: 'allow' });
+			expect(checkCommand('chmod 755 deploy.sh')).toEqual({
+				permission: 'allow',
+			});
 		});
 
 		test('sudo apt update (normal on Linux)', () => {
@@ -378,12 +382,16 @@ describe('checkCommand (Linux env)', () => {
 
 		test('grep -r TODO (normal on Linux)', () => {
 			setLinuxEnv();
-			expect(checkCommand('grep -r TODO src/')).toEqual({ permission: 'allow' });
+			expect(checkCommand('grep -r TODO src/')).toEqual({
+				permission: 'allow',
+			});
 		});
 
 		test('export VAR (normal on Linux)', () => {
 			setLinuxEnv();
-			expect(checkCommand('export NODE_ENV=production')).toEqual({ permission: 'allow' });
+			expect(checkCommand('export NODE_ENV=production')).toEqual({
+				permission: 'allow',
+			});
 		});
 
 		test('sh -c "ls -la"', () => {
@@ -393,7 +401,9 @@ describe('checkCommand (Linux env)', () => {
 
 		test('npm install', () => {
 			setLinuxEnv();
-			expect(checkCommand('npm install express')).toEqual({ permission: 'allow' });
+			expect(checkCommand('npm install express')).toEqual({
+				permission: 'allow',
+			});
 		});
 
 		test('git status', () => {
@@ -458,7 +468,9 @@ describe('checkCommand (unknown env)', () => {
 
 	test('npm install → allow', () => {
 		clearShellEnv();
-		expect(checkCommand('npm install express')).toEqual({ permission: 'allow' });
+		expect(checkCommand('npm install express')).toEqual({
+			permission: 'allow',
+		});
 	});
 });
 

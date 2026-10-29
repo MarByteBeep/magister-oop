@@ -4,9 +4,9 @@ import type { Student } from '@/types/student.types';
 import OccupancyStudentsByClass from './OccupancyStudentsByClass';
 import type { OccupancyClassGroup } from './useOccupancyStudentsModalData';
 
-type OccupancyViewMode = 'lesson' | 'break';
+export type OccupancyViewMode = 'lesson' | 'break';
 
-interface OccupancyStudentsModalContentProps {
+export interface OccupancyStudentsModalContentProps {
 	isEmpty: boolean;
 	showBreakStudents: boolean;
 	viewMode: OccupancyViewMode;
@@ -17,31 +17,36 @@ interface OccupancyStudentsModalContentProps {
 }
 
 function emptyViewMessage(viewMode: OccupancyViewMode): string {
-	return viewMode === 'lesson'
-		? 'Geen leerlingen met les in dit lesblok.'
-		: 'Geen leerlingen met tussenuur in dit lesblok.';
+	if (viewMode === 'lesson') return 'Geen leerlingen met les in dit lesblok.';
+	return 'Geen leerlingen met tussenuur in dit lesblok.';
 }
 
-export default function OccupancyStudentsModalContent({
-	isEmpty,
-	showBreakStudents,
-	viewMode,
-	activeStudentCount,
-	activeClassGroups,
-	studentsWithLesson,
-	onStudentClick,
-}: OccupancyStudentsModalContentProps) {
-	if (isEmpty) {
+type OccupancyBreakOrLessonContentProps = Omit<OccupancyStudentsModalContentProps, 'isEmpty'>;
+
+function OccupancyBreakOrLessonContent(props: OccupancyBreakOrLessonContentProps) {
+	if (!props.showBreakStudents) {
+		return (
+			<OccupancyStudentsByClass classGroups={props.studentsWithLesson} onStudentClick={props.onStudentClick} />
+		);
+	}
+	if (props.activeStudentCount === 0) {
+		return <p className="text-muted-foreground text-center py-4">{emptyViewMessage(props.viewMode)}</p>;
+	}
+	return <OccupancyStudentsByClass classGroups={props.activeClassGroups} onStudentClick={props.onStudentClick} />;
+}
+
+export default function OccupancyStudentsModalContent(props: OccupancyStudentsModalContentProps) {
+	if (props.isEmpty) {
 		return <p className="text-muted-foreground text-center py-4">Geen leerlingen gevonden voor dit lesuur.</p>;
 	}
-
-	if (!showBreakStudents) {
-		return <OccupancyStudentsByClass classGroups={studentsWithLesson} onStudentClick={onStudentClick} />;
-	}
-
-	if (activeStudentCount === 0) {
-		return <p className="text-muted-foreground text-center py-4">{emptyViewMessage(viewMode)}</p>;
-	}
-
-	return <OccupancyStudentsByClass classGroups={activeClassGroups} onStudentClick={onStudentClick} />;
+	return (
+		<OccupancyBreakOrLessonContent
+			showBreakStudents={props.showBreakStudents}
+			viewMode={props.viewMode}
+			activeStudentCount={props.activeStudentCount}
+			activeClassGroups={props.activeClassGroups}
+			studentsWithLesson={props.studentsWithLesson}
+			onStudentClick={props.onStudentClick}
+		/>
+	);
 }

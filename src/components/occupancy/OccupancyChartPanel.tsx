@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import OccupancyChart from './OccupancyChart';
 import type { OccupancyChartPoint } from './useOccupancyChartData';
 
-interface OccupancyChartPanelProps {
+export interface OccupancyChartPanelProps {
 	show: boolean;
 	chartData: OccupancyChartPoint[];
 	currentLessonInfo: LessonInfo;

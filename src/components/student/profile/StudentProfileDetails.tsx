@@ -5,7 +5,7 @@ import type { Address } from '@/magister/response/address.types';
 import type { StudentDetails } from '@/magister/response/studentDetails.types';
 import type { Student } from '@/types/student.types';
 
-interface StudentProfileDetailsProps {
+export interface StudentProfileDetailsProps {
 	student: Student;
 	fullName: string;
 	personalDetails?: StudentDetails | null;

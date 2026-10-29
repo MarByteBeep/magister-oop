@@ -8,7 +8,7 @@ import changelogMarkdown from '../../CHANGELOG.md?raw';
 
 const CHANGELOG_SECTIONS = parseChangelog(changelogMarkdown);
 
-interface ChangelogDialogProps {
+export interface ChangelogDialogProps {
 	open: boolean;
 	onClose: () => void;
 }

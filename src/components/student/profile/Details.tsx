@@ -9,70 +9,108 @@ import TardyModal from '@/components/student/tardy/TardyModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useStudentDetailsData } from '@/hooks/students/useStudentDetailsData';
+import { formatPersonName } from '@/lib/shared/stringUtils';
 import type { Student } from '@/types/student.types';
 
-interface DetailsProps {
+export interface DetailsProps {
 	student?: Student;
 	onOpenStudent?: (student: Student) => void;
 }
 
-export default function Details({ student, onOpenStudent }: DetailsProps) {
-	const {
-		personalDetails,
-		address,
-		photoBlobUrl,
-		parentContacts,
-		loadingPersonalDetails,
-		loadingAddress,
-		loadingParentContacts,
-		error,
-	} = useStudentDetailsData(student);
-	const [isTardyModalOpen, setIsTardyModalOpen] = useState(false);
+function DetailsError({ error }: { error: string | null }) {
+	if (!error) return null;
+	return <p className="text-red-500 text-center my-4">{error}</p>;
+}
 
-	const fullName = student ? `${student.roepnaam} ${student.tussenvoegsel ?? ''} ${student.achternaam}` : '';
-	const initials = student ? `${student.roepnaam.charAt(0)}${student.achternaam.charAt(0)}`.toUpperCase() : '';
-	const photoHref = student?.links.foto?.href;
+function QuickActionsCard({ onTardy }: { onTardy: () => void }) {
+	return (
+		<Card className="col-start-2">
+			<CardHeader>
+				<CardTitle>Snelle acties</CardTitle>
+			</CardHeader>
+			<CardContent className="grid grid-cols-3 items-center gap-2 mt-1">
+				<Button variant="outline" size="sm" disabled onClick={() => console.log('Ziek clicked')}>
+					<LuHeartPulse className="h-4 w-4" /> Ziek
+				</Button>
+				<Button variant="outline" size="sm" onClick={onTardy}>
+					<LuClock className="h-4 w-4" /> Te Laat
+				</Button>
+				<Button variant="outline" size="sm" disabled onClick={() => console.log('Afwezig clicked')}>
+					<LuUserX className="h-4 w-4" /> Afwezig
+				</Button>
+			</CardContent>
+		</Card>
+	);
+}
+
+function DetailsGrid({
+	student,
+	onOpenStudent,
+	onTardy,
+	details,
+}: {
+	student: Student;
+	onOpenStudent?: (student: Student) => void;
+	onTardy: () => void;
+	details: ReturnType<typeof useStudentDetailsData>;
+}) {
+	const fullName = formatPersonName(student.roepnaam, student.tussenvoegsel, student.achternaam);
+	const initials = `${student.roepnaam.charAt(0)}${student.achternaam.charAt(0)}`.toUpperCase();
+
+	return (
+		<div className="grid gap-4 md:grid-cols-3 grid-rows-[120px_auto]">
+			<StudentProfileCard
+				student={student}
+				fullName={fullName}
+				initials={initials}
+				photoHref={student.links.foto?.href}
+				photoBlobUrl={details.photoBlobUrl}
+				personalDetails={details.personalDetails}
+				address={details.address}
+				loadingPersonalDetails={details.loadingPersonalDetails}
+				loadingAddress={details.loadingAddress}
+			/>
+
+			<QuickActionsCard onTardy={onTardy} />
+
+			<StudentParentsCard
+				parentContacts={details.parentContacts}
+				loadingParentContacts={details.loadingParentContacts}
+			/>
+
+			<StudentAgendaCard student={student} onOpenStudent={onOpenStudent} />
+		</div>
+	);
+}
+
+function DetailsBody({
+	student,
+	onOpenStudent,
+	onTardy,
+	details,
+}: {
+	student: Student | undefined;
+	onOpenStudent?: (student: Student) => void;
+	onTardy: () => void;
+	details: ReturnType<typeof useStudentDetailsData>;
+}) {
+	if (!student) return null;
+	return <DetailsGrid student={student} onOpenStudent={onOpenStudent} onTardy={onTardy} details={details} />;
+}
+
+export default function Details({ student, onOpenStudent }: DetailsProps) {
+	const details = useStudentDetailsData(student);
+	const [isTardyModalOpen, setIsTardyModalOpen] = useState(false);
 
 	return (
 		<>
-			{error && <p className="text-red-500 text-center my-4">{error}</p>}
-			{student && (
-				<div className="grid gap-4 md:grid-cols-3 grid-rows-[120px_auto]">
-					<StudentProfileCard
-						student={student}
-						fullName={fullName}
-						initials={initials}
-						photoHref={photoHref}
-						photoBlobUrl={photoBlobUrl}
-						personalDetails={personalDetails}
-						address={address}
-						loadingPersonalDetails={loadingPersonalDetails}
-						loadingAddress={loadingAddress}
-					/>
-
-					<Card className="col-start-2">
-						<CardHeader>
-							<CardTitle>Snelle acties</CardTitle>
-						</CardHeader>
-						<CardContent className="grid grid-cols-3 items-center gap-2 mt-1">
-							<Button variant="outline" size="sm" disabled onClick={() => console.log('Ziek clicked')}>
-								<LuHeartPulse className="h-4 w-4" /> Ziek
-							</Button>
-							<Button variant="outline" size="sm" onClick={() => setIsTardyModalOpen(true)}>
-								<LuClock className="h-4 w-4" /> Te Laat
-							</Button>
-							<Button variant="outline" size="sm" disabled onClick={() => console.log('Afwezig clicked')}>
-								<LuUserX className="h-4 w-4" /> Afwezig
-							</Button>
-						</CardContent>
-					</Card>
-
-					<StudentParentsCard parentContacts={parentContacts} loadingParentContacts={loadingParentContacts} />
-
-					<StudentAgendaCard student={student} onOpenStudent={onOpenStudent} />
-				</div>
-			)}
-
+			<DetailsError error={details.error} />
+			<DetailsBody
+				student={student}
+				onOpenStudent={onOpenStudent}
+				onTardy={() => setIsTardyModalOpen(true)}
+				details={details}
+			/>
 			<TardyModal student={student} isOpen={isTardyModalOpen} onClose={() => setIsTardyModalOpen(false)} />
 		</>
 	);

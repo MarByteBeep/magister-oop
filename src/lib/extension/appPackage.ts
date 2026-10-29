@@ -7,29 +7,43 @@ function normalizeRepositoryUrl(raw: string): string {
 		.replace(/\.git$/i, '');
 }
 
-function repositoryBaseUrl(): string {
-	const repo = packageJson.repository;
-	if (typeof repo === 'string') {
-		return normalizeRepositoryUrl(repo);
-	}
-	if (repo && typeof repo === 'object' && 'url' in repo) {
-		const url = (repo as { url: unknown }).url;
-		if (typeof url === 'string') {
-			return normalizeRepositoryUrl(url);
-		}
-	}
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
+function repositoryUrlFromString(repository: unknown): string | null {
+	if (typeof repository !== 'string') return null;
+	return normalizeRepositoryUrl(repository);
+}
+
+function repositoryUrlFromObject(repository: unknown): string | null {
+	if (!isRecord(repository)) return null;
+	const url = repository.url;
+	if (typeof url !== 'string') return null;
+	return normalizeRepositoryUrl(url);
+}
+
+function repositoryBaseUrl(repository: unknown): string {
+	const fromString = repositoryUrlFromString(repository);
+	if (fromString !== null) return fromString;
+	const fromObject = repositoryUrlFromObject(repository);
+	if (fromObject !== null) return fromObject;
 	throw new Error('package.json: "repository" must be a string or an object with a string "url"');
 }
 
-const repositoryUrl = repositoryBaseUrl();
-
-function readLicenseUrl(): string {
-	const v = (packageJson as Record<string, unknown>).licenseUrl;
-	if (typeof v === 'string' && v.trim().length > 0) {
-		return v.trim();
+function readLicenseUrl(pkg: Record<string, unknown>): string {
+	const value = pkg.licenseUrl;
+	if (typeof value !== 'string') {
+		throw new Error('package.json: "licenseUrl" must be a non-empty string');
 	}
-	throw new Error('package.json: "licenseUrl" must be a non-empty string');
+	const trimmed = value.trim();
+	if (trimmed.length === 0) {
+		throw new Error('package.json: "licenseUrl" must be a non-empty string');
+	}
+	return trimmed;
 }
+
+const repositoryUrl = repositoryBaseUrl(packageJson.repository);
 
 export const appPackage = {
 	version: packageJson.version,
@@ -37,6 +51,6 @@ export const appPackage = {
 	license: packageJson.license,
 	copyright: packageJson.copyright,
 	repositoryUrl,
-	licenseUrl: readLicenseUrl(),
+	licenseUrl: readLicenseUrl(packageJson as Record<string, unknown>),
 	issuesUrl: `${repositoryUrl}/issues`,
 };

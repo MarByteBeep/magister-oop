@@ -4,7 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
-import { apiPlugin } from './vite-plugin-api';
+import { apiPlugin } from './vitePluginApi';
 
 function manifestVersionFromPackage(): Plugin {
 	return {
@@ -16,7 +16,9 @@ function manifestVersionFromPackage(): Plugin {
 			const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
 				version: string;
 			};
-			const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version: string };
+			const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as {
+				version: string;
+			};
 			manifest.version = pkg.version;
 			const json = `${JSON.stringify(manifest, null, '\t')}\n`;
 			writeFileSync(manifestPath, json, 'utf8');

@@ -7,22 +7,26 @@ import type { ContactItem, ContactsResponse } from '@/magister/response/contact.
 import type { ParentsResponse } from '@/magister/response/parent.types';
 import type { StudentDetails } from '@/magister/response/studentDetails.types';
 
+function contactValue(contact: ContactItem): string | null {
+	if (contact.type === 'telefoonnummer') return contact.telefoonnummer;
+	if (contact.type === 'emailadres') return contact.emailadres;
+	return null;
+}
+
+function shouldKeepContact(value: string | null, seenValues: Set<string>): value is string {
+	if (!value) return false;
+	return !seenValues.has(value);
+}
+
 function filterAndDeduplicateContacts(contacts: ContactItem[]): ContactItem[] {
 	const uniqueContacts: ContactItem[] = [];
 	const seenValues = new Set<string>();
 
 	for (const contact of contacts) {
-		const value =
-			contact.type === 'telefoonnummer'
-				? contact.telefoonnummer
-				: contact.type === 'emailadres'
-					? contact.emailadres
-					: null;
-
-		if (value && !seenValues.has(value)) {
-			seenValues.add(value);
-			uniqueContacts.push(contact);
-		}
+		const value = contactValue(contact);
+		if (!shouldKeepContact(value, seenValues)) continue;
+		seenValues.add(value);
+		uniqueContacts.push(contact);
 	}
 	return uniqueContacts;
 }
@@ -41,33 +45,39 @@ export async function fetchStudentAddress(studentId: number) {
 	return data.items.find((t) => t.type === 'woon');
 }
 
+function parentDisplayName(parent: ParentsResponse['items'][number]): string {
+	if (parent.tussenvoegsel) {
+		return `${parent.voorletters} ${parent.tussenvoegsel} ${parent.achternaam}`;
+	}
+	return `${parent.voorletters} ${parent.achternaam}`;
+}
+
+async function fetchOneParentContact(parent: ParentsResponse['items'][number]): Promise<ParentContact> {
+	const parentName = parentDisplayName(parent);
+	try {
+		const contactDetailsResponse = await getJson<ContactsResponse>(endpoints.parentContactDetails(parent.id));
+		return {
+			id: parent.id,
+			parentName,
+			verzorgerType: parent.verzorgerType,
+			geslacht: parent.geslacht,
+			contacts: filterAndDeduplicateContacts(contactDetailsResponse.items),
+		};
+	} catch (err) {
+		console.error(`Error fetching contact details for parent ${parent.id}:`, err);
+		return {
+			id: parent.id,
+			parentName,
+			verzorgerType: parent.verzorgerType,
+			geslacht: parent.geslacht,
+			contacts: [],
+		};
+	}
+}
+
 export async function fetchParentContacts(studentId: number): Promise<ParentContact[]> {
 	const parentsResponse = await getJson<ParentsResponse>(endpoints.studentParents(studentId));
-
-	const parentContactPromises = parentsResponse.items.map(async (parent) => {
-		const parentName = `${parent.voorletters} ${parent.tussenvoegsel ? `${parent.tussenvoegsel} ` : ''}${parent.achternaam}`;
-		try {
-			const contactDetailsResponse = await getJson<ContactsResponse>(endpoints.parentContactDetails(parent.id));
-			return {
-				id: parent.id,
-				parentName,
-				verzorgerType: parent.verzorgerType,
-				geslacht: parent.geslacht,
-				contacts: filterAndDeduplicateContacts(contactDetailsResponse.items),
-			};
-		} catch (err) {
-			console.error(`Error fetching contact details for parent ${parent.id}:`, err);
-			return {
-				id: parent.id,
-				parentName,
-				verzorgerType: parent.verzorgerType,
-				geslacht: parent.geslacht,
-				contacts: [],
-			};
-		}
-	});
-
-	return Promise.all(parentContactPromises);
+	return Promise.all(parentsResponse.items.map(fetchOneParentContact));
 }
 
 export async function loadAllStudentDetails(

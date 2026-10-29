@@ -44,6 +44,31 @@ function isSnapshotMonth(dateKey: string): boolean {
 	return getMonthKey(parseDateKey(dateKey)) === getMonthKey(getNow());
 }
 
+function loadingPatchForMode(mode: BulkListMode): Partial<BulkListSnapshot> {
+	if (mode === 'initial') return { loading: true, error: null };
+	return { refreshing: true };
+}
+
+function nullResultError(mode: BulkListMode, previousError: string | null): string | null {
+	if (mode === 'initial') return 'Kon de lijst niet ophalen.';
+	return previousError;
+}
+
+function catchErrorMessage(mode: BulkListMode, error: unknown, previousError: string | null): string | null {
+	if (mode === 'initial') return (error as Error).message;
+	return previousError;
+}
+
+function settledSuccessPatch(dateKey: string, data: unknown): Partial<BulkListSnapshot> {
+	const settled: Partial<BulkListSnapshot> = {
+		loading: false,
+		refreshing: false,
+		error: null,
+	};
+	if (isSnapshotMonth(dateKey)) return { ...settled, data };
+	return settled;
+}
+
 export function createBulkListRegistry(sources: BulkListSource[]) {
 	const byId = new Map(sources.map((source) => [source.id, source]));
 	const snapshots = new Map<string, BulkListSnapshot>(
@@ -71,10 +96,86 @@ export function createBulkListRegistry(sources: BulkListSource[]) {
 		publish(id, { ...current, ...partial });
 	}
 
+	function applyFetchedWithSource(source: BulkListSource, data: unknown, dateKey: string) {
+		const apply = source.applyToStudents;
+		if (!apply) return;
+		if (!setStudents) return;
+		setStudents((prev) => apply(prev, data, dateKey));
+	}
+
 	function applyFetched(id: string, data: unknown, dateKey: string) {
 		const source = byId.get(id);
-		if (!source?.applyToStudents || !setStudents) return;
-		setStudents((prev) => source.applyToStudents?.(prev, data, dateKey) ?? prev);
+		if (!source) return;
+		applyFetchedWithSource(source, data, dateKey);
+	}
+
+	function promotePendingToInitial(id: string, key: string) {
+		inflightMode.set(key, 'initial');
+		patch(id, { loading: true, refreshing: false, error: null });
+	}
+
+	function maybePromotePending(id: string, key: string, mode: BulkListMode, pending: Promise<unknown | null>) {
+		if (mode === 'initial' && inflightMode.get(key) === 'background') {
+			promotePendingToInitial(id, key);
+		}
+		return pending;
+	}
+
+	function previousError(id: string): string | null {
+		const snapshot = snapshotFor(id);
+		if (!snapshot) return null;
+		return snapshot.error;
+	}
+
+	function patchNullFetch(id: string, mode: BulkListMode) {
+		patch(id, {
+			loading: false,
+			refreshing: false,
+			error: nullResultError(mode, previousError(id)),
+		});
+	}
+
+	function patchFetchError(id: string, mode: BulkListMode, error: unknown) {
+		console.warn(`Failed to refresh bulk list ${id}`, error);
+		patch(id, {
+			loading: false,
+			refreshing: false,
+			error: catchErrorMessage(mode, error, previousError(id)),
+		});
+	}
+
+	async function fetchAndApply(
+		id: string,
+		dateKey: string,
+		getMode: () => BulkListMode,
+		source: BulkListSource,
+	): Promise<unknown | null> {
+		const data = await source.fetch(dateKey);
+		const mode = getMode();
+		if (data === null) {
+			patchNullFetch(id, mode);
+			return null;
+		}
+		patch(id, settledSuccessPatch(dateKey, data));
+		applyFetched(id, data, dateKey);
+		return data;
+	}
+
+	async function runFetchRequest(
+		id: string,
+		dateKey: string,
+		mode: BulkListMode,
+		key: string,
+		source: BulkListSource,
+	): Promise<unknown | null> {
+		const activeMode = () => inflightMode.get(key) ?? mode;
+		patch(id, loadingPatchForMode(activeMode()));
+		try {
+			return await fetchAndApply(id, dateKey, activeMode, source);
+		} catch (error) {
+			patchFetchError(id, activeMode(), error);
+			return null;
+		}
 	}
 
 	async function refresh(id: string, dateKey: string, mode: BulkListMode): Promise<unknown | null> {
@@ -83,46 +184,10 @@ export function createBulkListRegistry(sources: BulkListSource[]) {
 
 		const key = `${id}:${dateKey}`;
 		const pending = inflight.get(key);
-		if (pending) {
-			// Promote background → initial so "Opnieuw proberen" keeps initial error semantics.
-			if (mode === 'initial' && inflightMode.get(key) === 'background') {
-				inflightMode.set(key, 'initial');
-				patch(id, { loading: true, refreshing: false, error: null });
-			}
-			return pending;
-		}
+		if (pending) return maybePromotePending(id, key, mode, pending);
 
 		inflightMode.set(key, mode);
-		const request = (async () => {
-			const activeMode = () => inflightMode.get(key) ?? mode;
-			patch(id, activeMode() === 'initial' ? { loading: true, error: null } : { refreshing: true });
-			try {
-				const data = await source.fetch(dateKey);
-				if (data == null) {
-					patch(id, {
-						loading: false,
-						refreshing: false,
-						error:
-							activeMode() === 'initial'
-								? 'Kon de lijst niet ophalen.'
-								: (snapshotFor(id)?.error ?? null),
-					});
-					return null;
-				}
-				const settled: Partial<BulkListSnapshot> = { loading: false, refreshing: false, error: null };
-				patch(id, isSnapshotMonth(dateKey) ? { ...settled, data } : settled);
-				applyFetched(id, data, dateKey);
-				return data;
-			} catch (error) {
-				console.warn(`Failed to refresh bulk list ${id}`, error);
-				patch(id, {
-					loading: false,
-					refreshing: false,
-					error: activeMode() === 'initial' ? (error as Error).message : (snapshotFor(id)?.error ?? null),
-				});
-				return null;
-			}
-		})().finally(() => {
+		const request = runFetchRequest(id, dateKey, mode, key, source).finally(() => {
 			inflight.delete(key);
 			inflightMode.delete(key);
 		});
@@ -136,12 +201,15 @@ export function createBulkListRegistry(sources: BulkListSource[]) {
 		snapshot: snapshotFor,
 		subscribe(id: string, listener: (snapshot: BulkListSnapshot) => void) {
 			const current = snapshots.get(id);
-			if (current == null) {
+			if (current === undefined) {
 				throw new Error(`Bulk list "${id}" does not publish a snapshot`);
 			}
-			const set = listeners.get(id) ?? new Set();
+			let set = listeners.get(id);
+			if (!set) {
+				set = new Set();
+				listeners.set(id, set);
+			}
 			set.add(listener);
-			listeners.set(id, set);
 			listener(current);
 			return () => {
 				set.delete(listener);

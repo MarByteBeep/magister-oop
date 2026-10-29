@@ -19,6 +19,10 @@ build
 testserver/data/
 anonymizer/*.json
 
+# Test coverage
+*.info
+*.lcov
+
 # Editor directories and files
 !.vscode/extensions.json
 .idea

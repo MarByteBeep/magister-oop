@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { getDateKey, parseDateKey } from '@/lib/shared/dateUtils';
 
-interface DateAndTimeRangePickerProps {
+export interface DateAndTimeRangePickerProps {
 	dateKey: string;
 	startTime: string;
 	endTime: string;

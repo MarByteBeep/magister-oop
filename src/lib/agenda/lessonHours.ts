@@ -60,27 +60,43 @@ export function findOverlappingLessonIndexRangeByTime(
 	return { from: nearest, to: nearest };
 }
 
+function orderedDateRange(start: Date, end: Date): { rangeStart: Date; rangeEnd: Date } {
+	if (start <= end) return { rangeStart: start, rangeEnd: end };
+	return { rangeStart: end, rangeEnd: start };
+}
+
+function slotOverlapsDateRange(slotStart: Date, slotEnd: Date, rangeStart: Date, rangeEnd: Date): boolean {
+	return slotStart < rangeEnd && slotEnd > rangeStart;
+}
+
+function extendCoveredIndex(from: number, index: number): number {
+	if (from < 0) return index;
+	return from;
+}
+
+function coveredRangeOrNull(from: number, to: number): { from: number; to: number } | null {
+	if (from < 0) return null;
+	return { from, to };
+}
+
 function findCoveredSlotIndexRange(
 	slots: { start: string; end: string }[],
 	start: Date,
 	end: Date,
 ): { from: number; to: number } | null {
-	const rangeStart = start <= end ? start : end;
-	const rangeEnd = start <= end ? end : start;
+	const { rangeStart, rangeEnd } = orderedDateRange(start, end);
 	let from = -1;
 	let to = -1;
 
 	for (let index = 0; index < slots.length; index++) {
 		const slotStart = hhmmToDate(rangeStart, slots[index].start);
 		const slotEnd = hhmmToDate(rangeStart, slots[index].end);
-		if (slotStart < rangeEnd && slotEnd > rangeStart) {
-			if (from < 0) from = index;
-			to = index;
-		}
+		if (!slotOverlapsDateRange(slotStart, slotEnd, rangeStart, rangeEnd)) continue;
+		from = extendCoveredIndex(from, index);
+		to = index;
 	}
 
-	if (from < 0) return null;
-	return { from, to };
+	return coveredRangeOrNull(from, to);
 }
 
 /** Lesson hours plus the breaks between them. Appointment drags snap to these slots. */
@@ -177,8 +193,12 @@ export function getLessonHourBadgePlacements(selection: { start: Date; end: Date
 	const range = findCoveredSlotIndexRange(getSelectableTimeTable(), selection.start, selection.end);
 	if (!range) return [];
 
-	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
-	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
+	let rangeStart = selection.start;
+	let rangeEnd = selection.end;
+	if (rangeStart > rangeEnd) {
+		rangeStart = selection.end;
+		rangeEnd = selection.start;
+	}
 	const totalMs = rangeEnd.getTime() - rangeStart.getTime();
 	if (totalMs <= 0) return [];
 
@@ -219,15 +239,20 @@ export function selectionCoversFullSchoolDay(selection: { start: Date; end: Date
 
 export function snapSelectionToLessonHours(selection: { start: Date; end: Date }): AgendaSlotSelection | null {
 	if (selectionCoversFullSchoolDay(selection)) {
-		const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
-		return getFullDayScheduleSelection(rangeStart);
+		let day = selection.start;
+		if (selection.end < day) day = selection.end;
+		return getFullDayScheduleSelection(day);
 	}
 
 	const range = findOverlappingAppointmentSlotRange(selection.start, selection.end);
 	if (!range) return null;
 
-	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
-	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
+	let rangeStart = selection.start;
+	let rangeEnd = selection.end;
+	if (rangeStart > rangeEnd) {
+		rangeStart = selection.end;
+		rangeEnd = selection.start;
+	}
 
 	const slots = getAppointmentTimeSlots();
 	return {

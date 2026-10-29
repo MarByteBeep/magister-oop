@@ -4,6 +4,25 @@ import { submitAbsenceNotice } from '@/lib/absence-notice/create';
 import { buildAgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import { submitReturnMeasure } from '@/lib/return-measure/create';
 
+function canSaveReturnMeasure(description: string, dayCount: string): boolean {
+	const parsedDayCount = Number.parseInt(dayCount, 10);
+	if (description.trim().length === 0) return false;
+	if (!Number.isFinite(parsedDayCount)) return false;
+	return parsedDayCount >= 1;
+}
+
+function attendanceCommentOk(commentMandatory: boolean, comment: string): boolean {
+	if (!commentMandatory) return true;
+	return comment.trim().length > 0;
+}
+
+function canSaveAbsenceNotice(studentExterneId: string, attendanceTypeCode: string, comment: string): boolean {
+	if (studentExterneId.trim().length === 0) return false;
+	const selectedAttendanceType = getAttendanceType(attendanceTypeCode);
+	if (!selectedAttendanceType) return false;
+	return attendanceCommentOk(selectedAttendanceType.commentMandatory, comment);
+}
+
 export function canSaveNewAppointment(input: {
 	mode: CreateMode;
 	studentExterneId: string;
@@ -17,18 +36,10 @@ export function canSaveNewAppointment(input: {
 }): boolean {
 	const slotSelection = buildAgendaSlotSelection(input.dateKey, input.startTime, input.endTime);
 	if (!slotSelection) return false;
-
 	if (input.mode === 'return-measure') {
-		const parsedDayCount = Number.parseInt(input.dayCount, 10);
-		return input.description.trim().length > 0 && Number.isFinite(parsedDayCount) && parsedDayCount >= 1;
+		return canSaveReturnMeasure(input.description, input.dayCount);
 	}
-
-	const selectedAttendanceType = getAttendanceType(input.attendanceTypeCode);
-	return (
-		input.studentExterneId.trim().length > 0 &&
-		selectedAttendanceType != null &&
-		(!selectedAttendanceType.commentMandatory || input.comment.trim().length > 0)
-	);
+	return canSaveAbsenceNotice(input.studentExterneId, input.attendanceTypeCode, input.comment);
 }
 
 export async function saveNewAppointment(input: {

@@ -4,6 +4,18 @@ import { getDateKey, getNow, getStartOfWeek, getWeekDays } from '@/lib/shared/da
 import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 
+function entriesOrEmpty(entries: AgendaEntry[] | undefined): AgendaEntry[] {
+	if (!entries) return [];
+	return entries;
+}
+
+function agendaEntriesForStudentDay(student: Student | undefined, day: Date): AgendaEntry[] {
+	if (!student) return [];
+	const days = student.agenda;
+	if (!days) return [];
+	return entriesOrEmpty(days[getDateKey(day)]);
+}
+
 export function useWeeklyAgendaWeek(weekOffset: number, student: Student | undefined) {
 	const selectedWeekDate = useMemo(() => {
 		const date = new Date(getNow());
@@ -27,7 +39,7 @@ export function useWeeklyAgendaWeek(weekOffset: number, student: Student | undef
 	const weekAgenda = useMemo(() => {
 		const agenda: Record<string, AgendaEntry[]> = {};
 		for (const day of weekDays) {
-			agenda[getDateKey(day)] = student?.agenda?.[getDateKey(day)] ?? [];
+			agenda[getDateKey(day)] = agendaEntriesForStudentDay(student, day);
 		}
 		return agenda;
 	}, [student, weekDays]);

@@ -2,7 +2,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import type { PermanentFilterOption } from './SearchAndFiltersBar';
 
-interface PermanentFiltersPanelProps {
+export interface PermanentFiltersPanelProps {
 	show: boolean;
 	title: string;
 	options: PermanentFilterOption[];

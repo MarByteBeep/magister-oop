@@ -64,31 +64,43 @@ const MEASURE_IDS: Record<string, number> = {
 	'Van het plein (1 uur)': 8513,
 };
 
+function measureFromLabel(measureLabel: string | null): Measure | null {
+	if (!measureLabel) return null;
+	return {
+		id: MEASURE_IDS[measureLabel] ?? faker.number.int({ min: 8000, max: 8999 }),
+		omschrijving: measureLabel,
+	};
+}
+
+function handledByIdForTemplate(hasReported: boolean, hasNotReported: boolean, staffId: number): number | null {
+	if (hasReported || hasNotReported) return staffId;
+	return null;
+}
+
 function createTemplate(measureIndex: number, studentId: number, staffId: number): StoredReturnMeasureTemplate {
 	const template = TEST_RETURN_MEASURES[measureIndex % TEST_RETURN_MEASURES.length];
 	faker.seed(studentId + measureIndex);
-
-	const measure = template.measureLabel
-		? ({
-				id: MEASURE_IDS[template.measureLabel] ?? faker.number.int({ min: 8000, max: 8999 }),
-				omschrijving: template.measureLabel,
-			} satisfies Measure)
-		: null;
-
-	const reported = template.hasReported || template.hasNotReported;
 
 	return {
 		id: faker.number.int({ min: 100_000, max: 999_999 }),
 		dayOffset: template.dayOffset,
 		description: template.description,
-		measure,
+		measure: measureFromLabel(template.measureLabel),
 		startTime: template.startTime,
 		endTime: template.endTime,
 		hasReported: template.hasReported,
 		hasNotReported: template.hasNotReported,
 		handledTime: template.handledTime,
-		handledById: reported ? staffId : null,
+		handledById: handledByIdForTemplate(template.hasReported, template.hasNotReported, staffId),
 	};
+}
+
+function shouldGenerateReturnMeasure(studentId: number): boolean {
+	return studentId % 3 === 0;
+}
+
+function staffIdForCounter(allStaff: StaffMember[], measureCounter: number): number {
+	return allStaff[measureCounter % allStaff.length]?.id ?? 0;
 }
 
 export function generateReturnMeasureData(
@@ -99,10 +111,8 @@ export function generateReturnMeasureData(
 	let measureCounter = 0;
 
 	for (const student of allStudents) {
-		if (student.id % 3 !== 0) continue;
-
-		const staffId = allStaff[measureCounter % allStaff.length]?.id ?? 0;
-		result[student.id] = [createTemplate(measureCounter, student.id, staffId)];
+		if (!shouldGenerateReturnMeasure(student.id)) continue;
+		result[student.id] = [createTemplate(measureCounter, student.id, staffIdForCounter(allStaff, measureCounter))];
 		measureCounter++;
 	}
 

@@ -1,8 +1,9 @@
 import * as fs from 'node:fs';
 import path from 'node:path';
-import { collectFieldReplacement, type ReplacementMap, replaceStringValue } from './replacementRules';
+import { applyReplacements, collectReplacements, type JSONValue } from './jsonReplacements';
+import type { ReplacementMap } from './replacementRules';
 
-type JSONValue = string | number | boolean | null | { [key: string]: JSONValue } | JSONValue[];
+export type { JSONValue } from './jsonReplacements';
 
 export function anonymize(json: JSONValue): JSONValue {
 	const replacements: ReplacementMap = {
@@ -15,47 +16,15 @@ export function anonymize(json: JSONValue): JSONValue {
 	return applyReplacements(json, replacements);
 }
 
-function collectReplacements(json: JSONValue, rep: ReplacementMap, parentKey: string = '') {
-	if (Array.isArray(json)) {
-		for (const el of json) {
-			// Items inherit their parent key so id lists like
-			// "organisatorPersoonIds": [391] are collected as well.
-			collectFieldReplacement(parentKey, el, rep);
-			collectReplacements(el, rep, parentKey);
-		}
-		return;
+function overwriteJsonFile(sourcePath: string, output: string): void {
+	const tempPath = `${sourcePath}.${process.pid}.tmp`;
+	try {
+		fs.writeFileSync(tempPath, output, 'utf8');
+		fs.renameSync(tempPath, sourcePath);
+	} catch (error) {
+		fs.rmSync(tempPath, { force: true });
+		throw error;
 	}
-
-	if (json !== null && typeof json === 'object') {
-		for (const [key, value] of Object.entries(json)) {
-			collectFieldReplacement(key, value, rep);
-			collectReplacements(value, rep, key);
-		}
-	}
-}
-
-function applyReplacements(json: JSONValue, rep: ReplacementMap): JSONValue {
-	if (Array.isArray(json)) {
-		return json.map((el) => applyReplacements(el, rep));
-	}
-
-	if (json !== null && typeof json === 'object') {
-		const out: Record<string, JSONValue> = {};
-		for (const [key, value] of Object.entries(json)) {
-			out[key] = applyReplacements(value, rep);
-		}
-		return out;
-	}
-
-	if (typeof json === 'number' && rep.numberMap.has(json)) {
-		return rep.numberMap.get(json) ?? json;
-	}
-
-	if (typeof json === 'string') {
-		return replaceStringValue(json, rep);
-	}
-
-	return json;
 }
 
 if (import.meta.main) {
@@ -69,15 +38,7 @@ if (import.meta.main) {
 	const raw = fs.readFileSync(sourcePath, 'utf8');
 	const json = JSON.parse(raw);
 	const output = `${JSON.stringify(anonymize(json), null, 4)}\n`;
-
-	const tempPath = `${sourcePath}.${process.pid}.tmp`;
-	try {
-		fs.writeFileSync(tempPath, output, 'utf8');
-		fs.renameSync(tempPath, sourcePath);
-	} catch (error) {
-		fs.rmSync(tempPath, { force: true });
-		throw error;
-	}
+	overwriteJsonFile(sourcePath, output);
 
 	console.error(`Anonymized and overwrote ${sourcePath}`);
 }

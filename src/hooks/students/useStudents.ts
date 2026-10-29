@@ -1,58 +1,50 @@
-import { useCallback, useState } from 'react';
-import { useMagisterSession } from '@/context/MagisterSessionContext';
+import { useCallback } from 'react';
 import { useAgendaLoader } from '@/hooks/agenda/useAgendaLoader';
-import { useLessonInfo } from '@/hooks/agenda/useLessonInfo';
-import { useCurrentTime } from '@/hooks/shared/useCurrentTime';
-import { useSelectedStudiesStorage } from '@/hooks/shared/useSelectedStudiesStorage';
-import { useStudentFetch } from '@/hooks/students/useStudentFetch';
-import { useStudentStore } from '@/hooks/students/useStudentStore';
+import { useStudentsCore } from '@/hooks/students/useStudentsCore';
 import { useStudentsNeedingAgendaCount } from '@/hooks/students/useStudentsNeedingAgendaCount';
 import { useStudentsSideEffects } from '@/hooks/students/useStudentsSideEffects';
 import { registerLoadAgendaForStudent } from '@/lib/agenda/loadForStudentRegistry';
+
+function studentsLoadingFlag(loading: boolean, studentsNeedingAgendaCount: number): boolean {
+	if (loading) return true;
+	return studentsNeedingAgendaCount > 0;
+}
+
 export function useStudents() {
-	const session = useMagisterSession();
-	const [students, setStudents] = useStudentStore();
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
-	const currentTime = useCurrentTime();
-
-	const { currentLesson, nextLesson } = useLessonInfo(currentTime);
-	const { selectedStudies, setSelectedStudies } = useSelectedStudiesStorage();
-	const { fetchLockers, fetchStudentsPaginated, refresh: refetchStudents } = useStudentFetch(setStudents);
-
-	const loadAgendaForStudent = useAgendaLoader(setStudents, students);
+	const core = useStudentsCore();
+	const loadAgendaForStudent = useAgendaLoader(core.setStudents, core.students);
 	registerLoadAgendaForStudent(loadAgendaForStudent);
 
 	useStudentsSideEffects(
-		session,
-		students,
-		selectedStudies,
+		core.session,
+		core.students,
+		core.selectedStudies,
 		loadAgendaForStudent,
-		setStudents,
-		fetchStudentsPaginated,
-		fetchLockers,
-		setLoading,
-		setError,
+		core.setStudents,
+		core.fetchStudentsPaginated,
+		core.fetchLockers,
+		core.setLoading,
+		core.setError,
 	);
 
 	const refresh = useCallback(async () => {
-		setLoading(true);
-		await refetchStudents();
-		setLoading(false);
-	}, [refetchStudents]);
+		core.setLoading(true);
+		await core.refetchStudents();
+		core.setLoading(false);
+	}, [core.setLoading, core.refetchStudents]);
 
-	const studentsNeedingAgendaCount = useStudentsNeedingAgendaCount(students, selectedStudies);
+	const studentsNeedingAgendaCount = useStudentsNeedingAgendaCount(core.students, core.selectedStudies);
 
 	return {
-		students,
-		loading: loading || studentsNeedingAgendaCount > 0,
+		students: core.students,
+		loading: studentsLoadingFlag(core.loading, studentsNeedingAgendaCount),
 		studentsNeedingAgendaCount,
-		error,
+		error: core.error,
 		refresh,
-		selectedStudies,
-		setSelectedStudies,
+		selectedStudies: core.selectedStudies,
+		setSelectedStudies: core.setSelectedStudies,
 		loadAgendaForStudent,
-		currentLessonInfo: currentLesson,
-		nextLessonInfo: nextLesson,
+		currentLessonInfo: core.currentLesson,
+		nextLessonInfo: core.nextLesson,
 	};
 }

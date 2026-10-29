@@ -34,7 +34,7 @@ Clone, `bun install`, `bun run dev`. Voor dagelijks ontwikkelen volstaat één c
 - `public/`: Statische bestanden en `manifest.json`.
 - `src/`: React-app (popup), background script, Magister-API en gedeelde code.
 - `testserver/`: Mock-API (Hono) voor lokaal testen; bij `bun run dev` geïntegreerd in de Vite-server.
-- `vite.config.ts`, `vite-plugin-api.ts`: Vite-configuratie en API-middleware voor dev.
+- `vite.config.ts`, `vitePluginApi.ts`: Vite-configuratie en API-middleware voor dev.
 - `tsconfig.json`: Verwijst naar `tsconfig.app.json` (extensie), `tsconfig.node.json` (Vite/config) en `tsconfig.testserver.json` (testserver).
 
 ## License

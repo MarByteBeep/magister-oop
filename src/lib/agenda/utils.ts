@@ -123,36 +123,59 @@ export function formatCompactTeacherLabel(item: AgendaItem): string | undefined 
 	return `${codes[0]} e.a.`;
 }
 
-export function getLesson(date: Date): LessonInfo {
-	const time = formatTime(date);
-	const first = timeTable[0];
-	const last = timeTable[timeTable.length - 1];
+function isTimeInSlot(time: string, slot: TimeSlot): boolean {
+	return time >= slot.start && time < slot.end;
+}
 
-	if (time < first.start) return { status: 'before-school' };
-	if (time >= last.end) return { status: 'after-school' };
+function isTimeInBreakBetween(time: string, slot: TimeSlot, next: TimeSlot): boolean {
+	return time >= slot.end && time < next.start;
+}
 
-	for (let i = 0; i < timeTable.length; i++) {
-		const slot = timeTable[i];
-		const next = timeTable[i + 1];
+function lessonInfoAtIndex(index: number): LessonInfo {
+	const slot = timeTable[index];
+	return { status: 'lesson', lesson: index + 1, range: `${slot.start}-${slot.end}` };
+}
 
-		if (slot.start <= time && time < slot.end) {
-			return {
-				status: 'lesson',
-				lesson: i + 1,
-				range: `${slot.start}-${slot.end}`,
-			};
-		}
+function breakInfoAtIndex(index: number): LessonInfo {
+	const slot = timeTable[index];
+	const next = timeTable[index + 1];
+	return { status: 'break', lesson: index + 1, range: `${slot.end}-${next.start}` };
+}
 
-		if (next && slot.end <= time && time < next.start) {
-			return {
-				status: 'break',
-				lesson: i + 1,
-				range: `${slot.end}-${next.start}`,
-			};
+function findLessonInTable(time: string): LessonInfo | null {
+	const index = timeTable.findIndex((slot) => isTimeInSlot(time, slot));
+	if (index < 0) return null;
+	return lessonInfoAtIndex(index);
+}
+
+function findBreakInTable(time: string): LessonInfo | null {
+	for (let index = 0; index < timeTable.length - 1; index++) {
+		if (isTimeInBreakBetween(time, timeTable[index], timeTable[index + 1])) {
+			return breakInfoAtIndex(index);
 		}
 	}
+	return null;
+}
 
+function schoolBoundaryStatus(time: string): LessonInfo | null {
+	if (time < timeTable[0].start) return { status: 'before-school' };
+	if (time >= timeTable[timeTable.length - 1].end) return { status: 'after-school' };
+	return null;
+}
+
+function lessonOrBreak(time: string): LessonInfo {
+	const lesson = findLessonInTable(time);
+	if (lesson) return lesson;
+	const breakPeriod = findBreakInTable(time);
+	if (breakPeriod) return breakPeriod;
 	throw new Error('unreachable');
+}
+
+export function getLesson(date: Date): LessonInfo {
+	const time = formatTime(date);
+	const boundary = schoolBoundaryStatus(time);
+	if (boundary) return boundary;
+	return lessonOrBreak(time);
 }
 
 export function getCurrentLesson(): LessonInfo {
@@ -192,7 +215,10 @@ export function getAgendaOccurrenceKey(item: Pick<AgendaItem, 'id' | 'begin'>): 
 	return `${item.id}:${item.begin}`;
 }
 
-export function getItemTimeRange(item: AgendaItem): { startTime: string; endTime: string } {
+export function getItemTimeRange(item: AgendaItem): {
+	startTime: string;
+	endTime: string;
+} {
 	const itemStart = new Date(item.begin);
 	const itemEnd = new Date(item.einde);
 	return {

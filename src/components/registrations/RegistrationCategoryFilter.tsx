@@ -9,7 +9,7 @@ export interface RegistrationCategory {
 	count: number;
 }
 
-interface RegistrationCategoryFilterProps {
+export interface RegistrationCategoryFilterProps {
 	value: string;
 	categories: RegistrationCategory[];
 	onChange: (value: string) => void;
