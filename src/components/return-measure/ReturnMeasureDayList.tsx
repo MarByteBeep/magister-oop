@@ -9,7 +9,7 @@ import { parseDateKey } from '@/lib/shared/dateUtils';
 import type { ReturnMeasureStudent } from '@/magister/response/returnMeasure.types';
 import type { Student } from '@/types/student.types';
 
-interface ReturnMeasureDayListProps {
+export interface ReturnMeasureDayListProps {
 	groups: ReturnMeasureDayGroup[];
 	studentById: Map<number, Student>;
 	emptyMessage: string;

@@ -1,4 +1,4 @@
-type FetchBlobResult = { ok: true; blob: { buffer: ArrayBuffer; type: string } } | { ok: false; error: string };
+export type FetchBlobResult = { ok: true; blob: { buffer: ArrayBuffer; type: string } } | { ok: false; error: string };
 
 export async function fetchBlobInMagisterTab(
 	fetchUrl: string,

@@ -1,127 +1,182 @@
 'use client';
 
-import { useState } from 'react';
 import LazyAvatar from '@/components/LazyAvatar';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import TardyAgendaItem from '@/components/student/tardy/TardyAgendaItem';
 import TardyConfirmationModal from '@/components/student/tardy/TardyConfirmationModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useStudentsContext } from '@/context/StudentsContext';
-import { useTardyModalAgenda } from '@/hooks/agenda/useTardyModalAgenda';
-import { useCurrentTime } from '@/hooks/shared/useCurrentTime';
-import {
-	findLessonEntry,
-	getAgendaEntryKey,
-	isLessonEntry,
-	isSameAgendaEntryOccurrence,
-} from '@/lib/agenda/entryUtils';
-import { submitTardyAccountability } from '@/lib/agenda/tardyUtils';
-import { getNow } from '@/lib/shared/dateUtils';
-import type { AgendaEntry } from '@/magister/response/agendaEntry.types';
+import { useTardyModal } from '@/hooks/agenda/useTardyModal';
+import { getAgendaEntryKey, isLessonEntry, isSameAgendaEntryOccurrence } from '@/lib/agenda/entryUtils';
+import { closeWhenDismissed } from '@/lib/shared/dialogUtils';
+import type { AgendaEntry, LessonAgendaEntry } from '@/magister/response/agendaEntry.types';
 import type { Student } from '@/types/student.types';
 
-interface TardyModalProps {
+export interface TardyModalProps {
 	student?: Student;
 	isOpen: boolean;
 	onClose: () => void;
 }
 
-export default function TardyModal({ student, isOpen, onClose }: TardyModalProps) {
-	const { students, loadAgendaForStudent } = useStudentsContext();
-	const currentTime = useCurrentTime();
-	const [selectedEntry, setSelectedEntry] = useState<AgendaEntry | null>(null);
-	const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+function asLessonEntry(entry: AgendaEntry | null): LessonAgendaEntry | null {
+	if (!entry) return null;
+	if (!isLessonEntry(entry)) return null;
+	return entry;
+}
 
-	const studentId = student?.id;
-	const { agendaEntries, isLoading } = useTardyModalAgenda(isOpen, studentId, students, loadAgendaForStudent);
+function lessonBeginOrLast(entry: LessonAgendaEntry): number {
+	return entry.item.lesuur?.begin ?? 99;
+}
 
-	const lessonEntries = agendaEntries.filter(isLessonEntry);
-	const fullName = student ? `${student.roepnaam} ${student.tussenvoegsel ?? ''} ${student.achternaam}`.trim() : '';
-	const activeEntry = findLessonEntry(currentTime, agendaEntries);
+function compareLessonBegin(a: LessonAgendaEntry, b: LessonAgendaEntry): number {
+	return lessonBeginOrLast(a) - lessonBeginOrLast(b);
+}
 
-	const handleItemClick = (entry: AgendaEntry) => {
-		if (!isLessonEntry(entry)) return;
-		setSelectedEntry(entry);
-		setIsConfirmationOpen(true);
-	};
+function sortLessonEntriesByBegin(entries: LessonAgendaEntry[]): LessonAgendaEntry[] {
+	return [...entries].sort(compareLessonBegin);
+}
 
-	const handleConfirm = async () => {
-		if (!selectedEntry || !isLessonEntry(selectedEntry) || !studentId) return;
-		const ok = await submitTardyAccountability(studentId, selectedEntry.item);
-		if (!ok) return;
-
-		const today = getNow();
-		await loadAgendaForStudent(studentId, today, today, { refresh: true });
-		setIsConfirmationOpen(false);
-		setSelectedEntry(null);
-		onClose();
-	};
-
-	const handleCancel = () => {
-		setIsConfirmationOpen(false);
-		setSelectedEntry(null);
-	};
-
-	const sortedEntries = [...lessonEntries].sort(
-		(a, b) => (a.item.lesuur?.begin ?? 99) - (b.item.lesuur?.begin ?? 99),
+function StudentAvatar({ student, fullName }: { student: Student; fullName: string }) {
+	return (
+		<LazyAvatar
+			src={student.links.foto?.href || undefined}
+			alt={fullName}
+			initials={`${student.roepnaam.charAt(0)}${student.achternaam.charAt(0)}`.toUpperCase()}
+			className="h-10 w-10"
+		/>
 	);
+}
+
+function TardyModalHeader({ student, fullName }: { student: Student | undefined; fullName: string }) {
+	return (
+		<DialogHeader>
+			<DialogTitle className="flex items-center gap-3">
+				{student ? <StudentAvatar student={student} fullName={fullName} /> : null}
+				<span>{fullName} - Te laat melding</span>
+			</DialogTitle>
+		</DialogHeader>
+	);
+}
+
+function TardyLessonGrid({
+	lessonEntries,
+	currentTime,
+	activeEntry,
+	onSelect,
+}: {
+	lessonEntries: LessonAgendaEntry[];
+	currentTime: Date;
+	activeEntry: AgendaEntry | null | undefined;
+	onSelect: (entry: AgendaEntry) => void;
+}) {
+	const sortedEntries = sortLessonEntriesByBegin(lessonEntries);
+	return (
+		<ScrollArea className="flex-1 pr-4 min-h-0">
+			<div className="grid grid-cols-2 gap-2">
+				{sortedEntries.map((entry) => (
+					<TardyAgendaItem
+						key={getAgendaEntryKey(entry)}
+						entry={entry}
+						currentTime={currentTime}
+						isCurrent={isSameAgendaEntryOccurrence(activeEntry, entry)}
+						onSelect={onSelect}
+					/>
+				))}
+			</div>
+		</ScrollArea>
+	);
+}
+
+function TardyModalLessonList({
+	isLoading,
+	lessonEntries,
+	currentTime,
+	activeEntry,
+	onSelect,
+}: {
+	isLoading: boolean;
+	lessonEntries: LessonAgendaEntry[];
+	currentTime: Date;
+	activeEntry: AgendaEntry | null | undefined;
+	onSelect: (entry: AgendaEntry) => void;
+}) {
+	if (isLoading) {
+		return (
+			<div className="flex justify-center items-center py-8">
+				<LoadingSpinner iconClassName="h-6 w-6" />
+			</div>
+		);
+	}
+	if (lessonEntries.length === 0) {
+		return <p className="text-muted-foreground text-center py-8">Geen afspraken voor vandaag</p>;
+	}
+	return (
+		<TardyLessonGrid
+			lessonEntries={lessonEntries}
+			currentTime={currentTime}
+			activeEntry={activeEntry}
+			onSelect={onSelect}
+		/>
+	);
+}
+
+function TardyConfirmOverlay({
+	selectedEntry,
+	student,
+	fullName,
+	isOpen,
+	onConfirm,
+	onCancel,
+}: {
+	selectedEntry: AgendaEntry | null;
+	student: Student | undefined;
+	fullName: string;
+	isOpen: boolean;
+	onConfirm: () => void;
+	onCancel: () => void;
+}) {
+	const lesson = asLessonEntry(selectedEntry);
+	if (!lesson) return null;
+	return (
+		<TardyConfirmationModal
+			item={lesson.item}
+			student={student}
+			studentName={fullName}
+			isOpen={isOpen}
+			onConfirm={onConfirm}
+			onCancel={onCancel}
+		/>
+	);
+}
+
+export default function TardyModal({ student, isOpen, onClose }: TardyModalProps) {
+	const model = useTardyModal(isOpen, student, onClose);
 
 	return (
 		<>
-			<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+			<Dialog open={isOpen} onOpenChange={closeWhenDismissed(onClose)}>
 				<DialogContent
 					className="max-w-[500px] max-h-[500px] flex flex-col"
 					onOpenAutoFocus={(e) => e.preventDefault()}
 				>
-					<DialogHeader>
-						<DialogTitle className="flex items-center gap-3">
-							{student && (
-								<LazyAvatar
-									src={student.links.foto?.href || undefined}
-									alt={fullName}
-									initials={`${student.roepnaam.charAt(0)}${student.achternaam.charAt(0)}`.toUpperCase()}
-									className="h-10 w-10"
-								/>
-							)}
-							<span>{fullName} - Te laat melding</span>
-						</DialogTitle>
-					</DialogHeader>
-
-					{isLoading ? (
-						<div className="flex justify-center items-center py-8">
-							<LoadingSpinner iconClassName="h-6 w-6" />
-						</div>
-					) : lessonEntries.length === 0 ? (
-						<p className="text-muted-foreground text-center py-8">Geen afspraken voor vandaag</p>
-					) : (
-						<ScrollArea className="flex-1 pr-4 min-h-0">
-							<div className="grid grid-cols-2 gap-2">
-								{sortedEntries.map((entry) => (
-									<TardyAgendaItem
-										key={getAgendaEntryKey(entry)}
-										entry={entry}
-										currentTime={currentTime}
-										isCurrent={isSameAgendaEntryOccurrence(activeEntry, entry)}
-										onSelect={handleItemClick}
-									/>
-								))}
-							</div>
-						</ScrollArea>
-					)}
+					<TardyModalHeader student={student} fullName={model.fullName} />
+					<TardyModalLessonList
+						isLoading={model.isLoading}
+						lessonEntries={model.lessonEntries}
+						currentTime={model.currentTime}
+						activeEntry={model.activeEntry}
+						onSelect={model.handleItemClick}
+					/>
 				</DialogContent>
 			</Dialog>
-
-			{selectedEntry && isLessonEntry(selectedEntry) && (
-				<TardyConfirmationModal
-					item={selectedEntry.item}
-					student={student}
-					studentName={fullName}
-					isOpen={isConfirmationOpen}
-					onConfirm={handleConfirm}
-					onCancel={handleCancel}
-				/>
-			)}
+			<TardyConfirmOverlay
+				selectedEntry={model.selectedEntry}
+				student={student}
+				fullName={model.fullName}
+				isOpen={model.isConfirmationOpen}
+				onConfirm={model.handleConfirm}
+				onCancel={model.clearSelection}
+			/>
 		</>
 	);
 }

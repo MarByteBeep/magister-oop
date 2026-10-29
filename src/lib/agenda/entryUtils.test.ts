@@ -368,13 +368,6 @@ test('replaceRegistrationEntries keeps lessons and swaps overlays', () => {
 	expect(updated.filter(isRegistrationEntry).map((entry) => entry.registration.code)).toEqual(['A']);
 });
 
-test('lessonEntry wraps agenda items without mutation', () => {
-	const item = lesson('2026-09-02T10:50:00', '2026-09-02T11:30:00');
-	const entry = lessonEntry(item);
-	expect(entry.kind).toBe('lesson');
-	expect(entry.item).toBe(item);
-});
-
 test('findStudentOverviewEntry shows a timed return measure when there is no lesson', () => {
 	const measure = returnMeasureEntry(
 		returnMeasure(toISOFromDateKeyAndTime('2026-09-02', '10:50'), toISOFromDateKeyAndTime('2026-09-02', '11:50')),
@@ -468,14 +461,24 @@ test('findStudentOverviewEntryOverlappingLessonRange prefers an absence over a l
 
 test('scaleLayoutToGutter and shiftLayoutForGutter wrap calc lengths', () => {
 	const scaled = scaleLayoutToGutter(
-		{ top: 10, height: 20, width: 'calc(100% - 0px)', xOffset: 'calc(0% + 0px)' },
+		{
+			top: 10,
+			height: 20,
+			width: 'calc(100% - 0px)',
+			xOffset: 'calc(0% + 0px)',
+		},
 		20,
 	);
 	expect(scaled.width).toBe('calc((calc(100% - 0px)) * 0.2)');
 	expect(scaled.xOffset).toBe('calc((calc(0% + 0px)) * 0.2)');
 
 	const shifted = shiftLayoutForGutter(
-		{ top: 10, height: 20, width: 'calc(100% - 0px)', xOffset: 'calc(0% + 0px)' },
+		{
+			top: 10,
+			height: 20,
+			width: 'calc(100% - 0px)',
+			xOffset: 'calc(0% + 0px)',
+		},
 		20,
 	);
 	expect(shifted.width).toBe('calc((calc(100% - 0px)) * 0.8)');

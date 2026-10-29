@@ -6,103 +6,143 @@ import { type HoveredAgendaSlot, snapSelectionToLessonHours } from '@/lib/agenda
 import type { AgendaSlotSelection } from '@/lib/agenda/slotSelection';
 import { isAllDaySlotSelection, slotInfoToSelection } from '@/lib/agenda/slotSelection';
 
-export function useAgendaCalendarSelection(
-	onSelectSlot?: (selection: AgendaSlotSelection) => void,
-	createMode = false,
-) {
+function useAgendaSelectionState(createMode: boolean) {
 	const [selectingPreview, setSelectingPreview] = useState<AgendaSlotSelection | null>(null);
 	const [hoveredSlot, setHoveredSlot] = useState<HoveredAgendaSlot | null>(null);
 	const isSelectingRef = useRef(false);
 	const selectionCompletedRef = useRef(false);
 	const clearHoverTimeoutRef = useRef<number | undefined>(undefined);
-	const pointerRef = useRef<{ x: number; y: number } | null>(null);
 	const createModeRef = useRef(createMode);
 	createModeRef.current = createMode;
 
-	const handleSelecting = useCallback((range: { start: Date; end: Date }): boolean | undefined => {
-		if (!createModeRef.current) return false;
-		isSelectingRef.current = true;
-		selectionCompletedRef.current = false;
-		setHoveredSlot(null);
-		setSelectingPreview(snapSelectionToLessonHours(range));
-		return undefined;
-	}, []);
+	return {
+		selectingPreview,
+		setSelectingPreview,
+		hoveredSlot,
+		setHoveredSlot,
+		isSelectingRef,
+		selectionCompletedRef,
+		clearHoverTimeoutRef,
+		createModeRef,
+	};
+}
 
-	const handleSelectFullDay = useCallback(
-		(day: Date) => {
-			if (!onSelectSlot || !createModeRef.current) return;
-			setSelectingPreview(null);
-			setHoveredSlot(null);
-			onSelectSlot(getFullDayScheduleSelection(day));
-		},
-		[onSelectSlot],
-	);
+function snappedSelectionFromSlot(slotInfo: SlotInfo): AgendaSlotSelection | null {
+	if (isAllDaySlotSelection(slotInfo)) return getFullDayScheduleSelection(slotInfo.start);
+	return snapSelectionToLessonHours(slotInfoToSelection(slotInfo));
+}
 
-	const handleSelectSlot = useCallback(
-		(slotInfo: SlotInfo) => {
-			if (!onSelectSlot || !createModeRef.current) return;
-			isSelectingRef.current = false;
-			selectionCompletedRef.current = true;
-			setSelectingPreview(null);
-			setHoveredSlot(null);
+function canAcceptSelection(
+	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
+	createMode: boolean,
+): onSelectSlot is (selection: AgendaSlotSelection) => void {
+	return Boolean(onSelectSlot) && createMode;
+}
 
-			const snapped = isAllDaySlotSelection(slotInfo)
-				? getFullDayScheduleSelection(slotInfo.start)
-				: snapSelectionToLessonHours(slotInfoToSelection(slotInfo));
-			if (!snapped) return;
-			onSelectSlot(snapped);
-		},
-		[onSelectSlot],
-	);
+function clearHoverState(state: ReturnType<typeof useAgendaSelectionState>) {
+	window.clearTimeout(state.clearHoverTimeoutRef.current);
+	state.setSelectingPreview(null);
+	state.setHoveredSlot(null);
+}
+
+function applyPointerHover(
+	pointerRef: React.RefObject<{ x: number; y: number } | null>,
+	setHoveredSlot: (value: ReturnType<typeof useAgendaSelectionState>['hoveredSlot']) => void,
+) {
+	const point = pointerRef.current;
+	if (!point) return;
+	const slot = findHoveredAgendaSlotAtPoint(point.x, point.y);
+	if (slot) setHoveredSlot(slot);
+}
+
+function useAgendaSelectionEffects(
+	onSelectSlot: ((selection: AgendaSlotSelection) => void) | undefined,
+	createMode: boolean,
+	state: ReturnType<typeof useAgendaSelectionState>,
+) {
+	const pointerRef = useRef<{ x: number; y: number } | null>(null);
 
 	useEffect(() => {
 		if (!onSelectSlot) return;
-
 		const trackPointer = (event: PointerEvent) => {
 			pointerRef.current = { x: event.clientX, y: event.clientY };
 		};
-
 		window.addEventListener('pointermove', trackPointer, { passive: true });
 		return () => window.removeEventListener('pointermove', trackPointer);
 	}, [onSelectSlot]);
 
 	useEffect(() => {
 		if (!createMode) {
-			window.clearTimeout(clearHoverTimeoutRef.current);
-			setSelectingPreview(null);
-			setHoveredSlot(null);
+			clearHoverState(state);
 			return;
 		}
-
-		const point = pointerRef.current;
-		if (!point) return;
-		const slot = findHoveredAgendaSlotAtPoint(point.x, point.y);
-		if (slot) setHoveredSlot(slot);
-	}, [createMode]);
+		applyPointerHover(pointerRef, state.setHoveredSlot);
+	}, [createMode, state]);
 
 	useEffect(() => {
 		if (!onSelectSlot) return;
-
 		const handlePointerUp = () => {
-			if (!isSelectingRef.current) return;
-			isSelectingRef.current = false;
+			if (!state.isSelectingRef.current) return;
+			state.isSelectingRef.current = false;
 			queueMicrotask(() => {
-				if (!selectionCompletedRef.current) {
-					setSelectingPreview(null);
-				}
-				selectionCompletedRef.current = false;
+				if (!state.selectionCompletedRef.current) state.setSelectingPreview(null);
+				state.selectionCompletedRef.current = false;
 			});
 		};
-
 		window.addEventListener('pointerup', handlePointerUp);
 		return () => window.removeEventListener('pointerup', handlePointerUp);
-	}, [onSelectSlot]);
+	}, [onSelectSlot, state]);
+}
+
+export function useAgendaCalendarSelection(
+	onSelectSlot?: (selection: AgendaSlotSelection) => void,
+	createMode?: boolean,
+) {
+	const isCreateMode = createMode === true;
+	const state = useAgendaSelectionState(isCreateMode);
+	useAgendaSelectionEffects(onSelectSlot, isCreateMode, state);
+
+	const handleSelecting = useCallback(
+		(range: { start: Date; end: Date }): boolean | undefined => {
+			if (!state.createModeRef.current) return false;
+			state.isSelectingRef.current = true;
+			state.selectionCompletedRef.current = false;
+			state.setHoveredSlot(null);
+			state.setSelectingPreview(snapSelectionToLessonHours(range));
+			return undefined;
+		},
+		[state],
+	);
+
+	const handleSelectFullDay = useCallback(
+		(day: Date) => {
+			if (!canAcceptSelection(onSelectSlot, state.createModeRef.current)) return;
+			state.setSelectingPreview(null);
+			state.setHoveredSlot(null);
+			onSelectSlot(getFullDayScheduleSelection(day));
+		},
+		[onSelectSlot, state],
+	);
+
+	const handleSelectSlot = useCallback(
+		(slotInfo: SlotInfo) => {
+			if (!canAcceptSelection(onSelectSlot, state.createModeRef.current)) return;
+			state.isSelectingRef.current = false;
+			state.selectionCompletedRef.current = true;
+			state.setSelectingPreview(null);
+			state.setHoveredSlot(null);
+			const snapped = snappedSelectionFromSlot(slotInfo);
+			if (!snapped) return;
+			onSelectSlot(snapped);
+		},
+		[onSelectSlot, state],
+	);
 
 	return {
-		selectingPreview,
-		hoveredSlot,
-		setHoveredSlot,
-		clearHoverTimeoutRef,
+		selectingPreview: state.selectingPreview,
+		hoveredSlot: state.hoveredSlot,
+		setHoveredSlot: state.setHoveredSlot,
+		clearHoverTimeoutRef: state.clearHoverTimeoutRef,
 		handleSelecting,
 		handleSelectFullDay,
 		handleSelectSlot,

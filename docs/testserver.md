@@ -61,10 +61,10 @@ In productie (`bun run build`) wordt geen testserver gebruikt; dan praat de exte
 
 ## Overzicht commando’s
 
-| Actie                    | Commando                            |
-|--------------------------|-------------------------------------|
-| Data genereren           | `bun run testserver:init`           |
-| Dev (app + API in één)   | `bun run dev` (uit root)            |
+| Actie                  | Commando                  |
+| ---------------------- | ------------------------- |
+| Data genereren         | `bun run testserver:init` |
+| Dev (app + API in één) | `bun run dev` (uit root)  |
 
 ## Mapstructuur (testserver)
 

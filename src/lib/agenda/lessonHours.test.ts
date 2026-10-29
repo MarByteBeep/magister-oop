@@ -159,7 +159,11 @@ describe('getLessonHourBadgePlacements', () => {
 
 		const placements = getLessonHourBadgePlacements(selection);
 		expect(placements.map((placement) => placement.lessonHour)).toEqual([2, 3, 4]);
-		expect(placements[0]).toEqual({ lessonHour: 2, topPercent: 0, heightPercent: (40 / 140) * 100 });
+		expect(placements[0]).toEqual({
+			lessonHour: 2,
+			topPercent: 0,
+			heightPercent: (40 / 140) * 100,
+		});
 		expect(placements[1]).toEqual({
 			lessonHour: 3,
 			topPercent: (40 / 140) * 100,

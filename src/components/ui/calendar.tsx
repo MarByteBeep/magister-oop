@@ -49,7 +49,10 @@ function Calendar({
 			}}
 			showOutsideDays={showOutsideDays}
 			modifiers={{ ...pastModifiers, ...propsModifiers }}
-			modifiersClassNames={{ ...pastModifiersClassNames, ...propsModifiersClassNames }}
+			modifiersClassNames={{
+				...pastModifiersClassNames,
+				...propsModifiersClassNames,
+			}}
 			{...props}
 		/>
 	);

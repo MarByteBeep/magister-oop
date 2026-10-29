@@ -2,7 +2,7 @@ import type React from 'react';
 import { LuLoaderCircle } from 'react-icons/lu';
 import { cn } from '@/lib/utils';
 
-interface LoadingSpinnerProps {
+export interface LoadingSpinnerProps {
 	className?: string;
 	iconClassName?: string; // Added for specific icon styling
 }

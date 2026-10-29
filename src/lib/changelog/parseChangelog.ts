@@ -7,24 +7,28 @@ export interface ChangelogSection {
 const SECTION_HEADING = /^##\s+(.+)$/;
 const BULLET_LINE = /^-\s+(.+)$/;
 
+function sectionFromHeading(heading: string): ChangelogSection | null {
+	const [version, date] = heading.split('—').map((part) => part.trim());
+	if (!version) return null;
+	return { version, date, items: [] };
+}
+
 function parseSectionHeading(line: string): ChangelogSection | null {
 	const match = SECTION_HEADING.exec(line.trim());
 	const heading = match?.[1];
-	if (!heading) {
-		return null;
-	}
-
-	const [version, date] = heading.split('—').map((part) => part.trim());
-	if (!version) {
-		return null;
-	}
-
-	return { version, date, items: [] };
+	if (!heading) return null;
+	return sectionFromHeading(heading);
 }
 
 function parseBulletItem(line: string): string | null {
 	const match = BULLET_LINE.exec(line.trim());
-	return match?.[1] ?? null;
+	if (!match?.[1]) return null;
+	return match[1];
+}
+
+function appendBulletIfPresent(line: string, current: ChangelogSection): void {
+	const item = parseBulletItem(line);
+	if (item) current.items.push(item);
 }
 
 function processChangelogLine(
@@ -37,16 +41,8 @@ function processChangelogLine(
 		sections.push(section);
 		return section;
 	}
-
-	if (!current) {
-		return current;
-	}
-
-	const item = parseBulletItem(line);
-	if (item) {
-		current.items.push(item);
-	}
-
+	if (!current) return current;
+	appendBulletIfPresent(line, current);
 	return current;
 }
 

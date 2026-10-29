@@ -12,7 +12,10 @@ function extensionApi(): typeof chrome | undefined {
 }
 
 export function syncActionBadge(count: number): void {
-	sendRuntimeMessage({ type: 'syncActionBadge', text: formatActionBadgeText(count) });
+	sendRuntimeMessage({
+		type: 'syncActionBadge',
+		text: formatActionBadgeText(count),
+	});
 }
 
 export async function applyActionBadgeText(text: string): Promise<void> {

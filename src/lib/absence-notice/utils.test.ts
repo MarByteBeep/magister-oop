@@ -164,9 +164,13 @@ describe('expectedEndLabel', () => {
 	});
 
 	test('stays empty when the notice already has a definitive end', () => {
-		expect(expectedEndLabel(notice({ expectedEndDateTime: toISOFromDateKeyAndTime('2026-09-04', '16:00') }))).toBe(
-			null,
-		);
+		expect(
+			expectedEndLabel(
+				notice({
+					expectedEndDateTime: toISOFromDateKeyAndTime('2026-09-04', '16:00'),
+				}),
+			),
+		).toBe(null);
 	});
 });
 

@@ -6,7 +6,7 @@ import {
 	resolveActiveRegistrationCategory,
 } from '@/lib/registrations/categories';
 
-type GroupedRegistrations = ReturnType<typeof useGroupedRegistrations>;
+export type GroupedRegistrations = ReturnType<typeof useGroupedRegistrations>;
 
 export function useRegistrationCategories(grouped: GroupedRegistrations, category: string) {
 	const categories = useMemo(() => buildRegistrationCategories(grouped.orderedReasons, grouped.byReason), [grouped]);

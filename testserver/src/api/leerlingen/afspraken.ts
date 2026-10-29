@@ -40,22 +40,40 @@ function isSchoolDay(dateKey: string): boolean {
 	return weekday !== 0 && weekday !== 6;
 }
 
+function dayTemplatesForDate(week: AgendaItem<Participant>[][], dateKey: string): AgendaItem<Participant>[] {
+	return week[parseDateKey(dateKey).getDay() - 1] ?? [];
+}
+
 function expandWeek(week: AgendaItem<Participant>[][], begin: string, end: string): AgendaItem<Participant>[] {
 	const items: AgendaItem<Participant>[] = [];
 	for (const dateKey of eachDateKey(parseDateKey(begin), parseDateKey(end))) {
 		if (!isSchoolDay(dateKey)) continue;
-		const dayTemplates = week[parseDateKey(dateKey).getDay() - 1] ?? [];
-		items.push(...cloneAgendaForDate(dayTemplates, dateKey));
+		items.push(...cloneAgendaForDate(dayTemplatesForDate(week, dateKey), dateKey));
 	}
 	return items;
 }
 
+function beginDateKey(value: string | null): string {
+	const key = dateKeyFromParam(value);
+	if (key) return key;
+	return getTodayKey();
+}
+
+function endDateKey(value: string | null, begin: string): string {
+	const key = dateKeyFromParam(value);
+	if (key) return key;
+	return begin;
+}
+
+function weekForStudent(studentId: number): AgendaItem<Participant>[][] {
+	return getAllAgendaItems()[studentId] ?? [];
+}
+
 export async function GET(req: Request, studentId: number): Promise<Response> {
 	const url = new URL(req.url);
-	const begin = dateKeyFromParam(url.searchParams.get('begin')) ?? getTodayKey();
-	const end = dateKeyFromParam(url.searchParams.get('einde')) ?? begin;
-	const week = getAllAgendaItems()[studentId] ?? [];
-	const studentAgenda = expandWeek(week, begin, end);
+	const begin = beginDateKey(url.searchParams.get('begin'));
+	const end = endDateKey(url.searchParams.get('einde'), begin);
+	const studentAgenda = expandWeek(weekForStudent(studentId), begin, end);
 	const href = `/api/leerlingen/${studentId}/afspraken?begin=${begin}&einde=${end}&status=actief`;
 
 	const response: AgendaResponse = {

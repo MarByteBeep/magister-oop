@@ -4,7 +4,7 @@ import type { StudentDetailTab } from '@/components/student/profile/StudentDetai
 import StudentDetailDialog from '@/components/student/profile/StudentDetailDialog';
 import type { Student } from '@/types/student.types';
 
-interface StudentModalProps {
+export interface StudentModalProps {
 	student?: Student;
 	onClose: () => void;
 	initialTab?: StudentDetailTab;

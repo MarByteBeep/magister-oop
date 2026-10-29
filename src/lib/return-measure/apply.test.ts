@@ -66,7 +66,11 @@ test('replaces return measure overlays on loaded days and keeps lessons', () => 
 });
 
 test('drops overlays that disappeared from the bulk list', () => {
-	const students = [student({ agenda: { [dateKey]: [returnMeasureEntry(measure(1, 7, dateKey))] } })];
+	const students = [
+		student({
+			agenda: { [dateKey]: [returnMeasureEntry(measure(1, 7, dateKey))] },
+		}),
+	];
 
 	const [updated] = applyReturnMeasuresToStudents(students, [], dateKey);
 

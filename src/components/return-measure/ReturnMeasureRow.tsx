@@ -14,24 +14,32 @@ import type { Student } from '@/types/student.types';
 function formatTimeRange(row: Row): string | null {
 	const start = parseOptionalDate(row.start);
 	const end = parseOptionalDate(row.end);
-	if (!start || !end) return null;
+	if (!start) return null;
+	if (!end) return null;
 	return `${formatTime(start)} - ${formatTime(end)}`;
 }
 
-interface ReturnMeasureRowProps {
+function measureRowLabel(row: Row): string {
+	const timeRange = formatTimeRange(row);
+	const joined = [timeRange, row.primaryLabel, row.secondaryLabel].filter(Boolean).join(' · ');
+	if (joined) return joined;
+	return 'Terugkommaatregel';
+}
+
+function hasHandledTooltip(measure: ReturnMeasureStudent): boolean {
+	const { handledBy, handledAt } = getReturnMeasureHandledInfo(measure);
+	if (handledBy !== null) return true;
+	return handledAt !== null;
+}
+
+export interface ReturnMeasureRowProps {
 	row: Row;
 	student?: Student;
 	onSelectMeasure: (measure: ReturnMeasureStudent) => void;
 }
 
-export default function ReturnMeasureRow({ row, student, onSelectMeasure }: ReturnMeasureRowProps) {
-	const timeRange = formatTimeRange(row);
-	const measureLabel =
-		[timeRange, row.primaryLabel, row.secondaryLabel].filter(Boolean).join(' · ') || 'Terugkommaatregel';
-	const { handledBy, handledAt } = getReturnMeasureHandledInfo(row.measure);
-	const hasHandledTooltip = handledBy != null || handledAt != null;
-
-	const card = (
+function ReturnMeasureRowCard({ row, student, onSelectMeasure }: ReturnMeasureRowProps) {
+	return (
 		<div className="flex w-full items-center gap-2 rounded-md border bg-muted/50 p-2 hover:bg-muted">
 			<button
 				type="button"
@@ -44,7 +52,7 @@ export default function ReturnMeasureRow({ row, student, onSelectMeasure }: Retu
 					name={row.studentName}
 					photoUrl={student?.links.foto?.href}
 					classLabel={row.classCode}
-					description={measureLabel}
+					description={measureRowLabel(row)}
 					variant="plain"
 					className="min-w-0 flex-1 max-w-full"
 				/>
@@ -58,8 +66,11 @@ export default function ReturnMeasureRow({ row, student, onSelectMeasure }: Retu
 			/>
 		</div>
 	);
+}
 
-	if (!hasHandledTooltip) return card;
+export default function ReturnMeasureRow({ row, student, onSelectMeasure }: ReturnMeasureRowProps) {
+	const card = <ReturnMeasureRowCard row={row} student={student} onSelectMeasure={onSelectMeasure} />;
+	if (!hasHandledTooltip(row.measure)) return card;
 
 	return (
 		<Tooltip>

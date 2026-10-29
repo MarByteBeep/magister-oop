@@ -17,21 +17,29 @@ export async function generateEntityLinks(id: number, selfHref: string) {
 	};
 }
 
+async function writeDownloadedPhoto(
+	response: Response,
+	photoFilePath: string,
+	photoApiPath: string,
+): Promise<string | undefined> {
+	if (!response.ok) return undefined;
+	if (!response.body) return undefined;
+	const imageBuffer = await response.arrayBuffer();
+	await Bun.write(photoFilePath, imageBuffer);
+	return photoApiPath;
+}
+
 async function downloadEntityPhoto(
 	id: number,
 	fakerImageUrl: string,
 	photoApiPath: string,
 ): Promise<string | undefined> {
-	const photoFileName = `${id}.jpg`;
-	const photoFilePath = join(ALL_PHOTOS_DIR, photoFileName);
+	const photoFilePath = join(ALL_PHOTOS_DIR, `${id}.jpg`);
 
 	try {
 		const response = await fetch(fakerImageUrl);
-		if (response.ok && response.body) {
-			const imageBuffer = await response.arrayBuffer();
-			await Bun.write(photoFilePath, imageBuffer);
-			return photoApiPath;
-		}
+		const written = await writeDownloadedPhoto(response, photoFilePath, photoApiPath);
+		if (written) return written;
 		console.warn(`Failed to download image for ID ${id} from ${fakerImageUrl}: ${response.statusText}`);
 	} catch (error) {
 		console.error(`Error downloading image for ID ${id}:`, error);

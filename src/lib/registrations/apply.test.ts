@@ -41,7 +41,11 @@ function response(studentId: number): RegistrationsResponse {
 									omschrijving: 'Absent',
 								},
 								opmerking: null,
-								links: { self: { href: '/api/medewerkers/afspraken/verantwoordingen/3' } },
+								links: {
+									self: {
+										href: '/api/medewerkers/afspraken/verantwoordingen/3',
+									},
+								},
 							},
 						],
 						links: {

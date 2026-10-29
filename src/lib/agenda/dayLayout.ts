@@ -5,7 +5,7 @@ import noOverlap from 'react-big-calendar/lib/utils/layout-algorithms/no-overlap
 import { type CalendarEvent, isSameCalendarDay } from '@/lib/agenda/calendarUtils';
 import { partitionAgendaEvents } from '@/lib/agenda/dayLayoutPartition';
 
-type LayoutStyle = CSSProperties & {
+export type LayoutStyle = CSSProperties & {
 	top: number;
 	height: number | string;
 	width: number | string;

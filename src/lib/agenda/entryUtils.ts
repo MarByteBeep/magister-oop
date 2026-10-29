@@ -29,11 +29,21 @@ export function isRegistrationEntry(entry: AgendaEntry): entry is RegistrationAg
 }
 
 export function lessonEntry(item: AgendaItem<Participant> | AgendaItem): LessonAgendaEntry {
-	return { kind: 'lesson', start: item.begin, end: item.einde, item: item as AgendaItem };
+	return {
+		kind: 'lesson',
+		start: item.begin,
+		end: item.einde,
+		item: item as AgendaItem,
+	};
 }
 
 export function returnMeasureEntry(measure: ScheduledReturnMeasure): ReturnMeasureAgendaEntry {
-	return { kind: 'return-measure', start: measure.begin, end: measure.einde, measure };
+	return {
+		kind: 'return-measure',
+		start: measure.begin,
+		end: measure.einde,
+		measure,
+	};
 }
 
 function entrySourceId(entry: AgendaEntry): string | number {
@@ -229,18 +239,45 @@ function parseLessonRange(lessonRange: string): { start: string; end: string } |
 	return { start, end };
 }
 
+function entryMatchesLessonRange(
+	entry: AgendaEntry,
+	range: { start: string; end: string },
+	matchesKind: (entry: AgendaEntry) => boolean,
+): boolean {
+	if (!matchesKind(entry)) return false;
+	return entryOverlapsLessonRange(entry, range.start, range.end);
+}
+
+function findFirstEntryMatchingLessonRange(
+	entries: AgendaEntry[],
+	range: { start: string; end: string },
+	matchesKind: (entry: AgendaEntry) => boolean,
+): AgendaEntry | null {
+	for (const entry of entries) {
+		if (entryMatchesLessonRange(entry, range, matchesKind)) return entry;
+	}
+	return null;
+}
+
 export function findLessonEntryOverlappingLessonRange(
 	entries: AgendaEntry[],
 	lessonRange: string,
 ): LessonAgendaEntry | null {
 	const range = parseLessonRange(lessonRange);
 	if (!range) return null;
+	return findFirstEntryMatchingLessonRange(entries, range, isLessonEntry) as LessonAgendaEntry | null;
+}
 
-	for (const entry of entries) {
-		if (!isLessonEntry(entry)) continue;
-		if (entryOverlapsLessonRange(entry, range.start, range.end)) return entry;
-	}
-	return null;
+function firstOverviewEntryForLessonRange(
+	entries: AgendaEntry[],
+	lessonRange: string,
+	range: { start: string; end: string },
+): AgendaEntry | null {
+	const absence = findFirstEntryMatchingLessonRange(entries, range, isAbsenceNoticeEntry);
+	if (absence) return absence;
+	const lesson = findLessonEntryOverlappingLessonRange(entries, lessonRange);
+	if (lesson) return lesson;
+	return findFirstEntryMatchingLessonRange(entries, range, isReturnMeasureEntry);
 }
 
 export function findStudentOverviewEntryOverlappingLessonRange(
@@ -249,19 +286,5 @@ export function findStudentOverviewEntryOverlappingLessonRange(
 ): AgendaEntry | null {
 	const range = parseLessonRange(lessonRange);
 	if (!range) return null;
-	const { start: lessonStart, end: lessonEnd } = range;
-
-	for (const entry of entries) {
-		if (!isAbsenceNoticeEntry(entry)) continue;
-		if (entryOverlapsLessonRange(entry, lessonStart, lessonEnd)) return entry;
-	}
-
-	const lesson = findLessonEntryOverlappingLessonRange(entries, lessonRange);
-	if (lesson) return lesson;
-
-	for (const entry of entries) {
-		if (!isReturnMeasureEntry(entry)) continue;
-		if (entryOverlapsLessonRange(entry, lessonStart, lessonEnd)) return entry;
-	}
-	return null;
+	return firstOverviewEntryForLessonRange(entries, lessonRange, range);
 }

@@ -12,22 +12,22 @@ import type { AgendaEntry, LessonAgendaEntry } from '@/magister/response/agendaE
 import type { Student } from '@/types/student.types';
 import type { StudentWrite } from '@/types/studentStore.types';
 
-type ParticipantRef = { type: 'medewerker'; id: number } | { type: 'groep'; id: number };
+export type ParticipantRef = { type: 'medewerker'; id: number } | { type: 'groep'; id: number };
 
-type StoredAgendaItem = Omit<AgendaItem, 'deelnames'> & {
+export type StoredAgendaItem = Omit<AgendaItem, 'deelnames'> & {
 	deelnames: ParticipantRef[];
 };
 
-type StoredLessonEntry = {
+export type StoredLessonEntry = {
 	kind: 'lesson';
 	start: string;
 	end: string;
 	itemId: number;
 };
 
-type StoredAgendaEntry = StoredLessonEntry | Exclude<AgendaEntry, LessonAgendaEntry>;
+export type StoredAgendaEntry = StoredLessonEntry | Exclude<AgendaEntry, LessonAgendaEntry>;
 
-type StudentRecord = Omit<StudentWrite, 'agenda' | 'absenceNoticeLoad'>;
+export type StudentRecord = Omit<StudentWrite, 'agenda' | 'absenceNoticeLoad'>;
 
 export type StudentAgendaSnapshot = {
 	studentId: number;
@@ -370,20 +370,17 @@ class StudentDataStore {
 		return { agendaItemIds, ...this.collectParticipantIds(agendaItemIds) };
 	}
 
+	private pruneMapToReferencedIds<V>(map: Map<number, V>, referencedIds: Set<number>): void {
+		for (const id of map.keys()) {
+			if (!referencedIds.has(id)) map.delete(id);
+		}
+	}
+
 	private pruneInternedEntities(referencedIds?: ReferencedInternedIds): void {
-		const { agendaItemIds, staffMemberIds, groupIds } = referencedIds ?? this.collectReferencedIds();
-
-		for (const id of this.agendaItems.keys()) {
-			if (!agendaItemIds.has(id)) this.agendaItems.delete(id);
-		}
-
-		for (const id of this.staffMembers.keys()) {
-			if (!staffMemberIds.has(id)) this.staffMembers.delete(id);
-		}
-
-		for (const id of this.groups.keys()) {
-			if (!groupIds.has(id)) this.groups.delete(id);
-		}
+		const ids = referencedIds ?? this.collectReferencedIds();
+		this.pruneMapToReferencedIds(this.agendaItems, ids.agendaItemIds);
+		this.pruneMapToReferencedIds(this.staffMembers, ids.staffMemberIds);
+		this.pruneMapToReferencedIds(this.groups, ids.groupIds);
 	}
 
 	private stripLinks<T extends Participant | AgendaParticipant>(participant: T): Omit<T, 'links'> {

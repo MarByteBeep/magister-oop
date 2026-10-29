@@ -34,54 +34,52 @@ export interface SearchAndFiltersBarProps {
 	loadingTooltip?: string;
 }
 
-export function SearchAndFiltersBar({
-	searchTerm,
-	onSearchTermChange,
-	searchPlaceholder = 'Zoek…',
-	searchStorageKey,
-	permanentFilterTitle = 'Permanente filters',
-	permanentFilterOptions,
-	selectedPermanentFilters,
-	onSelectedPermanentFiltersChange,
-	quickFilters,
-	activeQuickFilterId,
-	onActiveQuickFilterIdChange,
-	loading = false,
-	loadingTooltip,
-}: SearchAndFiltersBarProps) {
+function nextQuickFilterId(activeQuickFilterId: string | null, id: string): string | null {
+	if (activeQuickFilterId === id) return null;
+	return id;
+}
+
+export function SearchAndFiltersBar(props: SearchAndFiltersBarProps) {
+	const searchPlaceholder = props.searchPlaceholder ?? 'Zoek…';
+	const permanentFilterTitle = props.permanentFilterTitle ?? 'Permanente filters';
+	const loading = props.loading === true;
 	const searchInputRef = useAutoFocus<HTMLInputElement>();
 	const [showPermanentFilters, setShowPermanentFilters] = useState(false);
 
-	useSearchTermStorage(searchTerm, searchStorageKey, onSearchTermChange);
+	useSearchTermStorage(props.searchTerm, props.searchStorageKey, props.onSearchTermChange);
 
 	const handleQuickFilterClick = (id: string) => {
-		onActiveQuickFilterIdChange(activeQuickFilterId === id ? null : id);
+		props.onActiveQuickFilterIdChange(nextQuickFilterId(props.activeQuickFilterId, id));
 	};
 
 	return (
 		<div className="w-full">
 			<SearchInputRow
-				searchTerm={searchTerm}
+				searchTerm={props.searchTerm}
 				searchPlaceholder={searchPlaceholder}
 				searchInputRef={searchInputRef}
 				loading={loading}
-				loadingTooltip={loadingTooltip}
+				loadingTooltip={props.loadingTooltip}
 				showPermanentFilters={showPermanentFilters}
 				permanentFilterTitle={permanentFilterTitle}
-				selectedFilterCount={selectedPermanentFilters.size}
-				onSearchTermChange={onSearchTermChange}
+				selectedFilterCount={props.selectedPermanentFilters.size}
+				onSearchTermChange={props.onSearchTermChange}
 				onTogglePermanentFilters={() => setShowPermanentFilters((v) => !v)}
 			/>
 
 			<PermanentFiltersPanel
 				show={showPermanentFilters}
 				title={permanentFilterTitle}
-				options={permanentFilterOptions}
-				selected={selectedPermanentFilters}
-				onChange={onSelectedPermanentFiltersChange}
+				options={props.permanentFilterOptions}
+				selected={props.selectedPermanentFilters}
+				onChange={props.onSelectedPermanentFiltersChange}
 			/>
 
-			<QuickFiltersBar filters={quickFilters} activeId={activeQuickFilterId} onToggle={handleQuickFilterClick} />
+			<QuickFiltersBar
+				filters={props.quickFilters}
+				activeId={props.activeQuickFilterId}
+				onToggle={handleQuickFilterClick}
+			/>
 		</div>
 	);
 }

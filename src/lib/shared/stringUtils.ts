@@ -1,3 +1,10 @@
+/** Trim; empty / whitespace-only / nullish → `undefined`. */
+export function trimmedOrUndefined(value: string | null | undefined): string | undefined {
+	if (value === null || value === undefined) return undefined;
+	const trimmed = value.trim();
+	return trimmed.length > 0 ? trimmed : undefined;
+}
+
 /** Avatar fallback: first letters of the first two name parts. */
 export function getInitials(name: string) {
 	return name

@@ -12,6 +12,19 @@ function useToggleGroupContext() {
 	return context;
 }
 
+function contextSizeOrDefault(context: { size?: 'default' | 'sm' | 'lg' } | undefined): 'default' | 'sm' | 'lg' {
+	if (!context) return 'default';
+	return context.size ?? 'default';
+}
+
+function resolveToggleSize(
+	sizeProp: 'default' | 'sm' | 'lg' | undefined,
+	context: { size?: 'default' | 'sm' | 'lg' } | undefined,
+): 'default' | 'sm' | 'lg' {
+	if (sizeProp !== undefined) return sizeProp;
+	return contextSizeOrDefault(context);
+}
+
 const ToggleGroup = React.forwardRef<
 	React.ElementRef<typeof ToggleGroupPrimitive.Root>,
 	React.ComponentPropsWithoutRef<typeof ToggleGroupPrimitive.Root> & {
@@ -43,7 +56,7 @@ const ToggleGroupItem = React.forwardRef<
 	}
 >(({ className, size: sizeProp, ...props }, ref) => {
 	const context = useToggleGroupContext();
-	const size = sizeProp ?? context?.size ?? 'default';
+	const size = resolveToggleSize(sizeProp, context);
 
 	return (
 		<ToggleGroupPrimitive.Item

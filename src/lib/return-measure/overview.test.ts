@@ -29,7 +29,9 @@ function measure(id: number, studentId: number, dateKey: string | null, override
 }
 
 function handled(id: number, studentId: number, dateKey: string) {
-	return measure(id, studentId, dateKey, { afgehandeldOp: toISOFromDateKeyAndTime(dateKey, '09:30') });
+	return measure(id, studentId, dateKey, {
+		afgehandeldOp: toISOFromDateKeyAndTime(dateKey, '09:30'),
+	});
 }
 
 describe('returnMeasureReportStatus', () => {
@@ -102,9 +104,18 @@ describe('buildReturnMeasureRows', () => {
 
 describe('returnMeasurePeriodRange', () => {
 	test('covers today, the surrounding week, and the whole month', () => {
-		expect(returnMeasurePeriodRange('today', now)).toEqual({ startKey: '2026-09-09', endKey: '2026-09-09' });
-		expect(returnMeasurePeriodRange('week', now)).toEqual({ startKey: '2026-09-07', endKey: '2026-09-13' });
-		expect(returnMeasurePeriodRange('month', now)).toEqual({ startKey: '2026-09-01', endKey: '2026-09-30' });
+		expect(returnMeasurePeriodRange('today', now)).toEqual({
+			startKey: '2026-09-09',
+			endKey: '2026-09-09',
+		});
+		expect(returnMeasurePeriodRange('week', now)).toEqual({
+			startKey: '2026-09-07',
+			endKey: '2026-09-13',
+		});
+		expect(returnMeasurePeriodRange('month', now)).toEqual({
+			startKey: '2026-09-01',
+			endKey: '2026-09-30',
+		});
 	});
 });
 

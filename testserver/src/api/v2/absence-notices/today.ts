@@ -1,22 +1,11 @@
-import { absenceNoticeOverlapsDate } from '@/lib/absence-notice/utils';
 import { getTodayKey } from '@/lib/shared/dateUtils';
-import type { AbsenceNotice, AbsenceNoticesResponse } from '@/magister/response/absenceNotice.types';
-import { expandAbsenceNoticeTemplates } from '../../utils/absenceNotices';
-import { getAbsenceNoticeTemplates, getAllStudents } from '../../utils/helpers';
+import type { AbsenceNoticesResponse } from '@/magister/response/absenceNotice.types';
+import { collectAbsenceNoticesForDate, requestDateKey } from '../../utils/absenceNoticeToday';
+import { jsonOk } from '../../utils/jsonResponses';
 
 export async function GET(req: Request): Promise<Response> {
-	const url = new URL(req.url);
-	const dateKey = url.searchParams.get('date') ?? getTodayKey();
-	const templatesByStudent = getAbsenceNoticeTemplates();
-	const items: AbsenceNotice[] = [];
-
-	for (const student of getAllStudents()) {
-		const templates = templatesByStudent[student.externeId] ?? [];
-		if (templates.length === 0) continue;
-		for (const notice of expandAbsenceNoticeTemplates(templates, student)) {
-			if (absenceNoticeOverlapsDate(notice, dateKey)) items.push(notice);
-		}
-	}
+	const dateKey = requestDateKey(req, getTodayKey());
+	const items = collectAbsenceNoticesForDate(dateKey);
 
 	const response: AbsenceNoticesResponse = {
 		overviewDate: `${dateKey}T00:00:00`,
@@ -26,7 +15,5 @@ export async function GET(req: Request): Promise<Response> {
 		items,
 	};
 
-	return new Response(JSON.stringify(response), {
-		headers: { 'Content-Type': 'application/json' },
-	});
+	return jsonOk(response);
 }

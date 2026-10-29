@@ -21,7 +21,7 @@ function ReportStatusBadge({ status }: { status: ReturnMeasureReportStatus }) {
 	return <Badge variant="outline">{REPORT_STATUS_LABELS[status]}</Badge>;
 }
 
-interface ReturnMeasureStatusBadgesProps {
+export interface ReturnMeasureStatusBadgesProps {
 	reportStatus: ReturnMeasureReportStatus;
 	planning: ReturnMeasurePlanning;
 }

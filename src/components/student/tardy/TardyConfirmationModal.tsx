@@ -8,7 +8,7 @@ import { printTardySlip } from '@/lib/agenda/tardySlip';
 import type { AgendaItem } from '@/magister/response/agenda.types';
 import type { Student } from '@/types/student.types';
 
-interface TardyConfirmationModalProps {
+export interface TardyConfirmationModalProps {
 	item: AgendaItem;
 	student?: Student;
 	studentName: string;
@@ -17,23 +17,37 @@ interface TardyConfirmationModalProps {
 	onCancel: () => void;
 }
 
-export default function TardyConfirmationModal({
-	item,
-	student,
-	studentName,
-	isOpen,
-	onConfirm,
-	onCancel,
-}: TardyConfirmationModalProps) {
-	const lessonInfo = item.lesuur?.begin ? `lesuur ${item.lesuur.begin}` : 'deze les';
-	const subject = item.onderwerp || 'deze les';
+function lessonBegin(item: AgendaItem): number | undefined {
+	if (!item.lesuur) return undefined;
+	return item.lesuur.begin;
+}
+
+function lessonInfoLabel(item: AgendaItem): string {
+	const begin = lessonBegin(item);
+	if (!begin) return 'deze les';
+	return `lesuur ${begin}`;
+}
+
+function subjectLabel(item: AgendaItem): string {
+	if (!item.onderwerp) return 'deze les';
+	return item.onderwerp;
+}
+
+function handleTardyOpenChange(open: boolean, onCancel: () => void) {
+	if (open) return;
+	onCancel();
+}
+
+export default function TardyConfirmationModal(props: TardyConfirmationModalProps) {
+	const lessonInfo = lessonInfoLabel(props.item);
+	const subject = subjectLabel(props.item);
 
 	const handlePrint = () => {
-		printTardySlip({ studentName, lessonInfo, subject });
+		printTardySlip({ studentName: props.studentName, lessonInfo, subject });
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+		<Dialog open={props.isOpen} onOpenChange={(open) => handleTardyOpenChange(open, props.onCancel)}>
 			<DialogContent className="max-w-[500px]">
 				<DialogHeader>
 					<DialogTitle>Te laat melding aanmaken</DialogTitle>
@@ -43,8 +57,8 @@ export default function TardyConfirmationModal({
 						Weet je zeker dat je een te laat melding wilt aanmaken voor {lessonInfo} ({subject})?
 					</p>
 					<StudentItem
-						student={student}
-						name={studentName}
+						student={props.student}
+						name={props.studentName}
 						description={`${lessonInfo} · ${subject}`}
 						variant="card"
 					/>
@@ -54,10 +68,10 @@ export default function TardyConfirmationModal({
 						<LuPrinter className="h-4 w-4" />
 						Afdrukken
 					</Button>
-					<Button variant="outline" onClick={onCancel}>
+					<Button variant="outline" onClick={props.onCancel}>
 						Annuleren
 					</Button>
-					<Button onClick={onConfirm}>OK</Button>
+					<Button onClick={props.onConfirm}>OK</Button>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

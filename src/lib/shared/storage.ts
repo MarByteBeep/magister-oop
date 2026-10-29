@@ -1,4 +1,4 @@
-type StorageType = 'session' | 'local';
+export type StorageType = 'session' | 'local';
 
 interface StorageAPI {
 	get<T>(key: string): Promise<T | undefined>;

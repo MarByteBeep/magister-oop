@@ -5,7 +5,7 @@ import Avatar from '@/components/ui/avatar';
 import { useLazyBlobUrl } from '@/hooks/shared/useLazyBlobUrl';
 import { cn } from '@/lib/utils';
 
-interface ClickAvatarPreviewProps {
+export interface ClickAvatarPreviewProps {
 	src?: string;
 	alt: string;
 	initials: string;

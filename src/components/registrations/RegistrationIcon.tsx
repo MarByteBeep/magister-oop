@@ -1,11 +1,21 @@
 'use client';
 
 import { cva, type VariantProps } from 'class-variance-authority';
+import {
+	authorizedLabel,
+	OptionalTooltipLine,
+	TimeRangeTooltipLine,
+} from '@/components/registrations/registrationTooltipLines';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { registrationAbbreviation, registrationLessonHourLabel } from '@/lib/registrations/entries';
-import { formatTime, parseOptionalDate } from '@/lib/shared/dateUtils';
+import { parseOptionalDate } from '@/lib/shared/dateUtils';
 import { cn } from '@/lib/utils';
 import type { AgendaRegistration, RegistrationTone } from '@/magister/response/agendaEntry.types';
+
+function isActivationKey(key: string): boolean {
+	if (key === 'Enter') return true;
+	return key === ' ';
+}
 
 const toneClasses: Record<RegistrationTone, string> = {
 	absence: 'bg-red-500 text-white',
@@ -29,12 +39,18 @@ const registrationIconStyles = cva(
 	},
 );
 
-interface RegistrationIconProps extends VariantProps<typeof registrationIconStyles> {
+export interface RegistrationIconProps extends VariantProps<typeof registrationIconStyles> {
 	registration: AgendaRegistration;
 	start?: string;
 	end?: string;
 	className?: string;
 	onSelect?: () => void;
+}
+
+function trimmedRegistrationComment(comment: string | null | undefined): string {
+	if (comment === undefined) return '';
+	if (comment === null) return '';
+	return comment.trim();
 }
 
 function RegistrationTooltip({
@@ -49,24 +65,37 @@ function RegistrationTooltip({
 	const begin = parseOptionalDate(start);
 	const finish = parseOptionalDate(end);
 	const hour = registrationLessonHourLabel(registration);
-	const comment = registration.comment?.trim();
+	const comment = trimmedRegistrationComment(registration.comment);
 	const lesson = registration.appointmentDescription.trim();
 
 	return (
 		<div className="space-y-1">
 			<div className="font-bold">{registration.description}</div>
-			{registration.code.trim() ? <div>Afkorting: {registration.code}</div> : null}
-			{begin && finish ? (
-				<div>
-					Tijd: {formatTime(begin)} - {formatTime(finish)}
-				</div>
-			) : null}
-			{hour ? <div>Lesuur: {hour}</div> : null}
-			{lesson ? <div>Les: {lesson}</div> : null}
-			<div>Geoorloofd: {registration.isAuthorized ? 'ja' : 'nee'}</div>
-			{comment ? <div>Opmerking: {comment}</div> : null}
+			<OptionalTooltipLine
+				show={registration.code.trim() !== ''}
+			>{`Afkorting: ${registration.code}`}</OptionalTooltipLine>
+			<TimeRangeTooltipLine begin={begin} finish={finish} />
+			<OptionalTooltipLine show={Boolean(hour)}>{`Lesuur: ${hour}`}</OptionalTooltipLine>
+			<OptionalTooltipLine show={lesson !== ''}>{`Les: ${lesson}`}</OptionalTooltipLine>
+			<div>Geoorloofd: {authorizedLabel(registration.isAuthorized)}</div>
+			<OptionalTooltipLine show={comment !== ''}>{`Opmerking: ${comment}`}</OptionalTooltipLine>
 		</div>
 	);
+}
+
+function handleRegistrationKeyDown(
+	event: { key: string; preventDefault: () => void; stopPropagation: () => void },
+	onSelect: (() => void) | undefined,
+) {
+	if (!isActivationKey(event.key)) return;
+	event.preventDefault();
+	event.stopPropagation();
+	invokeSelect(onSelect);
+}
+
+function invokeSelect(onSelect: (() => void) | undefined) {
+	if (!onSelect) return;
+	onSelect();
 }
 
 /** Round registration mark: reason abbreviation, with the registration details on hover. */
@@ -90,14 +119,9 @@ export default function RegistrationIcon({
 					onPointerDown={(event) => event.stopPropagation()}
 					onClick={(event) => {
 						event.stopPropagation();
-						onSelect?.();
+						invokeSelect(onSelect);
 					}}
-					onKeyDown={(event) => {
-						if (event.key !== 'Enter' && event.key !== ' ') return;
-						event.preventDefault();
-						event.stopPropagation();
-						onSelect?.();
-					}}
+					onKeyDown={(event) => handleRegistrationKeyDown(event, onSelect)}
 				>
 					{abbreviation}
 				</span>

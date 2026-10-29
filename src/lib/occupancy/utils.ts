@@ -94,32 +94,111 @@ export function getOccupancyForDay(students: Student[], dateKey: string): Record
 	return occupancy;
 }
 
+type StudentLessonPresence = {
+	hasLessonInThisRange: boolean;
+	hasLessonBefore: boolean;
+	hasLessonAfter: boolean;
+};
+
+function itemInSelectedLocations(item: AgendaItem, locations: string[]): boolean {
+	return getItemLocationCodes(item).some((loc) => locations.includes(loc));
+}
+
+function markOverlapPresence(
+	presence: StudentLessonPresence,
+	item: AgendaItem,
+	lessonStart: string,
+	lessonEnd: string,
+): void {
+	if (agendaItemOverlapsLesson(item, lessonStart, lessonEnd)) presence.hasLessonInThisRange = true;
+}
+
+function markAdjacentPresence(
+	presence: StudentLessonPresence,
+	item: AgendaItem,
+	lessonStart: string,
+	lessonEnd: string,
+): void {
+	const { startTime, endTime } = getItemTimeRange(item);
+	if (endTime <= lessonStart) presence.hasLessonBefore = true;
+	if (startTime >= lessonEnd) presence.hasLessonAfter = true;
+}
+
+function updatePresenceFromLessonItem(
+	presence: StudentLessonPresence,
+	item: AgendaItem,
+	lessonStart: string,
+	lessonEnd: string,
+	locations: string[],
+): void {
+	if (!itemInSelectedLocations(item, locations)) return;
+	markOverlapPresence(presence, item, lessonStart, lessonEnd);
+	markAdjacentPresence(presence, item, lessonStart, lessonEnd);
+}
+
 function analyzeStudentLessonPresence(
 	agendaForDay: AgendaEntry[],
 	lessonStart: string,
 	lessonEnd: string,
 	locations: string[],
-) {
-	let hasLessonInThisRange = false;
-	let hasLessonBefore = false;
-	let hasLessonAfter = false;
+): StudentLessonPresence {
+	const presence: StudentLessonPresence = {
+		hasLessonInThisRange: false,
+		hasLessonBefore: false,
+		hasLessonAfter: false,
+	};
 
 	for (const entry of agendaForDay) {
 		if (!isLessonEntry(entry)) continue;
-		const item = entry.item;
-		const { startTime: itemStartTime, endTime: itemEndTime } = getItemTimeRange(item);
-		const itemLocations = getItemLocationCodes(item);
-		const isInSelectedLocation = itemLocations.some((loc) => locations.includes(loc));
-
-		if (agendaItemOverlapsLesson(item, lessonStart, lessonEnd) && isInSelectedLocation) {
-			hasLessonInThisRange = true;
-		}
-
-		if (itemEndTime <= lessonStart && isInSelectedLocation) hasLessonBefore = true;
-		if (itemStartTime >= lessonEnd && isInSelectedLocation) hasLessonAfter = true;
+		updatePresenceFromLessonItem(presence, entry.item, lessonStart, lessonEnd, locations);
 	}
 
-	return { hasLessonInThisRange, hasLessonBefore, hasLessonAfter };
+	return presence;
+}
+
+function isBreakPresence(presence: StudentLessonPresence): boolean {
+	if (presence.hasLessonInThisRange) return false;
+	return presence.hasLessonBefore && presence.hasLessonAfter;
+}
+
+function nonEmptyAgenda(entries: AgendaEntry[] | undefined): AgendaEntry[] | null {
+	if (!entries) return null;
+	if (entries.length === 0) return null;
+	return entries;
+}
+
+function studentAgendaForDay(student: Student, dateKey: string): AgendaEntry[] | null {
+	const days = student.agenda;
+	if (!days) return null;
+	return nonEmptyAgenda(days[dateKey]);
+}
+
+function presenceClass(presence: StudentLessonPresence): 'lesson' | 'break' | null {
+	if (presence.hasLessonInThisRange) return 'lesson';
+	if (isBreakPresence(presence)) return 'break';
+	return null;
+}
+
+function classifyStudentForLessonRange(
+	student: Student,
+	dateKey: string,
+	lessonStart: string,
+	lessonEnd: string,
+	locations: string[],
+): 'lesson' | 'break' | null {
+	const agendaForDay = studentAgendaForDay(student, dateKey);
+	if (!agendaForDay) return null;
+	return presenceClass(analyzeStudentLessonPresence(agendaForDay, lessonStart, lessonEnd, locations));
+}
+
+function pushStudentByPresenceClass(
+	kind: 'lesson' | 'break' | null,
+	student: Student,
+	withLesson: Student[],
+	withBreak: Student[],
+): void {
+	if (kind === 'lesson') withLesson.push(student);
+	if (kind === 'break') withBreak.push(student);
 }
 
 export function getStudentsForLessonRange(
@@ -133,21 +212,24 @@ export function getStudentsForLessonRange(
 	const [lessonStart, lessonEnd] = lessonRange.split('-') as [string, string];
 
 	for (const student of students) {
-		const agendaForDay = student.agenda?.[dateKey];
-		if (!agendaForDay?.length) continue;
-
-		const { hasLessonInThisRange, hasLessonBefore, hasLessonAfter } = analyzeStudentLessonPresence(
-			agendaForDay,
-			lessonStart,
-			lessonEnd,
-			locations,
-		);
-
-		if (hasLessonInThisRange) withLesson.push(student);
-		else if (hasLessonBefore && hasLessonAfter) withBreak.push(student);
+		const kind = classifyStudentForLessonRange(student, dateKey, lessonStart, lessonEnd, locations);
+		pushStudentByPresenceClass(kind, student, withLesson, withBreak);
 	}
 
 	return { withLesson, withBreak };
+}
+
+function recordStudentPresenceCounts(
+	presence: StudentLessonPresence,
+	studentId: number,
+	lessonIds: Set<number>,
+	breakIds: Set<number>,
+): void {
+	if (presence.hasLessonInThisRange) {
+		lessonIds.add(studentId);
+		return;
+	}
+	if (isBreakPresence(presence)) breakIds.add(studentId);
 }
 
 export function countStudentsForLessonRange(
@@ -161,21 +243,14 @@ export function countStudentsForLessonRange(
 	const [lessonStart, lessonEnd] = lessonRange.split('-') as [string, string];
 
 	for (const student of students) {
-		const agendaForDay = student.agenda?.[todayKey];
-		if (!agendaForDay?.length) continue;
-
-		const { hasLessonInThisRange, hasLessonBefore, hasLessonAfter } = analyzeStudentLessonPresence(
-			agendaForDay,
-			lessonStart,
-			lessonEnd,
-			locations,
-		);
-
-		if (hasLessonInThisRange) uniqueStudentIds.add(student.id);
-		if (!hasLessonInThisRange && hasLessonBefore && hasLessonAfter) {
-			uniqueBreakStudentIds.add(student.id);
-		}
+		const agendaForDay = studentAgendaForDay(student, todayKey);
+		if (!agendaForDay) continue;
+		const presence = analyzeStudentLessonPresence(agendaForDay, lessonStart, lessonEnd, locations);
+		recordStudentPresenceCounts(presence, student.id, uniqueStudentIds, uniqueBreakStudentIds);
 	}
 
-	return { total: uniqueStudentIds.size, breakTotal: uniqueBreakStudentIds.size };
+	return {
+		total: uniqueStudentIds.size,
+		breakTotal: uniqueBreakStudentIds.size,
+	};
 }

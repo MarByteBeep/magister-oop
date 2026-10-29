@@ -1,70 +1,55 @@
 'use client';
 
-import { useState } from 'react';
 import { asyncFetchStatus } from '@/components/AsyncFetchStatus';
 import RegistrationCategoryFilter from '@/components/registrations/RegistrationCategoryFilter';
 import RegistrationGroupList from '@/components/registrations/RegistrationGroupList';
 import SyncButton from '@/components/SyncButton';
-import { useRegistrationsContext } from '@/context/RegistrationsContext';
-import { useStudentsContext } from '@/context/StudentsContext';
-import { useGroupedRegistrations } from '@/hooks/registrations/useGroupedRegistrations';
-import { useRegistrationCategories } from '@/hooks/registrations/useRegistrationCategories';
-import { useRegistrationsAgendaLoader } from '@/hooks/registrations/useRegistrationsAgendaLoader';
-import { useAllowedStudentIds } from '@/hooks/students/useAllowedStudentIds';
-import { useSelectedStudentFromId } from '@/hooks/students/useSelectedStudentFromId';
-import { ALL_REGISTRATION_CATEGORIES } from '@/lib/registrations/categories';
-import { getTodayKey } from '@/lib/shared/dateUtils';
+import { useRegistrationsViewModel } from '@/hooks/registrations/useRegistrationsViewModel';
+import type { Student } from '@/types/student.types';
 import StudentModal from './StudentModal';
 
+function RegistrationsStudentModal({ student, onClose }: { student: Student | undefined; onClose: () => void }) {
+	if (!student) return null;
+	return <StudentModal student={student} onClose={onClose} />;
+}
+
 export default function Registrations() {
-	const { data, loading, refreshing, error, refresh } = useRegistrationsContext();
-	const { students, selectedStudies, loadAgendaForStudent } = useStudentsContext();
-	const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
-	const [category, setCategory] = useState<string>(ALL_REGISTRATION_CATEGORIES);
-
-	const todayKey = getTodayKey();
-	const allowedStudentIds = useAllowedStudentIds(students, selectedStudies);
-
-	useRegistrationsAgendaLoader(data, students, allowedStudentIds, todayKey, loadAgendaForStudent);
-
-	const selectedStudent = useSelectedStudentFromId(students, selectedStudentId);
-	const grouped = useGroupedRegistrations(data, students, selectedStudies);
-	const { categories, activeCategory, visibleReasons } = useRegistrationCategories(grouped, category);
-
+	const vm = useRegistrationsViewModel();
 	const fetchStatus = asyncFetchStatus({
-		loading,
-		error,
+		loading: vm.loading,
+		error: vm.error,
 		errorMessage: 'Fout bij laden registraties',
-		onRetry: refresh,
+		onRetry: vm.refresh,
 	});
 	if (fetchStatus) return fetchStatus;
-
-	if (!data) {
-		return <p className="text-sm text-muted-foreground">Geen data.</p>;
-	}
+	if (!vm.data) return <p className="text-sm text-muted-foreground">Geen data.</p>;
 
 	return (
 		<div className="flex flex-col gap-4">
 			<div className="flex items-center justify-between gap-2">
-				<RegistrationCategoryFilter value={activeCategory} categories={categories} onChange={setCategory} />
+				<RegistrationCategoryFilter
+					value={vm.activeCategory}
+					categories={vm.categories}
+					onChange={vm.setCategory}
+				/>
 				<SyncButton
 					kind="plain"
 					label="Ververs registraties"
-					busy={refreshing}
+					busy={vm.refreshing}
 					toast="Registraties gesynchroniseerd"
 					errorToast="Registraties synchroniseren mislukt"
-					onSync={refresh}
+					onSync={vm.refresh}
 				/>
 			</div>
 
 			<RegistrationGroupList
-				orderedReasons={visibleReasons}
-				byReason={grouped.byReason}
-				studentById={grouped.studentById}
-				onSelectStudent={setSelectedStudentId}
+				orderedReasons={vm.visibleReasons}
+				byReason={vm.grouped.byReason}
+				studentById={vm.grouped.studentById}
+				onSelectStudent={vm.setSelectedStudentId}
 			/>
 
-			{selectedStudent && <StudentModal student={selectedStudent} onClose={() => setSelectedStudentId(null)} />}
+			<RegistrationsStudentModal student={vm.selectedStudent} onClose={() => vm.setSelectedStudentId(null)} />
 		</div>
 	);
 }

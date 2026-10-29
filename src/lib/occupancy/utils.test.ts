@@ -20,7 +20,14 @@ function lessonItem(start: string, end: string, locationCode: string): AgendaIte
 		type: 'les',
 		deelnames: [],
 		vakken: [],
-		locaties: [{ code: locationCode, omschrijving: locationCode, type: 'lokaal', links: { self: { href: '' } } }],
+		locaties: [
+			{
+				code: locationCode,
+				omschrijving: locationCode,
+				type: 'lokaal',
+				links: { self: { href: '' } },
+			},
+		],
 		links: {},
 	};
 }

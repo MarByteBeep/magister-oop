@@ -1,5 +1,17 @@
 import { describe, expect, test } from 'bun:test';
-import { formatPersonName, getInitials, normalizeString } from '@/lib/shared/stringUtils';
+import { formatPersonName, getInitials, normalizeString, trimmedOrUndefined } from '@/lib/shared/stringUtils';
+
+describe('trimmedOrUndefined', () => {
+	test('returns trimmed text', () => {
+		expect(trimmedOrUndefined('  hello  ')).toBe('hello');
+	});
+
+	test('collapses empty, whitespace, null, and undefined to undefined', () => {
+		for (const value of ['', '   ', null, undefined]) {
+			expect(trimmedOrUndefined(value)).toBeUndefined();
+		}
+	});
+});
 
 describe('formatPersonName', () => {
 	test('keeps a real infix', () => {

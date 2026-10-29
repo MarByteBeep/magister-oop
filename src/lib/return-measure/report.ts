@@ -58,30 +58,43 @@ function reportDateKey(measure: ReturnMeasureStudent): string {
 	return start ? getDateKey(start) : getTodayKey();
 }
 
+function unknownErrorMessage(err: unknown): string {
+	if (err instanceof Error) return err.message;
+	return 'Onbekende fout';
+}
+
+async function submitReturnMeasureReportRequest(
+	measure: ReturnMeasureStudent,
+	action: ReturnMeasureReportAction,
+): Promise<boolean> {
+	const payload: ReturnMeasureReportRequest = {
+		type: REPORT_REQUEST_TYPE[action],
+	};
+	const result = await putJson(endpoints.returnMeasureReport(measure.id), payload);
+	if (!result.ok) {
+		toast.error('Fout bij het melden van de terugkommaatregel', {
+			description: result.error,
+		});
+		return false;
+	}
+
+	rememberReturnMeasureReport(measure.id, action);
+	const dateKey = reportDateKey(measure);
+	invalidateReturnMeasureCache([getMonthKey(parseDateKey(dateKey))]);
+	await bulkListRegistry.refresh('return-measures', dateKey, 'background');
+	toast.success(reportSuccessMessage(measure, action));
+	return true;
+}
+
 export async function submitReturnMeasureReport(
 	measure: ReturnMeasureStudent,
 	action: ReturnMeasureReportAction,
 ): Promise<boolean> {
-	const payload: ReturnMeasureReportRequest = { type: REPORT_REQUEST_TYPE[action] };
-
 	try {
-		const result = await putJson(endpoints.returnMeasureReport(measure.id), payload);
-
-		if (!result.ok) {
-			toast.error('Fout bij het melden van de terugkommaatregel', { description: result.error });
-			return false;
-		}
-
-		rememberReturnMeasureReport(measure.id, action);
-		const dateKey = reportDateKey(measure);
-		invalidateReturnMeasureCache([getMonthKey(parseDateKey(dateKey))]);
-		await bulkListRegistry.refresh('return-measures', dateKey, 'background');
-
-		toast.success(reportSuccessMessage(measure, action));
-		return true;
+		return await submitReturnMeasureReportRequest(measure, action);
 	} catch (err) {
 		toast.error('Fout bij het melden van de terugkommaatregel', {
-			description: err instanceof Error ? err.message : 'Onbekende fout',
+			description: unknownErrorMessage(err),
 		});
 		return false;
 	}

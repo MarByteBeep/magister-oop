@@ -9,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 
-interface DatePickerProps {
+export interface DatePickerProps {
 	id?: string;
 	value?: Date;
 	placeholder?: string;

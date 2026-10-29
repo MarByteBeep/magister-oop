@@ -23,10 +23,15 @@ export function MagisterSessionProvider({ children }: { children: ReactNode }) {
 			if (isMagisterSessionStatus(value)) setStatus(value);
 		});
 
-		const onChanged = (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
-			if (area !== 'session' || !changes[MAGISTER_SESSION_KEY]) return;
-			const value = changes[MAGISTER_SESSION_KEY].newValue;
+		const applySessionChange = (changes: { [key: string]: chrome.storage.StorageChange }) => {
+			const change = changes[MAGISTER_SESSION_KEY];
+			if (!change) return;
+			const value = change.newValue;
 			if (isMagisterSessionStatus(value)) setStatus(value);
+		};
+		const onChanged = (changes: { [key: string]: chrome.storage.StorageChange }, area: string) => {
+			if (area !== 'session') return;
+			applySessionChange(changes);
 		};
 		chrome.storage.onChanged.addListener(onChanged);
 		return () => {

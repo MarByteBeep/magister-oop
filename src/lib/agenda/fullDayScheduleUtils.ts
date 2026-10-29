@@ -18,7 +18,9 @@ const DEFAULT_FULL_DAY_SCHEDULE_CONFIG: FullDayScheduleConfig = {
 	label: 'Vierkant rooster',
 };
 
-let fullDayScheduleConfig: FullDayScheduleConfig = { ...DEFAULT_FULL_DAY_SCHEDULE_CONFIG };
+let fullDayScheduleConfig: FullDayScheduleConfig = {
+	...DEFAULT_FULL_DAY_SCHEDULE_CONFIG,
+};
 
 /** Override school-specific times/label later (e.g. from settings). */
 export function configureFullDaySchedule(overrides: Partial<FullDayScheduleConfig>): void {
@@ -51,8 +53,12 @@ export function getFullDayScheduleSelection(date: Date): AgendaSlotSelection {
 
 export function isFullDayScheduleSelection(selection: { start: Date; end: Date }): boolean {
 	const { beginTime, endTime } = fullDayScheduleConfig;
-	const rangeStart = selection.start <= selection.end ? selection.start : selection.end;
-	const rangeEnd = selection.start <= selection.end ? selection.end : selection.start;
+	let rangeStart = selection.start;
+	let rangeEnd = selection.end;
+	if (rangeStart > rangeEnd) {
+		rangeStart = selection.end;
+		rangeEnd = selection.start;
+	}
 	return formatTime(rangeStart) === beginTime && formatTime(rangeEnd) === endTime;
 }
 

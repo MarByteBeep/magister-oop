@@ -2,7 +2,10 @@ import type { MagisterSessionStatus } from '@/lib/session/magisterSession';
 import { cn } from '@/lib/utils';
 
 const NOTICES: Record<Exclude<MagisterSessionStatus, 'ready'>, { text: string; className: string }> = {
-	checking: { text: 'Magister-sessie controleren…', className: 'text-muted-foreground' },
+	checking: {
+		text: 'Magister-sessie controleren…',
+		className: 'text-muted-foreground',
+	},
 	connecting: {
 		text: 'Magister-sessie verlopen of niet gevonden. Log in in de geopende Magister-tab; de gegevens verschijnen daarna automatisch.',
 		className: 'text-muted-foreground',

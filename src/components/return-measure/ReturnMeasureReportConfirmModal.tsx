@@ -17,7 +17,7 @@ const CONFIRM_COPY: Record<ReturnMeasureReportAction, { title: string; body: str
 	},
 };
 
-interface ReturnMeasureReportConfirmModalProps {
+export interface ReturnMeasureReportConfirmModalProps {
 	action: ReturnMeasureReportAction | null;
 	student?: Student;
 	studentName: string;
@@ -28,20 +28,25 @@ interface ReturnMeasureReportConfirmModalProps {
 	onCancel: () => void;
 }
 
-export default function ReturnMeasureReportConfirmModal({
-	action,
-	student,
-	studentName,
-	classLabel,
-	photoUrl,
-	isSubmitting,
-	onConfirm,
-	onCancel,
-}: ReturnMeasureReportConfirmModalProps) {
-	const copy = action == null ? null : CONFIRM_COPY[action];
+function confirmCopy(action: ReturnMeasureReportAction | null) {
+	if (action === null) return null;
+	return CONFIRM_COPY[action];
+}
+
+function handleConfirmOpenChange(open: boolean, isSubmitting: boolean, onCancel: () => void) {
+	if (open) return;
+	if (isSubmitting) return;
+	onCancel();
+}
+
+export default function ReturnMeasureReportConfirmModal(props: ReturnMeasureReportConfirmModalProps) {
+	const copy = confirmCopy(props.action);
 
 	return (
-		<Dialog open={action != null} onOpenChange={(open) => !open && !isSubmitting && onCancel()}>
+		<Dialog
+			open={props.action !== null}
+			onOpenChange={(open) => handleConfirmOpenChange(open, props.isSubmitting, props.onCancel)}
+		>
 			<DialogContent className="max-w-[500px]">
 				<DialogHeader>
 					<DialogTitle>{copy?.title}</DialogTitle>
@@ -49,18 +54,18 @@ export default function ReturnMeasureReportConfirmModal({
 				<div className="space-y-3">
 					<p className="text-sm text-muted-foreground">{copy?.body}</p>
 					<StudentItem
-						student={student}
-						name={studentName}
-						photoUrl={photoUrl}
-						classLabel={classLabel}
+						student={props.student}
+						name={props.studentName}
+						photoUrl={props.photoUrl}
+						classLabel={props.classLabel}
 						variant="card"
 					/>
 				</div>
 				<DialogFooter>
-					<Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
+					<Button variant="outline" onClick={props.onCancel} disabled={props.isSubmitting}>
 						Annuleren
 					</Button>
-					<Button onClick={onConfirm} disabled={isSubmitting}>
+					<Button onClick={props.onConfirm} disabled={props.isSubmitting}>
 						OK
 					</Button>
 				</DialogFooter>

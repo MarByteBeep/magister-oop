@@ -16,7 +16,9 @@ function manifestVersionFromPackage(): Plugin {
 			const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
 				version: string;
 			};
-			const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version: string };
+			const pkg = JSON.parse(readFileSync(pkgPath, 'utf8')) as {
+				version: string;
+			};
 			manifest.version = pkg.version;
 			const json = `${JSON.stringify(manifest, null, '\t')}\n`;
 			writeFileSync(manifestPath, json, 'utf8');

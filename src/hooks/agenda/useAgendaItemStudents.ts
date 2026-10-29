@@ -20,5 +20,12 @@ export function useAgendaItemStudents(entry: AgendaEntry, students: Student[]) {
 		);
 	}, [students, dateKey, firstLocation, lessonStart, lessonEnd, hasLocation, entry.kind]);
 
-	return { beginTime, endTime, lessonStart, lessonEnd, hasLocation, studentsInLocation };
+	return {
+		beginTime,
+		endTime,
+		lessonStart,
+		lessonEnd,
+		hasLocation,
+		studentsInLocation,
+	};
 }

@@ -16,7 +16,7 @@ const STATUSES: { value: ReturnMeasureStatusFilter; label: string }[] = [
 	{ value: 'all', label: 'Alles' },
 ];
 
-interface ReturnMeasureFiltersProps {
+export interface ReturnMeasureFiltersProps {
 	period: ReturnMeasurePeriod;
 	status: ReturnMeasureStatusFilter;
 	counts: Record<ReturnMeasureStatusFilter, number>;

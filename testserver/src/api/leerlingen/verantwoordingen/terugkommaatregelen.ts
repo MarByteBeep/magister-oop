@@ -1,68 +1,19 @@
-import { dayOffsetFromIsoInstant, isLocalTimeLabel } from '@/lib/shared/dateUtils';
-import type { CreateReturnMeasureRequest } from '@/magister/response/createReturnMeasure.types';
-import { appendReturnMeasureTemplate, getAllStudents } from '../../utils/helpers';
-import type { StoredReturnMeasureTemplate } from '../../utils/returnMeasures';
-
-function parseDayCount(rawDayCount: string): number | null {
-	const parsed = Number.parseInt(rawDayCount, 10);
-	if (!Number.isFinite(parsed) || parsed < 1) return null;
-	return parsed;
-}
-
-function invalidPayload(): Response {
-	return new Response(JSON.stringify({ error: 'Invalid payload' }), {
-		status: 400,
-		headers: { 'Content-Type': 'application/json' },
-	});
-}
+import {
+	parseCreateReturnMeasureRequest,
+	studentExistsById,
+	toReturnMeasureTemplate,
+} from '../../utils/createReturnMeasure';
+import { appendReturnMeasureTemplate } from '../../utils/helpers';
+import { jsonError } from '../../utils/jsonResponses';
 
 export async function POST(req: Request, studentId: number): Promise<Response> {
-	const student = getAllStudents().find((item) => item.id === studentId);
-	if (!student) {
-		return new Response(JSON.stringify({ error: 'Student not found' }), {
-			status: 404,
-			headers: { 'Content-Type': 'application/json' },
-		});
-	}
+	if (!studentExistsById(studentId)) return jsonError('Student not found', 404);
 
-	let body: CreateReturnMeasureRequest;
-	try {
-		body = (await req.json()) as CreateReturnMeasureRequest;
-	} catch {
-		return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-			status: 400,
-			headers: { 'Content-Type': 'application/json' },
-		});
-	}
+	const parsed = await parseCreateReturnMeasureRequest(req);
+	if (!parsed.ok) return parsed.response;
 
-	const dayOffset = dayOffsetFromIsoInstant(body.terugkomenOp);
-	const dayCount = parseDayCount(body.aantalDagen);
-	if (
-		dayOffset == null ||
-		dayCount == null ||
-		body.omschrijving.trim().length === 0 ||
-		!isLocalTimeLabel(body.beginTijd) ||
-		!isLocalTimeLabel(body.eindTijd)
-	) {
-		return invalidPayload();
-	}
-
-	const template: StoredReturnMeasureTemplate = {
-		id: Date.now(),
-		dayOffset,
-		description: body.omschrijving.trim(),
-		measure: null,
-		startTime: body.beginTijd,
-		endTime: body.eindTijd,
-		dayCount,
-		hasReported: false,
-		hasNotReported: false,
-		handledTime: null,
-		handledById: null,
-	};
-
-	appendReturnMeasureTemplate(studentId, template);
-	console.log(`Created return measure for student ${studentId}`, body);
+	appendReturnMeasureTemplate(studentId, toReturnMeasureTemplate(parsed.body, parsed.dayOffset, parsed.dayCount));
+	console.log(`Created return measure for student ${studentId}`, parsed.body);
 
 	return new Response(null, { status: 204 });
 }

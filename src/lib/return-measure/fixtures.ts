@@ -41,7 +41,9 @@ export function returnMeasureStudent(overrides: Partial<ReturnMeasureStudent> = 
 		omschrijving: 'test',
 		links: {
 			self: { href: '/api/m6/leerlingen/terugkomers' },
-			terugkommaatregelen: { href: `/api/leerlingen/${studentId}/verantwoordingen/terugkommaatregelen` },
+			terugkommaatregelen: {
+				href: `/api/leerlingen/${studentId}/verantwoordingen/terugkommaatregelen`,
+			},
 			melden: { href: `/api/terugkommaatregelen/${id}/melding` },
 		},
 		...overrides,

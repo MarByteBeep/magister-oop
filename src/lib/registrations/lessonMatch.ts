@@ -10,37 +10,96 @@ export type RegistrationLessonMatchInput = {
 	lessonHourEnd?: number;
 };
 
+function lessonEntriesForDay(student: Student, dateKey: string): LessonAgendaEntry[] {
+	const agenda = student.agenda;
+	if (!agenda) return [];
+	const agendaForDay = agenda[dateKey];
+	if (!agendaForDay) return [];
+	return agendaForDay.filter(isLessonEntry);
+}
+
+function definedHour(value: number | undefined): number | null {
+	if (value === undefined) return null;
+	return value;
+}
+
+function pairDefinedHours(begin: number | undefined, end: number | undefined): { begin: number; end: number } | null {
+	const start = definedHour(begin);
+	if (start === null) return null;
+	const finish = definedHour(end);
+	if (finish === null) return null;
+	return { begin: start, end: finish };
+}
+
+function lessonHourBounds(lesson: LessonAgendaEntry): { begin: number; end: number } | null {
+	const lesuur = lesson.item.lesuur;
+	if (!lesuur) return null;
+	return pairDefinedHours(lesuur.begin, lesuur.einde);
+}
+
+function lessonBeginsAtHour(lesson: LessonAgendaEntry, hour: number): boolean {
+	const lesuur = lesson.item.lesuur;
+	if (!lesuur) return false;
+	return lesuur.begin === hour;
+}
+
+function lessonCoversHourRange(lesson: LessonAgendaEntry, startHour: number, endHour: number): boolean {
+	const bounds = lessonHourBounds(lesson);
+	if (!bounds) return false;
+	if (bounds.begin > startHour) return false;
+	return bounds.end >= endHour;
+}
+
+function findLessonByHourStart(lessons: LessonAgendaEntry[], hour: number): LessonAgendaEntry | null {
+	const match = lessons.find((lesson) => lessonBeginsAtHour(lesson, hour));
+	if (!match) return null;
+	return match;
+}
+
+function findLessonCoveringHours(
+	lessons: LessonAgendaEntry[],
+	startHour: number,
+	endHour: number,
+): LessonAgendaEntry | null {
+	const match = lessons.find((lesson) => lessonCoversHourRange(lesson, startHour, endHour));
+	if (!match) return null;
+	return match;
+}
+
+function resolveEndHour(lessonHourStart: number, lessonHourEnd: number | undefined): number {
+	if (!lessonHourEnd) return lessonHourStart;
+	return lessonHourEnd;
+}
+
+function findLessonMatchingHours(
+	lessons: LessonAgendaEntry[],
+	lessonHourStart: number,
+	lessonHourEnd: number | undefined,
+): LessonAgendaEntry | null {
+	const exact = findLessonByHourStart(lessons, lessonHourStart);
+	if (exact) return exact;
+	return findLessonCoveringHours(lessons, lessonHourStart, resolveEndHour(lessonHourStart, lessonHourEnd));
+}
+
+function resolveLessonFromEntries(
+	startDate: Date,
+	lessons: LessonAgendaEntry[],
+	entry: RegistrationLessonMatchInput,
+): LessonAgendaEntry | null {
+	if (!entry.lessonHourStart) return findLessonEntry(startDate, lessons);
+	const byHour = findLessonMatchingHours(lessons, entry.lessonHourStart, entry.lessonHourEnd);
+	if (byHour) return byHour;
+	return findLessonEntry(startDate, lessons);
+}
+
 /** Lesson row on the student agenda that matches a registration mark. */
 export function resolveRegistrationLesson(
 	student: Student | undefined,
 	entry: RegistrationLessonMatchInput,
 ): LessonAgendaEntry | null {
 	if (!student) return null;
-
 	const startDate = parseOptionalDate(entry.start);
 	if (!startDate) return null;
-
-	const dateKey = getDateKey(startDate);
-	const agendaForDay = student.agenda?.[dateKey];
-	if (!agendaForDay?.length) return null;
-
-	const lessonEntries = agendaForDay.filter(isLessonEntry);
-	const lessonHourStart = entry.lessonHourStart;
-	const lessonHourEnd = entry.lessonHourEnd;
-
-	if (lessonHourStart) {
-		const endHour = lessonHourEnd || lessonHourStart;
-		const byHour =
-			lessonEntries.find((lesson) => lesson.item.lesuur?.begin === lessonHourStart) ??
-			lessonEntries.find(
-				(lesson) =>
-					lesson.item.lesuur?.begin &&
-					lesson.item.lesuur?.einde &&
-					lesson.item.lesuur.begin <= lessonHourStart &&
-					lesson.item.lesuur.einde >= endHour,
-			);
-		if (byHour) return byHour;
-	}
-
-	return findLessonEntry(startDate, lessonEntries);
+	const lessons = lessonEntriesForDay(student, getDateKey(startDate));
+	return resolveLessonFromEntries(startDate, lessons, entry);
 }

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 
-type AsyncFetchStatusProps = {
+export type AsyncFetchStatusProps = {
 	loading: boolean;
 	error: string | null;
 	errorMessage: string;

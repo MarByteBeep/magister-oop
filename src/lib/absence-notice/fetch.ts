@@ -13,6 +13,37 @@ export function invalidateAbsenceNoticeCache(dateKeys: string[]) {
 	}
 }
 
+function storeIfCurrentRequest(dateKey: string, request: Promise<AbsenceNotice[]>, items: AbsenceNotice[]): void {
+	if (inflight.get(dateKey) === request) cache.set(dateKey, items);
+}
+
+function clearIfCurrentRequest(dateKey: string, request: Promise<AbsenceNotice[]>): void {
+	if (inflight.get(dateKey) === request) inflight.delete(dateKey);
+}
+
+function logAbsenceFetchError(dateKey: string, error: unknown): void {
+	if (isMagisterUnavailableError(error)) return;
+	console.error('Failed to fetch absence notices for', dateKey, error);
+}
+
+async function fetchAbsenceNoticesRequest(
+	dateKey: string,
+	request: Promise<AbsenceNotice[]>,
+): Promise<AbsenceNotice[]> {
+	try {
+		const items = await loadAbsenceNoticesForDate(dateKey);
+		// After invalidate(), inflight no longer holds this promise — so a late response
+		// must neither populate the cache nor clear a newer request's slot (same check in finally).
+		storeIfCurrentRequest(dateKey, request, items);
+		return items;
+	} catch (error) {
+		logAbsenceFetchError(dateKey, error);
+		throw error;
+	} finally {
+		clearIfCurrentRequest(dateKey, request);
+	}
+}
+
 export async function getAbsenceNoticesForDate(dateKey: string): Promise<AbsenceNotice[]> {
 	const cached = cache.get(dateKey);
 	if (cached) return cached;
@@ -21,21 +52,7 @@ export async function getAbsenceNoticesForDate(dateKey: string): Promise<Absence
 	if (pending) return pending;
 
 	let request!: Promise<AbsenceNotice[]>;
-	request = (async () => {
-		try {
-			const items = await loadAbsenceNoticesForDate(dateKey);
-			// After invalidate(), inflight no longer holds this promise — so a late response
-			// must neither populate the cache nor clear a newer request's slot (same check in finally).
-			if (inflight.get(dateKey) === request) cache.set(dateKey, items);
-			return items;
-		} catch (error) {
-			if (!isMagisterUnavailableError(error))
-				console.error('Failed to fetch absence notices for', dateKey, error);
-			throw error;
-		} finally {
-			if (inflight.get(dateKey) === request) inflight.delete(dateKey);
-		}
-	})();
+	request = (async () => fetchAbsenceNoticesRequest(dateKey, request))();
 	inflight.set(dateKey, request);
 	return request;
 }
@@ -52,10 +69,15 @@ export async function refreshAbsenceNoticesForDate(dateKey: string): Promise<Abs
 	}
 }
 
+function shouldWarnTruncation(count: number | undefined, itemCount: number): boolean {
+	if (typeof count !== 'number') return false;
+	return count !== itemCount;
+}
+
 async function loadAbsenceNoticesForDate(dateKey: string): Promise<AbsenceNotice[]> {
 	const data = await getJson<AbsenceNoticesResponse>(endpoints.absenceNotices(dateKey), 'omit', 'no-cache', 'bearer');
 	const items = data.items ?? [];
-	if (typeof data.count === 'number' && data.count !== items.length) {
+	if (shouldWarnTruncation(data.count, items.length)) {
 		console.warn(`Absence notices for ${dateKey} may be truncated: count=${data.count}, items=${items.length}`);
 	}
 	return items;

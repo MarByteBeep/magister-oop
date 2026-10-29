@@ -1,28 +1,22 @@
 import { Skeleton } from '@/components/ui/skeleton';
+import { trimmedOrUndefined } from '@/lib/shared/stringUtils';
 import type { Address } from '@/magister/response/address.types';
 
-interface StudentProfileAddressFieldsProps {
+export interface StudentProfileAddressFieldsProps {
 	loading: boolean;
 	address?: Address | null;
 }
 
+function houseNumberSuffix(toevoeging: string | null | undefined): string {
+	return trimmedOrUndefined(toevoeging) ?? '';
+}
+
 function buildGoogleMapsUrl(address: Address): string {
-	const query = `${address.straat} ${address.huisnummer}${address.toevoeging ?? ''} ${address.plaats}`;
+	const query = `${address.straat} ${address.huisnummer}${houseNumberSuffix(address.toevoeging)} ${address.plaats}`;
 	return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
-export default function StudentProfileAddressFields({ loading, address }: StudentProfileAddressFieldsProps) {
-	if (loading) {
-		return (
-			<>
-				<Skeleton className="h-4 w-24" />
-				<Skeleton className="h-4 w-16" />
-			</>
-		);
-	}
-
-	if (!address) return null;
-
+function AddressFields({ address }: { address: Address }) {
 	return (
 		<>
 			<span className="text-sm font-medium text-muted-foreground">Adres</span>
@@ -35,7 +29,7 @@ export default function StudentProfileAddressFields({ loading, address }: Studen
 				>
 					<div>
 						{address.straat} {address.huisnummer}
-						{address.toevoeging ?? ''}
+						{houseNumberSuffix(address.toevoeging)}
 					</div>
 					<div>
 						{address.postcode} {address.plaats}
@@ -44,4 +38,17 @@ export default function StudentProfileAddressFields({ loading, address }: Studen
 			</span>
 		</>
 	);
+}
+
+export default function StudentProfileAddressFields(props: StudentProfileAddressFieldsProps) {
+	if (props.loading) {
+		return (
+			<>
+				<Skeleton className="h-4 w-24" />
+				<Skeleton className="h-4 w-16" />
+			</>
+		);
+	}
+	if (!props.address) return null;
+	return <AddressFields address={props.address} />;
 }

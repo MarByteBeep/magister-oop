@@ -1,4 +1,5 @@
 import { describe, expect, mock, test } from 'bun:test';
+import { toISOFromDateKeyAndTime } from '@/lib/shared/dateUtils';
 
 mock.module('@/lib/absence-notice/attendanceTypes', () => ({
 	getAttendanceType: (code: string) => {
@@ -40,8 +41,8 @@ describe('buildCreateAbsenceNoticeRequest', () => {
 			studentId: '00000000-0000-0000-0000-000000000001',
 			attendanceTypeCode: 'SL',
 			attendanceTypeDesc: 'Schoolleiding',
-			startDateTime: expect.any(String),
-			endDateTime: expect.any(String),
+			startDateTime: toISOFromDateKeyAndTime('2026-09-25', '11:20'),
+			endDateTime: toISOFromDateKeyAndTime('2026-09-25', '14:00'),
 			comment: 'internationale sportwedstrijd',
 			internalComment: 'extra verlof',
 		});
@@ -57,6 +58,25 @@ describe('buildCreateAbsenceNoticeRequest', () => {
 				attendanceTypeCode: 'RB',
 				comment: '   ',
 				internalComment: '',
+			}),
+		).toBeNull();
+	});
+
+	test('returns null for unknown attendance type or empty student id', () => {
+		const base = {
+			dateKey: '2026-09-25',
+			startTime: '11:20',
+			endTime: '14:00',
+			attendanceTypeCode: 'SL',
+			comment: '',
+			internalComment: '',
+		};
+		expect(buildCreateAbsenceNoticeRequest({ ...base, studentUuid: '   ' })).toBeNull();
+		expect(
+			buildCreateAbsenceNoticeRequest({
+				...base,
+				studentUuid: '00000000-0000-0000-0000-000000000001',
+				attendanceTypeCode: 'XX',
 			}),
 		).toBeNull();
 	});

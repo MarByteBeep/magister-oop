@@ -151,7 +151,10 @@ function seedFromKey(key: string): number {
 }
 
 function buildDaySchedule(classCode: string, teachers: StaffMember[]): AgendaItem<Participant>[] {
-	const lessonCount = faker.number.int({ min: MIN_LESSONS_PER_DAY, max: timeTable.length });
+	const lessonCount = faker.number.int({
+		min: MIN_LESSONS_PER_DAY,
+		max: timeTable.length,
+	});
 	const hours = faker.helpers
 		.shuffle(timeTable.map((_, index) => index + 1))
 		.slice(0, lessonCount)
@@ -187,6 +190,28 @@ function storeWeekForStudents(
 	}
 }
 
+function assignAgendaForClass(
+	classCode: string,
+	studentsInClass: StudentBase[],
+	activeTeachers: StaffMember[],
+	allStudentsAgenda: Record<number, AgendaItem<Participant>[][]>,
+	studentsWithGeneratedAgenda: Set<number>,
+	focusClassStudentIds: Set<number>,
+) {
+	if (activeTeachers.length === 0) {
+		console.warn(`No teacher available for class ${classCode}. Skipping class schedule.`);
+		return;
+	}
+	faker.seed(seedFromKey(classCode));
+	storeWeekForStudents(
+		studentsInClass,
+		buildWeekSchedule(classCode, activeTeachers),
+		allStudentsAgenda,
+		studentsWithGeneratedAgenda,
+		focusClassStudentIds,
+	);
+}
+
 function assignClassAgendas(
 	allStudents: StudentBase[],
 	focusClasses: string[],
@@ -198,17 +223,10 @@ function assignClassAgendas(
 	for (const classCode of focusClasses) {
 		const studentsInClass = allStudents.filter((s) => s.klassen.includes(classCode));
 		if (studentsInClass.length === 0) continue;
-
-		if (activeTeachers.length === 0) {
-			console.warn(`No teacher available for class ${classCode}. Skipping class schedule.`);
-			continue;
-		}
-
-		faker.seed(seedFromKey(classCode));
-		const week = buildWeekSchedule(classCode, activeTeachers);
-		storeWeekForStudents(
+		assignAgendaForClass(
+			classCode,
 			studentsInClass,
-			week,
+			activeTeachers,
 			allStudentsAgenda,
 			studentsWithGeneratedAgenda,
 			focusClassStudentIds,
@@ -234,7 +252,10 @@ function assignIndividualAgendas(
 export function generateAgendaData(
 	allStudents: StudentBase[],
 	allStaffMembers: StaffMember[],
-): { agenda: Record<number, AgendaItem<Participant>[][]>; focusClassStudentIds: Set<number> } {
+): {
+	agenda: Record<number, AgendaItem<Participant>[][]>;
+	focusClassStudentIds: Set<number>;
+} {
 	const allStudentsAgenda: Record<number, AgendaItem<Participant>[][]> = {};
 	const focusClassStudentIds = new Set<number>();
 	const numActiveTeachers = Math.floor(allStaffMembers.length * 0.3);

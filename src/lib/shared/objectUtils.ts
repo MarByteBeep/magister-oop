@@ -1,16 +1,29 @@
 type PlainObject = Record<string, unknown>;
 
-function isPlainObject(value: unknown): value is PlainObject {
-	if (value === null || typeof value !== 'object') return false;
+function isObjectValue(value: unknown): value is object {
+	return value !== null && typeof value === 'object';
+}
+
+function hasPlainObjectPrototype(value: object): boolean {
 	const proto = Object.getPrototypeOf(value);
-	return proto === Object.prototype || proto === null;
+	if (proto === Object.prototype) return true;
+	return proto === null;
+}
+
+function isPlainObject(value: unknown): value is PlainObject {
+	if (!isObjectValue(value)) return false;
+	return hasPlainObjectPrototype(value);
+}
+
+function mergeEntryValue(current: unknown, value: unknown): unknown {
+	if (isPlainObject(current) && isPlainObject(value)) return mergePlainObjects(current, value);
+	return value;
 }
 
 function mergePlainObjects(target: PlainObject, source: PlainObject): PlainObject {
 	const result: PlainObject = { ...target };
 	for (const [key, value] of Object.entries(source)) {
-		const current = result[key];
-		result[key] = isPlainObject(current) && isPlainObject(value) ? mergePlainObjects(current, value) : value;
+		result[key] = mergeEntryValue(result[key], value);
 	}
 	return result;
 }
