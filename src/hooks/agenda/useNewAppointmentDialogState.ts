@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState } from 'react';
+import { type Dispatch, useEffect, useReducer, useState } from 'react';
 import { toast } from 'sonner';
 import { canSaveNewAppointment, saveNewAppointment } from '@/hooks/agenda/newAppointmentDialogSave';
 import { ensureAttendanceTypes, getAttendanceTypes } from '@/lib/absence-notice/attendanceTypes';
@@ -65,6 +65,7 @@ function useAppointmentDialogFormState() {
 	}
 
 	return {
+		dispatch,
 		datePickerOpen: state.datePickerOpen,
 		setDatePickerOpen: (value: boolean) => setField('datePickerOpen', value),
 		reasonComboboxOpen: state.reasonComboboxOpen,
@@ -98,32 +99,19 @@ function unknownErrorMessage(error: unknown): string {
 	return 'Onbekende fout';
 }
 
-function applySelectionToForm(
-	selection: AgendaSlotSelection,
-	setDateKey: (value: string) => void,
-	setStartTime: (value: string) => void,
-	setEndTime: (value: string) => void,
-	setMode: (value: CreateMode) => void,
-) {
+function applySelectionToForm(selection: AgendaSlotSelection, dispatch: Dispatch<FormAction>) {
 	const values = selectionToFormValues(selection);
-	setDateKey(values.dateKey);
-	setStartTime(values.startTime);
-	setEndTime(values.endTime);
-	setMode('absence');
+	dispatch({ type: 'set', field: 'dateKey', value: values.dateKey });
+	dispatch({ type: 'set', field: 'startTime', value: values.startTime });
+	dispatch({ type: 'set', field: 'endTime', value: values.endTime });
+	dispatch({ type: 'set', field: 'mode', value: 'absence' });
 }
 
-function useSelectionFormSync(
-	isOpen: boolean,
-	selection: AgendaSlotSelection,
-	setDateKey: (value: string) => void,
-	setStartTime: (value: string) => void,
-	setEndTime: (value: string) => void,
-	setMode: (value: CreateMode) => void,
-) {
+function useSelectionFormSync(isOpen: boolean, selection: AgendaSlotSelection, dispatch: Dispatch<FormAction>) {
 	useEffect(() => {
 		if (!isOpen) return;
-		applySelectionToForm(selection, setDateKey, setStartTime, setEndTime, setMode);
-	}, [isOpen, selection, setDateKey, setStartTime, setEndTime, setMode]);
+		applySelectionToForm(selection, dispatch);
+	}, [isOpen, selection, dispatch]);
 }
 
 function loadAttendanceTypesOrToast(studentExterneId: string, setAttendanceTypes: (types: AttendanceType[]) => void) {
@@ -201,7 +189,7 @@ export function useNewAppointmentDialogState(
 	const form = useAppointmentDialogFormState();
 	const [attendanceTypes, setAttendanceTypes] = useState<AttendanceType[]>(() => getAttendanceTypes());
 
-	useSelectionFormSync(isOpen, selection, form.setDateKey, form.setStartTime, form.setEndTime, form.setMode);
+	useSelectionFormSync(isOpen, selection, form.dispatch);
 	useAttendanceTypesLoader(isOpen, studentExterneId, setAttendanceTypes);
 
 	const handleOpenChange = (open: boolean) => {
